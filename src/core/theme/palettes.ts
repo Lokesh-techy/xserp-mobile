@@ -1,0 +1,68 @@
+/** @author Lokesh */
+// Brand values come from xserp's erp_default.css via Despack (despack-rn/src/theme/index.ts). Do not edit casually.
+export const brand = {
+  navy900: '#001A3D',
+  navy800: '#00265A',
+  navy700: '#003378',
+  primary: '#004195',
+  accent: '#209BE1',
+  success: '#1D9D74',
+  warning: '#E59A1A',
+  danger: '#D9534F',
+  violet: '#6A5ACD',
+  white: '#FFFFFF',
+} as const;
+
+export const light = {
+  ...brand,
+  accentSoft: '#E6F4FC',
+  primarySoft: '#E8EEF8',
+  successSoft: '#E4F5EF',
+  warningSoft: '#FDF3E1',
+  dangerSoft: '#FBEAEA',
+  violetSoft: '#EEEBFA',
+  bg: '#F4F7FB',
+  surface: '#FFFFFF',
+  border: '#E3E9F2',
+  divider: '#EEF2F7',
+  fill: '#F1F4F9',
+  fillSubtle: '#F7F9FC',
+  chipBorder: '#D3DEF0',
+  bone: '#E9EEF5',
+  shimmer: 'rgba(255,255,255,0.75)',
+  handle: '#D5DDE8',
+  text: '#0B1A33',
+  textMuted: '#5B6B82',
+  textFaint: '#94A3B8',
+  onPrimarySoft: '#004195',
+  warningText: '#B87408',
+  infoText: '#1478B3',
+};
+
+export type Palette = { [K in keyof typeof light]: string };
+
+export const dark: Palette = {
+  ...brand,
+  accentSoft: '#0E2A3D',
+  primarySoft: '#16264A',
+  successSoft: '#0F2E26',
+  warningSoft: '#33270F',
+  dangerSoft: '#3A1A1C',
+  violetSoft: '#231E3D',
+  bg: '#0A111D',
+  surface: '#131C2B',
+  border: '#24324A',
+  divider: '#1C2739',
+  fill: '#1B2638',
+  fillSubtle: '#172131',
+  chipBorder: '#2A3B5A',
+  bone: '#1E293B',
+  shimmer: 'rgba(255,255,255,0.07)',
+  handle: '#334155',
+  text: '#E8EEF7',
+  textMuted: '#9AA8BD',
+  textFaint: '#66758C',
+  onPrimarySoft: '#8FB8FF',
+  warningText: '#F2B84B',
+  infoText: '#6CC4F5',
+};
