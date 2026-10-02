@@ -11,7 +11,8 @@ import { BottomSheet } from './bottom-sheet';
 import { Button } from './button';
 import { Chip } from './chip';
 import { DateField } from './date-field';
-import { PickerSheet, type PickerItem } from './picker-sheet';
+import type { PickerItem } from './item-row';
+import { PickerSheet } from './picker-sheet';
 import { PressableScale } from './pressable-scale';
 import { Text } from './text';
 
@@ -34,11 +35,16 @@ export function countActiveFilters(fields: FilterField[], value: FilterValues, d
 
 export function rangePresets(fyStartDay?: string | null) {
   return [
-    { key: '7d', label: 'Last 7 days', range: lastDays(7) },
-    { key: '30d', label: 'Last 30 days', range: lastDays(30) },
-    { key: 'month', label: 'This month', range: thisMonth() },
-    { key: 'fy', label: 'This FY', range: financialYear(fyStartDay) },
-    { key: 'lastFy', label: 'Last FY', range: financialYear(fyStartDay, subDays(financialYear(fyStartDay).since, 1)) },
+    { key: '7d', label: 'Last 7 days', short: '7 days', range: lastDays(7) },
+    { key: '30d', label: 'Last 30 days', short: '30 days', range: lastDays(30) },
+    { key: 'month', label: 'This month', short: 'Month', range: thisMonth() },
+    { key: 'fy', label: 'This FY', short: 'FY', range: financialYear(fyStartDay) },
+    {
+      key: 'lastFy',
+      label: 'Last FY',
+      short: 'Last FY',
+      range: financialYear(fyStartDay, subDays(financialYear(fyStartDay).since, 1)),
+    },
   ];
 }
 

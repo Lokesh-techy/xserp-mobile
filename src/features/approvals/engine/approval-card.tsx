@@ -38,28 +38,28 @@ export function ApprovalCard({ summary, tint, onPress, showStatus = true, kind }
             </Text>
           </View>
         )}
-        <Text variant="label" weight="bold" numberOfLines={1} style={styles.flex}>
+        <Text variant="rowTitle" weight="bold" numberOfLines={1} style={styles.flex}>
           {summary.code}
         </Text>
         {typeof summary.amount === 'number' && (
-          <Text variant="label" weight="extrabold" style={styles.amount}>
+          <Text variant="rowTitle" weight="extrabold" style={styles.amount}>
             {formatMoney(summary.amount, summary.currency || '₹')}
           </Text>
         )}
       </View>
       <View style={styles.row}>
-        <Text variant="caption" color={t.colors.textMuted} numberOfLines={1} style={styles.flex}>
+        <Text variant="rowMeta" color={t.colors.textMuted} numberOfLines={1} style={styles.flex}>
           {[summary.party || '—', project].filter(Boolean).join(' · ')}
         </Text>
         {showStatus ? (
           <View style={styles.status}>
             <View style={[styles.dot, { backgroundColor: status.fg }]} />
-            <Text variant="caption" weight="semibold" color={status.fg}>
+            <Text variant="rowMeta" weight="semibold" color={status.fg}>
               {summary.status.label}
             </Text>
           </View>
         ) : (
-          <Text variant="caption" color={t.colors.textFaint}>
+          <Text variant="rowMeta" color={t.colors.textFaint}>
             {formatDate(summary.date, 'd MMM')}
           </Text>
         )}
@@ -83,8 +83,8 @@ const useStyles = makeStyles((t) => ({
   stripe: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   flex: { flex: 1 },
-  kind: { paddingHorizontal: 7, paddingVertical: 1, borderRadius: 6 },
-  kindText: { fontSize: 11, lineHeight: 15 },
+  kind: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+  kindText: { fontSize: 12, lineHeight: 16 },
   amount: { fontVariant: ['tabular-nums'] },
   status: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   dot: { width: 6, height: 6, borderRadius: 3 },

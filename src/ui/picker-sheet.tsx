@@ -8,12 +8,11 @@ import { filterItems } from '@/core/utils';
 
 import { BottomSheet } from './bottom-sheet';
 import { Button } from './button';
+import { ItemText, TrailingTag, type PickerItem } from './item-row';
 import { togglePick } from './picker-selection';
 import { PressableScale } from './pressable-scale';
 import { SearchField } from './search-field';
 import { Text } from './text';
-
-export type PickerItem = { id: string; label: string; sublabel?: string };
 
 type Common = { visible: boolean; title: string; items: PickerItem[]; onClose: () => void };
 type Single = Common & {
@@ -39,7 +38,10 @@ export function PickerSheet(props: Single | Multi) {
   const { visible, title, items, onClose } = props;
   const [query, setQuery] = useState('');
   const [picked, setPicked] = useState<string[]>(props.multiple ? (props.initial ?? []) : []);
-  const shown = useMemo(() => filterItems(items, query, (i) => [i.label, i.sublabel, i.id]), [items, query]);
+  const shown = useMemo(
+    () => filterItems(items, query, (i) => [i.label, i.sublabel, i.trailing, i.id]),
+    [items, query],
+  );
   const selectedId = props.multiple ? null : props.selectedId;
 
   const close = () => {
@@ -76,7 +78,12 @@ export function PickerSheet(props: Single | Multi) {
         ) : undefined
       }>
       <View style={styles.search}>
-        <SearchField value={query} onChangeText={setQuery} placeholder={`Search ${title.toLowerCase()}`} />
+        <SearchField
+          variant="filled"
+          value={query}
+          onChangeText={setQuery}
+          placeholder={`Search ${title.toLowerCase()}`}
+        />
         <View style={styles.meta}>
           <Text variant="caption" color={t.colors.textMuted}>
             {shown.length === items.length
@@ -115,16 +122,8 @@ export function PickerSheet(props: Single | Multi) {
               scaleTo={0.99}
               accessibilityRole={props.multiple ? 'checkbox' : 'button'}
               accessibilityState={{ checked: on }}>
-              <View style={styles.text}>
-                <Text variant="label" weight={on ? 'bold' : 'semibold'} numberOfLines={1}>
-                  {item.label}
-                </Text>
-                {!!item.sublabel && (
-                  <Text variant="caption" color={t.colors.textMuted} numberOfLines={1}>
-                    {item.sublabel}
-                  </Text>
-                )}
-              </View>
+              <ItemText item={item} selected={on} />
+              <TrailingTag value={item.trailing} />
               {props.multiple ? (
                 <Ionicons
                   name={on ? 'checkbox' : 'square-outline'}
@@ -151,7 +150,13 @@ export function PickerSheet(props: Single | Multi) {
 }
 
 const useStyles = makeStyles((t) => ({
-  search: { paddingHorizontal: 18, paddingBottom: 6, gap: 8 },
+  search: {
+    paddingHorizontal: 18,
+    paddingBottom: 8,
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: t.colors.divider,
+  },
   meta: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -159,7 +164,7 @@ const useStyles = makeStyles((t) => ({
     minHeight: 20,
     paddingHorizontal: 2,
   },
-  list: { paddingHorizontal: 10 },
+  list: { paddingHorizontal: 10, paddingTop: 4 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -170,6 +175,5 @@ const useStyles = makeStyles((t) => ({
     borderRadius: t.radius.sm,
   },
   rowOn: { backgroundColor: t.colors.primarySoft },
-  text: { flex: 1, gap: 2 },
   empty: { alignItems: 'center', gap: 8, paddingVertical: 36 },
 }));

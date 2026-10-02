@@ -2,7 +2,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -10,7 +10,16 @@ import { useSessionStore } from '@/core/auth';
 import { env } from '@/core/config/env';
 import { can } from '@/core/permissions';
 import { makeStyles, useTheme } from '@/core/theme';
-import { ModuleScreen, PressableScale, SearchField, Section, StateView, Text, useHostRefresh, type ScrollHost } from '@/ui';
+import {
+  ModuleScreen,
+  PressableScale,
+  Section,
+  StateView,
+  Text,
+  useHostRefresh,
+  type ScrollHost,
+  useScreenSearch,
+} from '@/ui';
 
 import { visibleReports, type Report } from '../catalog';
 
@@ -21,16 +30,23 @@ export function ReportsScreen() {
 function Body({ host }: { host: ScrollHost }) {
   const styles = useStyles();
   const session = useSessionStore((s) => s.session);
-  const [query, setQuery] = useState('');
-  useHostRefresh(host, useCallback(() => Promise.resolve(), []));
+  const query = useScreenSearch('Search reports');
+  useHostRefresh(
+    host,
+    useCallback(() => Promise.resolve(), []),
+  );
   const sections = useMemo(() => visibleReports((code) => can(session, code, 'view'), query), [session, query]);
-  const open = (r: Report) => (r.kind === 'app' ? router.push(r.href) : void WebBrowser.openBrowserAsync(`${env.serverUrl}${r.path}`));
+  const open = (r: Report) =>
+    r.kind === 'app' ? router.push(r.href) : void WebBrowser.openBrowserAsync(`${env.serverUrl}${r.path}`);
   return host.attach(
     <Animated.ScrollView {...host.scrollProps} contentContainerStyle={styles.pad} keyboardShouldPersistTaps="handled">
-      <SearchField value={query} onChangeText={setQuery} placeholder="Search reports" />
       {sections.length === 0 && (
         <View style={styles.empty}>
-          <StateView icon="document-text-outline" title="No reports found" message={query ? 'Try a different word.' : "You don't have access to any report yet."} />
+          <StateView
+            icon="document-text-outline"
+            title="No reports found"
+            message={query ? 'Try a different word.' : "You don't have access to any report yet."}
+          />
         </View>
       )}
       {sections.map((s) => (
@@ -51,7 +67,11 @@ function ReportRow({ report, last, onPress }: { report: Report; last: boolean; o
   const styles = useStyles();
   const web = report.kind === 'web';
   return (
-    <PressableScale onPress={onPress} style={[styles.row, !last && styles.divider]} scaleTo={0.99} accessibilityLabel={`${report.title}${web ? ', opens XSERP web' : ''}`}>
+    <PressableScale
+      onPress={onPress}
+      style={[styles.row, !last && styles.divider]}
+      scaleTo={0.99}
+      accessibilityLabel={`${report.title}${web ? ', opens XSERP web' : ''}`}>
       <View style={[styles.icon, { backgroundColor: web ? t.colors.fill : t.colors.primarySoft }]}>
         <Ionicons name={report.icon} size={18} color={web ? t.colors.textMuted : t.colors.onPrimarySoft} />
       </View>
@@ -83,5 +103,13 @@ const useStyles = makeStyles((t) => ({
   divider: { borderBottomWidth: 1, borderBottomColor: t.colors.divider },
   icon: { width: 36, height: 36, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   flex: { flex: 1, gap: 2 },
-  webTag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, height: 22, borderRadius: t.radius.pill, backgroundColor: t.colors.fill },
+  webTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    height: 22,
+    borderRadius: t.radius.pill,
+    backgroundColor: t.colors.fill,
+  },
 }));

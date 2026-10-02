@@ -4,8 +4,10 @@ import { Text } from 'react-native';
 
 import { ThemeProvider } from '@/core/theme';
 
+import { HeaderRight } from './header-slot';
 import { MenuButton } from './menu-button';
 import { ModuleScreen, useScreenSearch } from './module-screen';
+import { PickerSheet } from './picker-sheet';
 import { SegmentedControl } from './segmented-control';
 
 jest.mock('react-native-safe-area-context', () => ({
@@ -98,4 +100,26 @@ test('a tab registers the screen search and receives what is typed', async () =>
   await wrap(<ModuleScreen title="Purchase">{() => <SearchingTab />}</ModuleScreen>);
   await fireEvent.changeText(screen.getByPlaceholderText('Search orders'), 'acme');
   expect(screen.getByText('query:acme')).toBeTruthy();
+});
+
+function TabWithControl() {
+  return (
+    <HeaderRight>
+      <MenuButton title="Sort" options={[{ key: 'd', label: 'Default order', short: 'Sort' }]} value="d" onChange={jest.fn()} />
+    </HeaderRight>
+  );
+}
+
+test('a tab can place its single control in the screen header (compact label)', async () => {
+  await wrap(<ModuleScreen title="Audit" tabs={<Text>tabs</Text>}>{() => <TabWithControl />}</ModuleScreen>);
+  expect(screen.getByLabelText('Sort: Sort')).toBeTruthy();
+});
+
+test('dropdown rows keep the unit in its own column, out of the detail line', async () => {
+  await wrap(
+    <PickerSheet visible title="Material" items={[{ id: '1', label: 'Copper cable 4 sq mm', sublabel: 'DRG-12 · Polycab', trailing: 'mtr' }]} onSelect={jest.fn()} onClose={jest.fn()} />,
+  );
+  expect(screen.getByText('DRG-12 · Polycab')).toBeTruthy();
+  expect(screen.getByText('MTR')).toBeTruthy();
+  expect(screen.getByPlaceholderText('Search material')).toBeTruthy();
 });

@@ -10,14 +10,34 @@ import { useCan } from '@/core/permissions';
 import { useFocusRefetch } from '@/core/query';
 import { makeStyles, useTheme } from '@/core/theme';
 import { formatDate, formatMoney, lastDays, type DateRange } from '@/core/utils';
-import { Button, Card, ModuleScreen, QueryState, RangeChips, type ScrollHost, SegmentedTabs, StatusPill, Text, useHostRefresh, useTabParam, withPressFeel } from '@/ui';
+import {
+  Button,
+  Card,
+  ModuleScreen,
+  QueryState,
+  RangeChips,
+  type ScrollHost,
+  SegmentedTabs,
+  StatusPill,
+  Text,
+  useHostRefresh,
+  useTabParam,
+  withPressFeel,
+  HeaderRight,
+} from '@/ui';
 
 import { fetchExpenseGroups, fetchExpenses } from '../api';
 import { expenseKeys } from '../keys';
 import { expenseStatus, STATUS, type ExpenseStatus } from '../status';
 
 const TABS = ['draft', 'confirmed', 'approved', 'checked', 'verified'] as const;
-const TAB_STATUS: Record<(typeof TABS)[number], ExpenseStatus> = { draft: STATUS.DRAFT, confirmed: STATUS.CONFIRMED, approved: STATUS.APPROVED, checked: STATUS.CHECKED, verified: STATUS.VERIFIED };
+const TAB_STATUS: Record<(typeof TABS)[number], ExpenseStatus> = {
+  draft: STATUS.DRAFT,
+  confirmed: STATUS.CONFIRMED,
+  approved: STATUS.APPROVED,
+  checked: STATUS.CHECKED,
+  verified: STATUS.VERIFIED,
+};
 
 export function ExpensesScreen() {
   const [tab, setTab] = useTabParam(TABS, 'draft');
@@ -37,13 +57,25 @@ export function ExpensesScreen() {
   );
 }
 
-function ExpenseList({ host, status, onRefreshGroups }: { host: ScrollHost; status: ExpenseStatus; onRefreshGroups: () => Promise<unknown> }) {
+function ExpenseList({
+  host,
+  status,
+  onRefreshGroups,
+}: {
+  host: ScrollHost;
+  status: ExpenseStatus;
+  onRefreshGroups: () => Promise<unknown>;
+}) {
   const t = useTheme();
   const styles = useStyles();
   const fy = useSessionStore((s) => s.session?.fyStartDay);
   const canCreate = useCan('EXPENSES', 'edit');
   const [range, setRange] = useState<DateRange>(() => lastDays(30));
-  const query = useQuery({ queryKey: expenseKeys.list(status, range), queryFn: () => fetchExpenses(status, range), placeholderData: (p) => p });
+  const query = useQuery({
+    queryKey: expenseKeys.list(status, range),
+    queryFn: () => fetchExpenses(status, range),
+    placeholderData: (p) => p,
+  });
   const refetch = useCallback(() => Promise.all([query.refetch(), onRefreshGroups()]), [query, onRefreshGroups]);
   useHostRefresh(host, refetch);
   useFocusRefetch(refetch);
@@ -55,30 +87,48 @@ function ExpenseList({ host, status, onRefreshGroups }: { host: ScrollHost; stat
       contentContainerStyle={styles.pad}
       ListHeaderComponent={
         <View style={styles.head}>
-          {canCreate && status === STATUS.DRAFT && <Button title="New expense" icon="add-circle-outline" onPress={withPressFeel(() => router.push({ pathname: '/expenses/[id]', params: { id: 'new' } }))} />}
-          <RangeChips value={range} onChange={setRange} fyStartDay={fy} nested={host.nestedProps} />
+          {canCreate && status === STATUS.DRAFT && (
+            <Button
+              title="New expense"
+              icon="add-circle-outline"
+              onPress={withPressFeel(() => router.push({ pathname: '/expenses/[id]', params: { id: 'new' } }))}
+            />
+          )}
+          <HeaderRight>
+            <RangeChips value={range} onChange={setRange} fyStartDay={fy} />
+          </HeaderRight>
         </View>
       }
       ListEmptyComponent={
-        <QueryState query={query} isEmpty={() => true} empty={{ icon: 'receipt-outline', title: 'No claims here', message: 'Nothing in this status for the selected period.' }}>
+        <QueryState
+          query={query}
+          isEmpty={() => true}
+          empty={{
+            icon: 'receipt-outline',
+            title: 'No claims here',
+            message: 'Nothing in this status for the selected period.',
+          }}>
           {() => null}
         </QueryState>
       }
       renderItem={({ item }) => {
         const st = expenseStatus(item.status);
         return (
-          <Card tint={t.tints.expenses} style={styles.card} onPress={() => router.push({ pathname: '/expenses/[id]', params: { id: item.id } })}>
+          <Card
+            tint={t.tints.expenses}
+            style={styles.card}
+            onPress={() => router.push({ pathname: '/expenses/[id]', params: { id: item.id } })}>
             <View style={styles.row}>
               <Text variant="heading" style={styles.flex} numberOfLines={1}>
                 {item.code || `Draft #${item.id}`}
               </Text>
               <StatusPill label={st.label} tone={st.tone} />
             </View>
-            <Text variant="label" color={t.colors.textMuted} numberOfLines={1}>
+            <Text variant="rowMeta" color={t.colors.textMuted} numberOfLines={1}>
               {[item.claimant, item.description].filter(Boolean).join(' · ') || '—'}
             </Text>
             <View style={styles.row}>
-              <Text variant="caption" color={t.colors.textMuted} style={styles.flex}>
+              <Text variant="rowMeta" color={t.colors.textMuted} style={styles.flex}>
                 {formatDate(item.date)}
               </Text>
               <Text variant="heading" style={styles.amount}>

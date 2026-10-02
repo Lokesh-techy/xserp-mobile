@@ -39,3 +39,5 @@ export * from './segmented-control';
 export * from './menu-button';
 export * from './switch-row';
 export { Popover, placePopover, type Anchor } from './popover';
+export { HeaderRight } from './header-slot';
+export * from './item-row';

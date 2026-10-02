@@ -11,11 +11,13 @@ export function SwitchRow({
   value,
   onChange,
   detail,
+  disabled,
 }: {
   label: string;
   value: boolean;
   onChange: (v: boolean) => void;
   detail?: string;
+  disabled?: boolean;
 }) {
   const t = useTheme();
   const styles = useStyles();
@@ -32,6 +34,7 @@ export function SwitchRow({
       <Switch
         value={value}
         onValueChange={onChange}
+        disabled={disabled}
         trackColor={{ true: t.colors.accent, false: t.colors.border }}
         thumbColor={t.colors.white}
         accessibilityLabel={label}

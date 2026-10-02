@@ -3,7 +3,7 @@ import { Platform, Text as RNText, StyleSheet, type TextProps } from 'react-nati
 
 import { useTheme, type Fonts } from '@/core/theme';
 
-export type TextVariant = 'display' | 'title' | 'heading' | 'body' | 'label' | 'caption' | 'overline';
+export type TextVariant = 'display' | 'title' | 'heading' | 'body' | 'label' | 'caption' | 'overline' | 'rowTitle' | 'rowMeta';
 
 const variants: Record<
   TextVariant,
@@ -16,6 +16,9 @@ const variants: Record<
   label: { fontSize: 13, lineHeight: 18, weight: 'semibold' },
   caption: { fontSize: 12, lineHeight: 16, weight: 'medium' },
   overline: { fontSize: 11, lineHeight: 14, weight: 'bold', letterSpacing: 1.2 },
+  // List rows: one step above label/caption so lists read comfortably at arm's length.
+  rowTitle: { fontSize: 15, lineHeight: 20, weight: 'semibold' },
+  rowMeta: { fontSize: 13, lineHeight: 18, weight: 'medium' },
 };
 
 type Props = TextProps & { variant?: TextVariant; color?: string; weight?: keyof Fonts };

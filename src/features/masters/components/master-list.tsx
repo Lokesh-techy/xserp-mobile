@@ -1,15 +1,31 @@
 /** @author Lokesh */
 import { formatDistanceToNow } from 'date-fns';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { makeStyles, useTheme } from '@/core/theme';
 import { filterItems } from '@/core/utils';
 import { syncMaster, useMasterStore, type MasterKind } from '@/features/master-data';
-import { Card, SearchField, StateView, Text, useHostRefresh, type PickerItem, type ScrollHost } from '@/ui';
+import {
+  Card,
+  StateView,
+  Text,
+  useHostRefresh,
+  type PickerItem,
+  type ScrollHost,
+  useScreenSearch,
+  ItemText,
+  TrailingTag,
+} from '@/ui';
 
-type Props = { host: ScrollHost; kind: MasterKind; items: PickerItem[]; noun: string; onOpen: (item: PickerItem) => void };
+type Props = {
+  host: ScrollHost;
+  kind: MasterKind;
+  items: PickerItem[];
+  noun: string;
+  onOpen: (item: PickerItem) => void;
+};
 
 /** Searchable, virtualised list over a cached master; pull to force a re-sync. */
 export function MasterList({ host, kind, items, noun, onOpen }: Props) {
@@ -17,9 +33,12 @@ export function MasterList({ host, kind, items, noun, onOpen }: Props) {
   const styles = useStyles();
   const syncedAt = useMasterStore((s) => s.syncedAt[kind]);
   const syncing = useMasterStore((s) => s.syncing[kind]);
-  const [search, setSearch] = useState('');
-  useHostRefresh(host, useCallback(() => syncMaster(kind, { force: true }), [kind]));
-  const rows = useMemo(() => filterItems(items, search, (i) => [i.label, i.sublabel]), [items, search]);
+  const search = useScreenSearch(`Search ${noun}`);
+  useHostRefresh(
+    host,
+    useCallback(() => syncMaster(kind, { force: true }), [kind]),
+  );
+  const rows = useMemo(() => filterItems(items, search, (i) => [i.label, i.sublabel, i.trailing]), [items, search]);
   return host.attach(
     <Animated.FlatList
       {...host.scrollProps}
@@ -30,25 +49,42 @@ export function MasterList({ host, kind, items, noun, onOpen }: Props) {
       windowSize={9}
       ListHeaderComponent={
         <View style={styles.head}>
-          <SearchField value={search} onChangeText={setSearch} placeholder={`Search ${noun}`} />
           <Text variant="caption" color={t.colors.textMuted}>
-            {rows.length} {noun} · {syncing ? 'syncing…' : syncedAt ? `synced ${formatDistanceToNow(syncedAt, { addSuffix: true })}` : 'not synced yet'}
+            {rows.length} {noun} ·{' '}
+            {syncing
+              ? 'syncing…'
+              : syncedAt
+                ? `synced ${formatDistanceToNow(syncedAt, { addSuffix: true })}`
+                : 'not synced yet'}
           </Text>
         </View>
       }
-      ListEmptyComponent={<StateView icon="albums-outline" title={syncing ? `Syncing ${noun}…` : `No ${noun}`} message={syncing ? undefined : 'Pull down to sync.'} />}
+      ListEmptyComponent={
+        <StateView
+          icon="albums-outline"
+          title={syncing ? `Syncing ${noun}…` : `No ${noun}`}
+          message={syncing ? undefined : 'Pull down to sync.'}
+        />
+      }
       renderItem={({ item }) => (
         <Card style={styles.card} onPress={() => onOpen(item)}>
-          <Text variant="label">{item.label}</Text>
-          {!!item.sublabel && (
-            <Text variant="caption" color={t.colors.textMuted}>
-              {item.sublabel}
-            </Text>
-          )}
+          <ItemText item={item} />
+          <TrailingTag value={item.trailing} />
         </Card>
       )}
     />,
   );
 }
 
-const useStyles = makeStyles((t) => ({ pad: { padding: t.space.gutter, paddingTop: 8, paddingBottom: 48 }, head: { gap: 8, marginBottom: 12 }, card: { marginBottom: 10, gap: 2, padding: 14 } }));
+const useStyles = makeStyles((t) => ({
+  pad: { padding: t.space.gutter, paddingTop: 8, paddingBottom: 48 },
+  head: { gap: 8, marginBottom: 12 },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
+}));

@@ -82,8 +82,10 @@ function NotificationRow({ item, onOpen, onDelete }: { item: AppNotification; on
       <PressableScale onPress={onOpen} style={styles.row} scaleTo={0.99}>
         <View style={[styles.dot, { backgroundColor: item.read ? 'transparent' : t.colors.accent }]} />
         <View style={styles.flex}>
-          <Text variant={item.read ? 'body' : 'label'}>{item.message}</Text>
-          <Text variant="caption" color={t.colors.textMuted}>
+          <Text variant="rowTitle" weight={item.read ? 'medium' : 'semibold'}>
+            {item.message}
+          </Text>
+          <Text variant="rowMeta" color={t.colors.textMuted}>
             {formatDate(item.createdOn, 'HH:mm · d MMM')}
           </Text>
         </View>
@@ -95,7 +97,7 @@ function NotificationRow({ item, onOpen, onDelete }: { item: AppNotification; on
 const useStyles = makeStyles((t) => ({
   pad: { padding: t.space.gutter, paddingBottom: 48 },
   section: { marginTop: 14, marginBottom: 8 },
-  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 14, marginBottom: 8, borderRadius: t.radius.md, backgroundColor: t.colors.surface, ...t.shadow.card },
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 16, paddingHorizontal: 16, marginBottom: 10, borderRadius: t.radius.md, backgroundColor: t.colors.surface, ...t.shadow.card },
   dot: { width: 8, height: 8, borderRadius: 4, marginTop: 6 },
   flex: { flex: 1, gap: 4 },
   delete: { width: 80, marginBottom: 8, borderRadius: t.radius.md, backgroundColor: t.colors.danger, alignItems: 'center', justifyContent: 'center' },

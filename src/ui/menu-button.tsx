@@ -6,11 +6,16 @@ import { StyleSheet, View } from 'react-native';
 
 import { makeStyles, useTheme } from '@/core/theme';
 
+import { usePlacement } from './header-slot';
+import { PickerSheet } from './picker-sheet';
 import { Popover, type Anchor } from './popover';
 import { PressableScale } from './pressable-scale';
 import { Text } from './text';
 
-export type MenuOption = { key: string; label: string; detail?: string; dot?: string };
+const LONG_LIST = 10;
+
+/** `short` is what a compact button shows ("30 days"); the menu always lists `label`. */
+export type MenuOption = { key: string; label: string; short?: string; detail?: string; dot?: string };
 
 type Single = { multiple?: false; value: string; onChange: (key: string) => void };
 type Multi = { multiple: true; values: string[]; onChangeMany: (keys: string[]) => void; allLabel: string };
@@ -18,8 +23,8 @@ type Props = (Single | Multi) & {
   title: string;
   options: MenuOption[];
   icon?: React.ComponentProps<typeof Ionicons>['name'];
-  /** `header` sits on the gradient bar (translucent, white text). */
-  appearance?: 'field' | 'header';
+  /** `header` sits on the gradient bar; `compact` beside the tabs. Defaults from where it is placed. */
+  appearance?: 'field' | 'header' | 'compact';
 };
 
 /**
@@ -31,8 +36,15 @@ export function MenuButton(props: Props) {
   const styles = useStyles();
   const trigger = useRef<View>(null);
   const [anchor, setAnchor] = useState<Anchor | null>(null);
-  const { title, options, icon, appearance = 'field' } = props;
+  const placement = usePlacement();
+  const {
+    title,
+    options,
+    icon,
+    appearance = placement === 'bar' ? 'header' : placement === 'tabs' ? 'compact' : 'field',
+  } = props;
   const header = appearance === 'header';
+  const compact = appearance === 'compact';
   const allOn = !!props.multiple && (props.values.length === 0 || props.values.length === options.length);
   const summary = props.multiple
     ? allOn
@@ -41,11 +53,18 @@ export function MenuButton(props: Props) {
           .filter((o) => props.values.includes(o.key))
           .map((o) => o.label)
           .join(', ')
-    : (options.find((o) => o.key === props.value)?.label ?? title);
+    : (() => {
+        const o = options.find((x) => x.key === props.value);
+        return (header || compact ? (o?.short ?? o?.label) : o?.label) ?? title;
+      })();
   const changed = props.multiple ? !allOn : false;
 
+  // A long single-choice list (suppliers, parties) gets the searchable sheet instead of a popover.
+  const long = !props.multiple && options.length > LONG_LIST;
+  const [sheet, setSheet] = useState(false);
   const open = () => {
     Haptics.selectionAsync().catch(() => {});
+    if (long) return setSheet(true);
     trigger.current?.measureInWindow((x, y, width, height) => setAnchor({ x, y, width, height }));
   };
   // Multi-select applies as you tick (like a native menu), so there is no Done step.
@@ -65,7 +84,10 @@ export function MenuButton(props: Props) {
         <PressableScale
           onPress={open}
           scaleTo={0.96}
-          style={[styles.button, header ? styles.header : changed && styles.changed]}
+          style={[
+            styles.button,
+            header ? styles.header : compact ? [styles.compact, changed && styles.changed] : changed && styles.changed,
+          ]}
           accessibilityRole="button"
           accessibilityLabel={`${title}: ${summary}`}>
           {icon && <Ionicons name={icon} size={14} color={changed && !header ? t.colors.onPrimarySoft : faint} />}
@@ -75,6 +97,17 @@ export function MenuButton(props: Props) {
           <Ionicons name="chevron-down" size={13} color={faint} />
         </PressableScale>
       </View>
+      {long && !props.multiple && (
+        <PickerSheet
+          visible={sheet}
+          title={title}
+          items={options.map((o) => ({ id: o.key, label: o.label, sublabel: o.detail }))}
+          selectedId={props.value}
+          allowClear={false}
+          onSelect={(i) => i && props.onChange(i.id)}
+          onClose={() => setSheet(false)}
+        />
+      )}
       <Popover anchor={anchor} onClose={() => setAnchor(null)}>
         <Text variant="caption" weight="bold" color={t.colors.textFaint} style={styles.heading}>
           {title.toUpperCase()}
@@ -155,6 +188,7 @@ const useStyles = makeStyles((t) => ({
   },
   changed: { backgroundColor: t.colors.primarySoft },
   label: { flexShrink: 1 },
+  compact: { height: 30, maxWidth: 130, paddingHorizontal: 10, borderRadius: 15 },
   header: { backgroundColor: t.alpha.glassButton, height: 32, maxWidth: 170, paddingHorizontal: 11, borderRadius: 16 },
   heading: { paddingHorizontal: 16, paddingTop: 6, paddingBottom: 4, letterSpacing: 0.6 },
   sep: { height: StyleSheet.hairlineWidth, backgroundColor: t.colors.divider, marginHorizontal: 16, marginVertical: 2 },

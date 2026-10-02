@@ -16,6 +16,7 @@ import Animated from 'react-native-reanimated';
 import { makeStyles } from '@/core/theme';
 
 import { CollapsingSearch } from './collapsing-search';
+import { createHeaderSlot, HeaderSlotContext } from './header-slot';
 import { usePullToSync } from './pull-to-sync';
 import { ScreenHeader, type HeaderAction } from './screen-header';
 
@@ -31,9 +32,10 @@ const SearchContext = createContext<SearchApi>({ query: '', setQuery: () => unde
  * Turns on the screen's pinned search bar and returns what the user typed. The bar lives under the
  * header (not in the list), so it stays reachable — and slims down — however far the list scrolls.
  */
-export function useScreenSearch(placeholder: string): string {
+export function useScreenSearch(placeholder: string | null): string {
   const { query, register } = useContext(SearchContext);
   useEffect(() => {
+    if (placeholder === null) return;
     register(placeholder);
     return () => register(null);
   }, [placeholder, register]);
@@ -67,24 +69,33 @@ export function ModuleScreen({ title, subtitle, actions, headerRight, tabs, back
     if (p === null) setQuery('');
   }, []);
   const search = useMemo(() => ({ query, setQuery, register: registerSearch }), [query, registerSearch]);
+  const [slot] = useState(createHeaderSlot);
   return (
     <RefreshContext.Provider value={register}>
       <SearchContext.Provider value={search}>
-        <View style={styles.root}>
-          <ScreenHeader
-            title={title}
-            subtitle={subtitle}
-            actions={actions}
-            right={headerRight}
-            tabs={tabs}
-            back={back}
-            pull={pull.indicator}
-          />
-          {placeholder !== null && (
-            <CollapsingSearch value={query} onChangeText={setQuery} placeholder={placeholder} scrollY={pull.scrollY} />
-          )}
-          <View style={styles.body}>{children(pull)}</View>
-        </View>
+        <HeaderSlotContext.Provider value={slot}>
+          <View style={styles.root}>
+            <ScreenHeader
+              title={title}
+              subtitle={subtitle}
+              actions={actions}
+              right={headerRight}
+              slot={slot}
+              tabs={tabs}
+              back={back}
+              pull={pull.indicator}
+            />
+            {placeholder !== null && (
+              <CollapsingSearch
+                value={query}
+                onChangeText={setQuery}
+                placeholder={placeholder}
+                scrollY={pull.scrollY}
+              />
+            )}
+            <View style={styles.body}>{children(pull)}</View>
+          </View>
+        </HeaderSlotContext.Provider>
       </SearchContext.Provider>
     </RefreshContext.Provider>
   );

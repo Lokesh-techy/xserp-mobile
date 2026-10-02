@@ -6,7 +6,8 @@ import { Pressable, View } from 'react-native';
 import { makeStyles, useTheme } from '@/core/theme';
 
 import type { IconName } from './button';
-import { PickerSheet, type PickerItem } from './picker-sheet';
+import type { PickerItem } from './item-row';
+import { PickerSheet } from './picker-sheet';
 import { PressableScale } from './pressable-scale';
 import { Text } from './text';
 
@@ -60,9 +61,9 @@ export function SelectField({
             numberOfLines={1}>
             {picked?.label ?? placeholder ?? `Choose ${label.toLowerCase()}`}
           </Text>
-          {!!picked?.sublabel && (
+          {!!(picked?.sublabel || picked?.trailing) && (
             <Text variant="caption" color={t.colors.textMuted} numberOfLines={1}>
-              {picked.sublabel}
+              {[picked.sublabel, picked.trailing].filter(Boolean).join(' · ')}
             </Text>
           )}
         </View>

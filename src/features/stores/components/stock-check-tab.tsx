@@ -1,13 +1,26 @@
 /** @author Lokesh */
 import { useCallback, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { useSessionStore } from '@/core/auth';
 import { makeStyles, useTheme } from '@/core/theme';
 import { formatDate, formatQty, lastDays } from '@/core/utils';
 import { useMaterialItems, useMaterials } from '@/features/master-data';
-import { Card, Chip, PickerSheet, PressableScale, QueryState, RangeChips, StatCard, StateView, Text, useHostRefresh, type ScrollHost } from '@/ui';
+import {
+  Card,
+  PickerSheet,
+  PressableScale,
+  QueryState,
+  RangeChips,
+  StatCard,
+  StateView,
+  Text,
+  useHostRefresh,
+  type ScrollHost,
+  SwitchRow,
+  HeaderRight,
+} from '@/ui';
 
 import { useStockCheck } from '../hooks';
 
@@ -44,23 +57,46 @@ export function StockCheckTab({ host }: { host: ScrollHost }) {
                 </Text>
                 {!!material && (
                   <Text variant="caption" color={t.colors.textMuted}>
-                    {[material.drawingNo, material.makeName !== '-NA-' ? material.makeName : null, material.unit].filter(Boolean).join(' · ')}
+                    {[material.drawingNo, material.makeName !== '-NA-' ? material.makeName : null, material.unit]
+                      .filter(Boolean)
+                      .join(' · ')}
                   </Text>
                 )}
               </PressableScale>
-              <RangeChips value={range} onChange={setRange} fyStartDay={fy} nested={host.nestedProps} />
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips} {...host.nestedProps}>
-                <Chip label="Exclude drafts" active={excludeDrafts} onPress={() => setExcludeDrafts((v) => !v)} />
-                <Chip label="Faulty stock" tone="warning" active={faulty} onPress={() => setFaulty((v) => !v)} />
-              </ScrollView>
+              <HeaderRight>
+                <RangeChips value={range} onChange={setRange} fyStartDay={fy} />
+              </HeaderRight>
+              <View style={styles.options}>
+                <SwitchRow
+                  label="Exclude drafts"
+                  detail="Ignore documents not yet approved"
+                  value={excludeDrafts}
+                  onChange={setExcludeDrafts}
+                />
+                <SwitchRow label="Faulty stock only" value={faulty} onChange={setFaulty} />
+              </View>
               {!key ? (
-                <StateView icon="search-outline" title="Check any material's stock" message="Pick a material to see its opening, closing and movements." />
+                <StateView
+                  icon="search-outline"
+                  title="Check any material's stock"
+                  message="Pick a material to see its opening, closing and movements."
+                />
               ) : (
                 <QueryState query={query} skeleton={<View />}>
                   {(d) => (
                     <View style={styles.grid}>
-                      <StatCard label="Opening" value={formatQty(d.opening, material?.unit)} icon="archive-outline" tone="neutral" />
-                      <StatCard label="Closing" value={formatQty(d.closing, material?.unit)} icon="cube-outline" tone="info" />
+                      <StatCard
+                        label="Opening"
+                        value={formatQty(d.opening, material?.unit)}
+                        icon="archive-outline"
+                        tone="neutral"
+                      />
+                      <StatCard
+                        label="Closing"
+                        value={formatQty(d.closing, material?.unit)}
+                        icon="cube-outline"
+                        tone="info"
+                      />
                     </View>
                   )}
                 </QueryState>
@@ -70,18 +106,18 @@ export function StockCheckTab({ host }: { host: ScrollHost }) {
           renderItem={({ item }) => (
             <Card style={styles.move}>
               <View style={styles.flex}>
-                <Text variant="label">{item.docNo || '—'}</Text>
-                <Text variant="caption" color={t.colors.textMuted}>
+                <Text variant="rowTitle">{item.docNo || '—'}</Text>
+                <Text variant="rowMeta" color={t.colors.textMuted}>
                   {formatDate(item.date)}
                 </Text>
               </View>
               {item.receipt > 0 && (
-                <Text variant="label" weight="bold" color={t.colors.success}>
+                <Text variant="rowTitle" weight="bold" color={t.colors.success}>
                   +{formatQty(item.receipt)}
                 </Text>
               )}
               {item.issue > 0 && (
-                <Text variant="label" weight="bold" color={t.colors.danger}>
+                <Text variant="rowTitle" weight="bold" color={t.colors.danger}>
                   −{formatQty(item.issue)}
                 </Text>
               )}
@@ -89,7 +125,15 @@ export function StockCheckTab({ host }: { host: ScrollHost }) {
           )}
         />,
       )}
-      <PickerSheet visible={picking} title="Material" items={items} selectedId={key} allowClear={false} onSelect={(i) => i && setKey(i.id)} onClose={() => setPicking(false)} />
+      <PickerSheet
+        visible={picking}
+        title="Material"
+        items={items}
+        selectedId={key}
+        allowClear={false}
+        onSelect={(i) => i && setKey(i.id)}
+        onClose={() => setPicking(false)}
+      />
     </>
   );
 }
@@ -97,9 +141,17 @@ export function StockCheckTab({ host }: { host: ScrollHost }) {
 const useStyles = makeStyles((t) => ({
   pad: { padding: t.space.gutter, paddingTop: 8, paddingBottom: 48 },
   head: { gap: 12, marginBottom: 14 },
-  picker: { minHeight: 56, borderRadius: t.radius.md, backgroundColor: t.colors.surface, justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 8, ...t.shadow.card },
-  chips: { gap: 8 },
+  picker: {
+    minHeight: 56,
+    borderRadius: t.radius.md,
+    backgroundColor: t.colors.surface,
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    ...t.shadow.card,
+  },
+  options: { backgroundColor: t.colors.surface, borderRadius: t.radius.md, paddingHorizontal: 14, paddingVertical: 4 },
   grid: { flexDirection: 'row', gap: 12 },
-  move: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10, padding: 14 },
+  move: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10, paddingVertical: 16, paddingHorizontal: 16 },
   flex: { flex: 1, gap: 2 },
 }));

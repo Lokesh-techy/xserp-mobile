@@ -22,14 +22,23 @@ export function usePartyItems(): PickerItem[] {
 export function useMaterialItems(): PickerItem[] {
   const rows = useMaterials();
   return useMemo(
-    () => rows.map((m) => ({ id: materialKey(m.itemId, m.makeId), label: m.name, sublabel: [m.drawingNo, m.makeName !== '-NA-' ? m.makeName : null, m.unit].filter(Boolean).join(' · ') })),
+    () =>
+      rows.map((m) => ({
+        id: materialKey(m.itemId, m.makeId),
+        label: m.name,
+        sublabel: [m.drawingNo, m.makeName !== '-NA-' ? m.makeName : null].filter(Boolean).join(' · ') || undefined,
+        trailing: m.unit || undefined,
+      })),
     [rows],
   );
 }
 
 export function useLedgerItems(filter?: (l: LedgerName) => boolean): PickerItem[] {
   const rows = useLedgers();
-  return useMemo(() => (filter ? rows.filter(filter) : rows).map((l) => ({ id: l.id, label: l.name, sublabel: l.group })), [rows, filter]);
+  return useMemo(
+    () => (filter ? rows.filter(filter) : rows).map((l) => ({ id: l.id, label: l.name, sublabel: l.group })),
+    [rows, filter],
+  );
 }
 
 export function useProjectItems(): PickerItem[] {

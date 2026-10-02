@@ -1,12 +1,13 @@
 /** @author Lokesh */
 import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useContext, useState } from 'react';
 import { ScrollView, View, type LayoutRectangle } from 'react-native';
 import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 
 import { makeStyles, springs, useTheme } from '@/core/theme';
 
 import { Badge } from './badge';
+import { TabsWidthContext } from './header-slot';
 import { PressableScale } from './pressable-scale';
 import { Text } from './text';
 
@@ -24,6 +25,7 @@ export function SegmentedTabs<K extends string>({
 }) {
   const t = useTheme();
   const styles = useStyles();
+  const reportWidth = useContext(TabsWidthContext);
   const [layouts, setLayouts] = useState<Partial<Record<K, LayoutRectangle>>>({});
   const active = layouts[value];
   const indicator = useAnimatedStyle(() => ({
@@ -32,7 +34,11 @@ export function SegmentedTabs<K extends string>({
     width: withSpring(active?.width ?? 0, springs.snappy),
   }));
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.row}
+      onContentSizeChange={(w) => reportWidth?.(Math.ceil(w))}>
       {tabs.map((tab) => {
         const on = tab.key === value;
         return (

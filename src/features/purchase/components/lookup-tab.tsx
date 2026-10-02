@@ -1,6 +1,5 @@
 /** @author Lokesh */
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { useFocusRefetch } from '@/core/query';
@@ -8,7 +7,20 @@ import { makeStyles, useTheme } from '@/core/theme';
 import { filterItems, normalize, type DateRange } from '@/core/utils';
 import { ApprovalCard, openPager } from '@/features/approvals/engine';
 import { useMaterialItems, usePartyItems, useProjectItems, useProjects } from '@/features/master-data';
-import { countActiveFilters, FilterSheet, QueryState, Text, useHostRefresh, type FilterField, type FilterValues, type ScrollHost, pullable, MenuButton, useScreenSearch } from '@/ui';
+import {
+  countActiveFilters,
+  FilterSheet,
+  QueryState,
+  Text,
+  useHostRefresh,
+  type FilterField,
+  type FilterValues,
+  type ScrollHost,
+  pullable,
+  MenuButton,
+  useScreenSearch,
+  HeaderRight,
+} from '@/ui';
 
 import { DEFAULT_PO_FILTERS, type PoFilters } from '../api';
 import { poApproval } from '../approvals';
@@ -25,7 +37,13 @@ const LOCAL = [
 
 type Props = { host: ScrollHost; filterOpen: boolean; onFilterClose: () => void; onFilterCount: (n: number) => void };
 
-const toValues = (f: PoFilters): FilterValues => ({ range: f.range, status: f.status, supplierId: f.supplierId, projectId: null, itemKey: f.itemId });
+const toValues = (f: PoFilters): FilterValues => ({
+  range: f.range,
+  status: f.status,
+  supplierId: f.supplierId,
+  projectId: null,
+  itemKey: f.itemId,
+});
 
 export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Props) {
   const t = useTheme();
@@ -55,7 +73,10 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
     [parties, projects, materials],
   );
 
-  useEffect(() => onFilterCount(countActiveFilters(fields, values, defaults)), [fields, values, defaults, onFilterCount]);
+  useEffect(
+    () => onFilterCount(countActiveFilters(fields, values, defaults)),
+    [fields, values, defaults, onFilterCount],
+  );
 
   const apply = (v: FilterValues) => {
     setValues(v);
@@ -80,7 +101,24 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
 
   return (
     <>
-      <QueryState query={query} wrap={(n) => pullable(host, n)} isEmpty={(d) => d.length === 0} empty={{ icon: 'search-outline', title: 'No purchase orders', message: 'No purchase orders match these filters.' }}>
+      <HeaderRight>
+        <MenuButton
+          title="Delivery"
+          icon="cube-outline"
+          options={[{ key: 'any', label: 'Any delivery status', short: 'Delivery' }, ...LOCAL]}
+          value={local ?? 'any'}
+          onChange={(k) => setLocal(k === 'any' ? null : k)}
+        />
+      </HeaderRight>
+      <QueryState
+        query={query}
+        wrap={(n) => pullable(host, n)}
+        isEmpty={(d) => d.length === 0}
+        empty={{
+          icon: 'search-outline',
+          title: 'No purchase orders',
+          message: 'No purchase orders match these filters.',
+        }}>
         {() =>
           host.attach(
             <Animated.FlatList
@@ -90,25 +128,30 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
               contentContainerStyle={[styles.pad, styles.grow]}
               initialNumToRender={8}
               windowSize={7}
-              ListHeaderComponent={
-                <View style={styles.head}>
-                  <MenuButton title="Delivery" icon="cube-outline" options={[{ key: 'any', label: 'Any delivery status' }, ...LOCAL]} value={local ?? 'any'} onChange={(k) => setLocal(k === 'any' ? null : k)} />
-                  <Text variant="caption" color={t.colors.textMuted}>
-                    {visible.length} of {all.length}
-                  </Text>
-                </View>
-              }
               ListFooterComponent={
                 <Text variant="caption" color={t.colors.textMuted} style={styles.footer}>
                   {visible.length} of {all.length} orders
                 </Text>
               }
-              renderItem={({ item }) => <ApprovalCard summary={poApproval.summary(item)} tint={t.tints.purchase} onPress={() => openPager(poApproval, visible, item.id)} />}
+              renderItem={({ item }) => (
+                <ApprovalCard
+                  summary={poApproval.summary(item)}
+                  tint={t.tints.purchase}
+                  onPress={() => openPager(poApproval, visible, item.id)}
+                />
+              )}
             />,
           )
         }
       </QueryState>
-      <FilterSheet visible={filterOpen} onClose={onFilterClose} fields={fields} value={values} defaults={defaults} onApply={apply} />
+      <FilterSheet
+        visible={filterOpen}
+        onClose={onFilterClose}
+        fields={fields}
+        value={values}
+        defaults={defaults}
+        onApply={apply}
+      />
     </>
   );
 }
@@ -116,6 +159,5 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
 const useStyles = makeStyles((t) => ({
   pad: { padding: t.space.gutter, paddingBottom: 48 },
   grow: { flexGrow: 1 },
-  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   footer: { textAlign: 'center', marginTop: 8 },
 }));
