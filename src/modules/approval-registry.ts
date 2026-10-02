@@ -5,10 +5,11 @@ import type { Href } from 'expo-router';
 import { useSessionStore } from '@/core/auth';
 import { can } from '@/core/permissions';
 import { POLL_MS } from '@/core/query';
-import type { AnyApproval, ApprovalType } from '@/features/approvals/engine';
+import { erase, type AnyApproval, type ApprovalType } from '@/features/approvals/engine';
+import { poApproval } from '@/features/purchase';
 
 // Each module task adds its config here, e.g. `po: erase(poApproval)`.
-export const APPROVALS: Partial<Record<ApprovalType, AnyApproval>> = {};
+export const APPROVALS: Partial<Record<ApprovalType, AnyApproval>> = { po: erase(poApproval) };
 
 const HREF: Record<ApprovalType, Href> = {
   po: '/purchase?tab=pending',

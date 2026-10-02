@@ -1,6 +1,2 @@
 /** @author Lokesh */
-import { PendingModuleScreen } from '@/features/home';
-
-export default function Screen() {
-  return <PendingModuleScreen title="Purchase" />;
-}
+export { PurchaseScreen as default } from '@/features/purchase';

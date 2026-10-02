@@ -1,0 +1,1 @@
+{"response_code":200,"po_list":[{"po_id":31,"po_code":"","drafted_on":"2026-09-29 11:20:00","approved_on":null,"supplier_name":"Acme Ltd","supplier":{"id":12,"code":"P001","name":"Acme Ltd"},"project_code":"PRJ1","project_name":"Solar Plant","po_value":"12500.00","currency_symbol":"₹","quantity":10,"unit":"Nos","status":0,"po_type":0}]}

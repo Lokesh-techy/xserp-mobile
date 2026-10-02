@@ -1,11 +1,12 @@
 /** @author Lokesh */
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
 import { useSession } from '@/core/auth';
 import { makeStyles, useTheme } from '@/core/theme';
 import { formatDate, formatMoney } from '@/core/utils';
-import { Card, DocumentButton, Section, StatusPill, Text } from '@/ui';
+import { BottomSheet, Card, DocumentButton, Section, StatusPill, Text } from '@/ui';
 
 import { LineItemsCard } from './line-items-card';
 import type { ApprovalConfig } from './types';
@@ -22,6 +23,8 @@ export function ApprovalPage<T, D>({ config, item, active, width }: { config: Ap
     enabled: !!config.detail && active,
   });
   const lines = config.lines?.(item, detail.data) ?? [];
+  const [line, setLine] = useState<string | null>(null);
+  const LineSheet = config.lineSheet;
   return (
     <ScrollView style={{ width }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <Card tint={t.tints[config.tint]} style={styles.hero}>
@@ -53,7 +56,7 @@ export function ApprovalPage<T, D>({ config, item, active, width }: { config: Ap
           ))}
         </View>
       </Card>
-      {config.lines && <LineItemsCard lines={lines} loading={detail.isPending && !!config.detail} />}
+      {config.lines && <LineItemsCard lines={lines} loading={detail.isPending && !!config.detail} onPress={LineSheet ? setLine : undefined} />}
       {config.sections
         ?.filter((sec) => sec.visible?.(item, { session }) ?? true)
         .map((sec) => (
@@ -61,6 +64,11 @@ export function ApprovalPage<T, D>({ config, item, active, width }: { config: Ap
             <sec.Component item={item} detail={detail.data} />
           </Section>
         ))}
+      {LineSheet && (
+        <BottomSheet visible={!!line} onClose={() => setLine(null)} title="Material">
+          {line && <LineSheet item={item} lineKey={line} detail={detail.data} />}
+        </BottomSheet>
+      )}
       {config.document && (
         <View style={styles.doc}>
           <DocumentButton request={config.document(item)} />

@@ -58,6 +58,8 @@ export type ApprovalConfig<T, D = undefined> = {
   detail?: (item: T) => Promise<D>;
   lines?: (item: T, detail: D | undefined) => LineItem[];
   sections?: ApprovalSection<T, D>[];
+  /** When set, line items are tappable and open this component in a bottom sheet. */
+  lineSheet?: ComponentType<{ item: T; lineKey: string; detail: D | undefined }>;
   document?: (item: T) => DocumentRequest;
   actions: ApprovalAction<T>[];
   invalidate?: readonly (readonly unknown[])[];
