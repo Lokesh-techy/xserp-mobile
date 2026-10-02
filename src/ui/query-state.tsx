@@ -1,6 +1,6 @@
 /** @author Lokesh */
 import type { UseQueryResult } from '@tanstack/react-query';
-import type { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 
 import { errorMessage, isApiError } from '@/core/api';
@@ -15,14 +15,16 @@ type Props<T> = {
   empty?: { icon?: IconName; title: string; message?: string };
   skeleton?: ReactNode;
   children: (data: T) => ReactNode;
+  /** On list screens: keeps loading/empty/error states pull-to-refresh-able. */
+  wrap?: (node: ReactNode) => ReactElement;
 };
 
 /** Loading → skeleton, error → retry card, empty → friendly state, else children(data). */
-export function QueryState<T>({ query, isEmpty, empty, skeleton, children }: Props<T>) {
-  if (query.status === 'pending') return <>{skeleton ?? <ListSkeleton rows={4} />}</>;
+export function QueryState<T>({ query, isEmpty, empty, skeleton, children, wrap = (n) => <>{n}</> }: Props<T>) {
+  if (query.status === 'pending') return wrap(skeleton ?? <ListSkeleton rows={4} />);
   if (query.status === 'error') {
     const offline = isApiError(query.error) && query.error.kind === 'network';
-    return (
+    return wrap(
       <Centered>
         <StateView
           icon={offline ? 'cloud-offline-outline' : 'alert-circle-outline'}
@@ -30,7 +32,7 @@ export function QueryState<T>({ query, isEmpty, empty, skeleton, children }: Pro
           message={errorMessage(query.error)}
           action={{ label: 'Try again', onPress: () => void query.refetch() }}
         />
-      </Centered>
+      </Centered>,
     );
   }
   if (isEmpty?.(query.data)) {

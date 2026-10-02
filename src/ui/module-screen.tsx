@@ -1,6 +1,7 @@
 /** @author Lokesh */
 import { createContext, useCallback, useContext, useEffect, useRef, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { makeStyles } from '@/core/theme';
 
@@ -40,3 +41,12 @@ export function useHostRefresh(_host: ScrollHost, fn: () => Promise<unknown>) {
 }
 
 const useStyles = makeStyles((t) => ({ root: { flex: 1, backgroundColor: t.colors.bg }, body: { flex: 1 } }));
+
+/** Wraps a non-list state (loading, empty, error) so it can still be pulled to refresh. */
+export function pullable(host: ScrollHost, node: ReactNode): ReactElement {
+  return host.attach(
+    <Animated.ScrollView {...host.scrollProps} contentContainerStyle={{ flexGrow: 1, padding: 18 }}>
+      {node}
+    </Animated.ScrollView>,
+  );
+}

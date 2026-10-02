@@ -5,10 +5,9 @@ import { View } from 'react-native';
 
 import { makeStyles, useTheme } from '@/core/theme';
 import { useLedgerItems, usePartyItems, useProjectItems, type LedgerName } from '@/features/master-data';
-import { Chip, DateField, Input, Text } from '@/ui';
+import { Chip, DateField, Input, SelectField, Text } from '@/ui';
 
 import { fetchFrequentPicks, fetchLastUsedDetails } from './api';
-import { PickField } from './pick-field';
 import { INVOICE_TYPES, type InvoiceForm } from './schema';
 
 const salesLedger = (l: LedgerName) => /sales/i.test(l.group) || /sales/i.test(l.name);
@@ -57,13 +56,30 @@ export function PartyStep() {
           </View>
         )}
       />
-      <Controller control={control} name="partyId" render={({ field }) => <PickField label="Customer" items={first(frequent.data?.partyIds, parties)} value={field.value} onChange={(id) => void pickParty(id)} error={e.partyId?.message} />} />
-      <Controller control={control} name="projectId" render={({ field }) => <PickField label="Project" items={first(frequent.data?.projectIds, projects)} value={field.value} onChange={field.onChange} error={e.projectId?.message} />} />
-      <Controller control={control} name="saleAccountId" render={({ field }) => <PickField label="Sales account" items={accounts} value={field.value} onChange={field.onChange} error={e.saleAccountId?.message} />} />
-      <Controller control={control} name="poNo" render={({ field }) => <Input label="Customer PO no." icon="document-outline" value={field.value} onChangeText={field.onChange} />} />
-      <Controller control={control} name="poDate" render={({ field }) => <DateField label="Customer PO date" value={field.value ?? new Date()} onChange={field.onChange} />} />
-      <Controller control={control} name="gstin" render={({ field }) => <Input label="GSTIN" icon="shield-outline" autoCapitalize="characters" value={field.value} onChangeText={field.onChange} />} />
+      <Controller
+        control={control}
+        name="partyId"
+        render={({ field }) => (
+          <SelectField label="Customer" required items={first(frequent.data?.partyIds, parties)} value={field.value} onChange={(id) => (id ? void pickParty(id) : setValue('partyId', '', { shouldValidate: true, shouldDirty: true }))} error={e.partyId?.message} />
+        )}
+      />
+      <Controller control={control} name="projectId" render={({ field }) => <SelectField label="Project" required items={first(frequent.data?.projectIds, projects)} value={field.value} onChange={field.onChange} error={e.projectId?.message} />} />
+      <Controller control={control} name="saleAccountId" render={({ field }) => <SelectField label="Sales account" required items={accounts} value={field.value} onChange={field.onChange} error={e.saleAccountId?.message} />} />
+      <Controller control={control} name="poNo" render={({ field }) => <Input label="Customer PO no." icon="document-outline" value={field.value} onChangeText={field.onChange} autoCapitalize="characters" />} />
+      <Controller control={control} name="poDate" render={({ field }) => <DateField label="Customer PO date" value={field.value ?? new Date()} maximumDate={new Date()} onChange={field.onChange} />} />
+      <Controller
+        control={control}
+        name="gstin"
+        render={({ field }) => (
+          <Input label="GSTIN" icon="shield-outline" autoCapitalize="characters" maxLength={15} value={field.value} onChangeText={(v) => field.onChange(v.toUpperCase())} onBlur={field.onBlur} error={e.gstin?.message} />
+        )}
+      />
       <Controller control={control} name="deliverTo" render={({ field }) => <Input label="Deliver to" icon="location-outline" multiline value={field.value} onChangeText={field.onChange} />} />
+      {e.poDate?.message && (
+        <Text variant="caption" color={t.colors.danger}>
+          {e.poDate.message}
+        </Text>
+      )}
     </View>
   );
 }

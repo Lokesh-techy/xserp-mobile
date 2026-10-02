@@ -1,4 +1,5 @@
 /** @author Lokesh */
+require('react-native-gesture-handler/jestSetup');
 // In-memory replacements for native storage so core logic is testable in Node.
 const mockKvMemory = new Map<string, string>();
 jest.mock('expo-sqlite/kv-store', () => ({

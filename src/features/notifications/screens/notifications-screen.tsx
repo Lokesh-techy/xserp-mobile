@@ -7,7 +7,7 @@ import Animated from 'react-native-reanimated';
 
 import { makeStyles, useTheme } from '@/core/theme';
 import { formatDate } from '@/core/utils';
-import { ModuleScreen, PressableScale, QueryState, Text, useHostRefresh, type ScrollHost } from '@/ui';
+import { ModuleScreen, PressableScale, QueryState, Text, useHostRefresh, type ScrollHost, pullable } from '@/ui';
 
 import { groupByDay, type AppNotification } from '../api';
 import { useDeleteNotifications, useMarkRead, useNotifications } from '../hooks';
@@ -38,7 +38,7 @@ function Body({ host }: { host: ScrollHost }) {
   useHostRefresh(host, useCallback(() => query.refetch(), [query]));
   const rows = useMemo<Row[]>(() => groupByDay(query.data ?? []).flatMap((g) => [{ kind: 'header' as const, title: g.title }, ...g.data.map((item) => ({ kind: 'item' as const, item }))]), [query.data]);
   return (
-    <QueryState query={query} isEmpty={(d) => d.length === 0} empty={{ icon: 'notifications-off-outline', title: 'No notifications', message: "You're all caught up." }}>
+    <QueryState query={query} wrap={(n) => pullable(host, n)} isEmpty={(d) => d.length === 0} empty={{ icon: 'notifications-off-outline', title: 'No notifications', message: "You're all caught up." }}>
       {() =>
         host.attach(
           <Animated.FlatList

@@ -7,7 +7,7 @@ import Animated from 'react-native-reanimated';
 
 import { makeStyles, useTheme } from '@/core/theme';
 import { filterItems, formatMoney } from '@/core/utils';
-import { Card, ModuleScreen, QueryState, SearchField, StateView, Text, useHostRefresh, type ScrollHost } from '@/ui';
+import { Card, ModuleScreen, QueryState, SearchField, StateView, Text, useHostRefresh, type ScrollHost, pullable } from '@/ui';
 
 import { fetchBucketLedgers } from '../api';
 import { bucketFromParam } from '../buckets';
@@ -34,7 +34,7 @@ function Body({ host, param }: { host: ScrollHost; param: string }) {
   useHostRefresh(host, useCallback(() => query.refetch(), [query]));
   const rows = useMemo(() => filterItems(query.data ?? [], search, (l) => [l.name, l.group_name]), [query.data, search]);
   return (
-    <QueryState query={query} isEmpty={(d) => d.length === 0} empty={{ icon: 'checkmark-circle-outline', title: 'Nothing in this bucket' }}>
+    <QueryState query={query} wrap={(n) => pullable(host, n)} isEmpty={(d) => d.length === 0} empty={{ icon: 'checkmark-circle-outline', title: 'Nothing in this bucket' }}>
       {() =>
         host.attach(
           <Animated.FlatList

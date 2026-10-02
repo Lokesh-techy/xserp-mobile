@@ -11,9 +11,9 @@ import { tapFeedback } from '@/core/utils';
 import type { IconName } from './button';
 import { Text } from './text';
 
-type Props = TextInputProps & { label: string; icon: IconName; secure?: boolean; error?: string | null };
+type Props = TextInputProps & { label: string; icon: IconName; secure?: boolean; error?: string | null; required?: boolean };
 
-export const Input = forwardRef<TextInput, Props>(function Input({ label, icon, secure, error, onFocus, onBlur, onChangeText, ...rest }, ref) {
+export const Input = forwardRef<TextInput, Props>(function Input({ label, icon, secure, error, required, onFocus, onBlur, onChangeText, ...rest }, ref) {
   const t = useTheme();
   const styles = useStyles();
   const focus = useSharedValue(0);
@@ -32,6 +32,7 @@ export const Input = forwardRef<TextInput, Props>(function Input({ label, icon, 
     <View style={styles.root}>
       <Text variant="label" color={t.colors.textMuted}>
         {label}
+        {required && <Text variant="label" color={t.colors.danger}> ✱</Text>}
       </Text>
       <Animated.View style={[styles.box, boxStyle]}>
         <Ionicons name={icon} size={18} color={focused ? t.colors.onPrimarySoft : t.colors.textFaint} />

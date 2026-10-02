@@ -1,4 +1,5 @@
 /** @author Lokesh */
+import { useState } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import { View } from 'react-native';
 
@@ -34,9 +35,7 @@ export function ChargesStep() {
           key={c.key}
           control={control}
           name={c.key}
-          render={({ field }) => (
-            <Input label={c.label} icon={c.icon} keyboardType="decimal-pad" value={field.value ? String(field.value) : ''} onChangeText={(s) => field.onChange(Number(s.replace(/,/g, '')) || 0)} />
-          )}
+          render={({ field, fieldState }) => <MoneyInput label={c.label} icon={c.icon} value={field.value} onChange={field.onChange} error={fieldState.error?.message} />}
         />
       ))}
       <TextFields fields={CHARGE_TEXT} />
@@ -50,6 +49,25 @@ export function TransportStep() {
     <View style={styles.root}>
       <TextFields fields={TRANSPORT} />
     </View>
+  );
+}
+
+/** Keeps the typed text (so "150." and "0.5" can be entered) and reports a number to the form. */
+function MoneyInput({ label, icon, value, onChange, error }: { label: string; icon: IconName; value: number; onChange: (n: number) => void; error?: string }) {
+  const [text, setText] = useState(value ? String(value) : '');
+  return (
+    <Input
+      label={label}
+      icon={icon}
+      keyboardType="decimal-pad"
+      value={text}
+      error={error ?? (text && !Number.isFinite(Number(text.replace(/,/g, ''))) ? 'Enter a number' : undefined)}
+      onChangeText={(v) => {
+        setText(v);
+        const n = Number(v.replace(/,/g, ''));
+        onChange(v.trim() === '' ? 0 : Number.isFinite(n) ? n : value);
+      }}
+    />
   );
 }
 

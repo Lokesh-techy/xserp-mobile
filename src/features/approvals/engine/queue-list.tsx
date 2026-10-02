@@ -6,7 +6,7 @@ import Animated from 'react-native-reanimated';
 import { useFocusRefetch } from '@/core/query';
 import { makeStyles, useTheme } from '@/core/theme';
 import { filterItems } from '@/core/utils';
-import { Chip, ListSkeleton, QueryState, SearchField, useHostRefresh, type ScrollHost } from '@/ui';
+import { Chip, ListSkeleton, QueryState, SearchField, useHostRefresh, type ScrollHost, pullable } from '@/ui';
 
 import { ApprovalCard } from './approval-card';
 import { openPager } from './pager-store';
@@ -32,7 +32,7 @@ export function QueueList<T, D>({ config, host, sorts }: { config: ApprovalConfi
   }, [query.data, search, config, sorts, sortKey]);
 
   return (
-    <QueryState query={query} skeleton={<View style={styles.pad}><ListSkeleton /></View>} isEmpty={(d) => d.length === 0} empty={{ icon: 'checkmark-done-outline', title: 'All caught up', message: `No ${config.title.toLowerCase()} are waiting for you.` }}>
+    <QueryState query={query} wrap={(n) => pullable(host, n)} skeleton={<View style={styles.pad}><ListSkeleton /></View>} isEmpty={(d) => d.length === 0} empty={{ icon: 'checkmark-done-outline', title: 'All caught up', message: `No ${config.title.toLowerCase()} are waiting for you.` }}>
       {() =>
         host.attach(
           <Animated.FlatList

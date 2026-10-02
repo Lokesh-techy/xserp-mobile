@@ -8,7 +8,7 @@ import { makeStyles, useTheme } from '@/core/theme';
 import { filterItems, normalize, type DateRange } from '@/core/utils';
 import { ApprovalCard, openPager } from '@/features/approvals/engine';
 import { useMaterialItems, usePartyItems, useProjectItems, useProjects } from '@/features/master-data';
-import { Chip, countActiveFilters, FilterSheet, QueryState, SearchField, Text, useHostRefresh, type FilterField, type FilterValues, type ScrollHost } from '@/ui';
+import { Chip, countActiveFilters, FilterSheet, QueryState, SearchField, Text, useHostRefresh, type FilterField, type FilterValues, type ScrollHost, pullable } from '@/ui';
 
 import { DEFAULT_PO_FILTERS, type PoFilters } from '../api';
 import { poApproval } from '../approvals';
@@ -80,7 +80,7 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
 
   return (
     <>
-      <QueryState query={query} isEmpty={(d) => d.length === 0} empty={{ icon: 'search-outline', title: 'No purchase orders', message: 'No purchase orders match these filters.' }}>
+      <QueryState query={query} wrap={(n) => pullable(host, n)} isEmpty={(d) => d.length === 0} empty={{ icon: 'search-outline', title: 'No purchase orders', message: 'No purchase orders match these filters.' }}>
         {() =>
           host.attach(
             <Animated.FlatList

@@ -2,58 +2,107 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { makeStyles, useTheme } from '@/core/theme';
 import { formatMoney, formatQty } from '@/core/utils';
-import { Button, Card, StateView, Text } from '@/ui';
+import { useMaterialItems, useMaterials } from '@/features/master-data';
+import { Button, PickerSheet, PressableScale, StateView, Text, toast } from '@/ui';
 
-import { AddMaterialSheet } from './add-material-sheet';
-import type { InvoiceForm } from './schema';
+import { fetchPartyRate } from './api';
+import { ItemEditorSheet } from './item-editor-sheet';
+import type { InvoiceForm, InvoiceItem } from './schema';
 
+const lineValue = (i: InvoiceItem) => i.quantity * i.rate * (1 - i.discount / 100);
+
+/** Pick several materials at once (party rates fill in), then tap any line to edit or remove it. */
 export function ItemsStep() {
   const t = useTheme();
   const styles = useStyles();
   const { control, formState, trigger } = useFormContext<InvoiceForm>();
-  const { fields, append, remove } = useFieldArray({ control, name: 'items' });
+  const { fields, append, update, remove } = useFieldArray({ control, name: 'items' });
   const partyId = useWatch({ control, name: 'partyId' });
+  const materials = useMaterials();
+  const materialItems = useMaterialItems();
+  const [picking, setPicking] = useState(false);
+  const [editing, setEditing] = useState<number | null>(null);
   const [adding, setAdding] = useState(false);
+
+  const addMany = async (ids: string[]) => {
+    const existing = new Set(fields.map((f) => `${f.itemId}:${f.makeId}`));
+    const fresh = ids.filter((id) => !existing.has(id));
+    if (fresh.length < ids.length) toast.show({ message: `${ids.length - fresh.length} already on this invoice — skipped`, tone: 'info' });
+    if (!fresh.length) return;
+    setAdding(true);
+    const rows = await Promise.all(
+      fresh.map(async (key) => {
+        const m = materials.find((x) => `${x.itemId}:${x.makeId}` === key);
+        if (!m) return null;
+        const rate = partyId ? await fetchPartyRate(partyId, m.itemId, m.makeId).catch(() => ({ rate: 0, discount: 0 })) : { rate: 0, discount: 0 };
+        return { itemId: m.itemId, makeId: m.makeId, name: m.name, unit: m.unit, hsnCode: m.hsnCode, quantity: 1, rate: rate.rate, discount: rate.discount, taxCodes: [] } satisfies InvoiceItem;
+      }),
+    );
+    rows.forEach((r) => r && append(r));
+    setAdding(false);
+    void trigger('items');
+    toast.show({ message: `${fresh.length} item${fresh.length === 1 ? '' : 's'} added — tap a line to set quantity and taxes`, tone: 'success' });
+  };
+
+  const total = fields.reduce((n, f) => n + lineValue(f), 0);
   return (
     <View style={styles.root}>
       {fields.length === 0 ? (
-        <StateView icon="cube-outline" title="No items yet" message={formState.errors.items?.message ?? 'Add the materials you are invoicing.'} />
+        <StateView icon="cube-outline" title="No items yet" message={formState.errors.items?.message ?? 'Pick one or more materials to invoice.'} />
       ) : (
-        fields.map((f, i) => (
-          <Card key={f.id} style={styles.card}>
-            <View style={styles.flex}>
-              <Text variant="label">{f.name}</Text>
-              <Text variant="caption" color={t.colors.textMuted}>
-                {formatQty(f.quantity, f.unit)} × {formatMoney(f.rate)}
-                {f.discount ? ` · ${f.discount}% off` : ''}
-                {f.taxCodes.length ? ` · ${f.taxCodes.join(', ')}` : ''}
-              </Text>
-            </View>
-            <Text variant="label" weight="bold">
-              {formatMoney(f.quantity * f.rate * (1 - f.discount / 100))}
+        <View style={styles.list}>
+          {fields.map((f, i) => {
+            const bad = !!formState.errors.items?.[i];
+            return (
+              <PressableScale key={f.id} onPress={() => setEditing(i)} style={[styles.line, i > 0 && styles.divider, bad && styles.bad]} scaleTo={0.99} accessibilityLabel={`Edit ${f.name}`}>
+                <View style={styles.flex}>
+                  <Text variant="label" numberOfLines={1}>
+                    {f.name}
+                  </Text>
+                  <Text variant="caption" color={bad ? t.colors.danger : t.colors.textMuted} numberOfLines={1}>
+                    {bad ? 'Check quantity and rate' : `${formatQty(f.quantity, f.unit)} × ${formatMoney(f.rate)}${f.discount ? ` · ${f.discount}% off` : ''}${f.taxCodes.length ? ` · ${f.taxCodes.join(', ')}` : ''}`}
+                  </Text>
+                </View>
+                <Text variant="label" weight="bold" style={styles.amount}>
+                  {formatMoney(lineValue(f))}
+                </Text>
+                <Ionicons name="create-outline" size={18} color={t.colors.textFaint} />
+              </PressableScale>
+            );
+          })}
+          <View style={[styles.line, styles.divider]}>
+            <Text variant="label" color={t.colors.textMuted} style={styles.flex}>
+              {fields.length} item{fields.length === 1 ? '' : 's'}
             </Text>
-            <Pressable hitSlop={10} onPress={() => remove(i)} accessibilityLabel={`Remove ${f.name}`}>
-              <Ionicons name="trash-outline" size={18} color={t.colors.danger} />
-            </Pressable>
-          </Card>
-        ))
+            <Text variant="heading">{formatMoney(total)}</Text>
+          </View>
+        </View>
       )}
-      <Button title="Add item" icon="add-circle-outline" variant="ghost" onPress={() => setAdding(true)} />
-      <AddMaterialSheet
-        visible={adding}
-        partyId={partyId}
-        onClose={() => setAdding(false)}
-        onAdd={(item) => {
-          append(item);
+      <Button title={adding ? 'Adding' : fields.length ? 'Add more items' : 'Add items'} icon="add-circle-outline" variant="ghost" loading={adding} onPress={() => setPicking(true)} />
+      <PickerSheet multiple visible={picking} title="Materials" items={materialItems} confirmLabel={(n) => (n ? `Add ${n} item${n === 1 ? '' : 's'}` : 'Select materials')} onConfirm={(items) => void addMany(items.map((i) => i.id))} onClose={() => setPicking(false)} />
+      <ItemEditorSheet
+        item={editing === null ? null : (fields[editing] ?? null)}
+        onClose={() => setEditing(null)}
+        onSave={(item) => {
+          if (editing !== null) update(editing, item);
           void trigger('items');
         }}
+        onRemove={() => editing !== null && remove(editing)}
       />
     </View>
   );
 }
 
-const useStyles = makeStyles(() => ({ root: { gap: 12 }, card: { flexDirection: 'row', alignItems: 'center', gap: 12 }, flex: { flex: 1, gap: 2 } }));
+const useStyles = makeStyles((t) => ({
+  root: { gap: 12 },
+  list: { backgroundColor: t.colors.surface, borderRadius: t.radius.lg, paddingHorizontal: 14, ...t.shadow.card },
+  line: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12 },
+  divider: { borderTopWidth: 1, borderTopColor: t.colors.divider },
+  bad: { backgroundColor: t.colors.dangerSoft, marginHorizontal: -14, paddingHorizontal: 14 },
+  flex: { flex: 1, gap: 2 },
+  amount: { fontVariant: ['tabular-nums'] },
+}));

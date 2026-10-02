@@ -17,10 +17,12 @@ type Props = {
   onClose: () => void;
   title?: string;
   children: ReactNode;
+  /** Pinned under the content (e.g. Apply/Reset) — always visible and tappable, never scrolled away. */
+  footer?: ReactNode;
   maxHeightRatio?: number;
 };
 
-export function BottomSheet({ visible, onClose, title, children, maxHeightRatio = 0.88 }: Props) {
+export function BottomSheet({ visible, onClose, title, children, footer, maxHeightRatio = 0.88 }: Props) {
   const styles = useStyles();
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -96,7 +98,9 @@ export function BottomSheet({ visible, onClose, title, children, maxHeightRatio 
               )}
             </View>
           </GestureDetector>
-          {children}
+          {/* Content shrinks to fit so nothing renders outside the sheet (where taps are ignored). */}
+          <View style={styles.content}>{children}</View>
+          {footer && <View style={styles.footer}>{footer}</View>}
         </Animated.View>
       </GestureHandlerRootView>
     </Modal>
@@ -116,6 +120,8 @@ const useStyles = makeStyles((t) => ({
     borderTopRightRadius: t.radius.xl,
   },
   handleArea: { paddingTop: 10, paddingBottom: 8 },
+  content: { flexShrink: 1 },
+  footer: { paddingHorizontal: 20, paddingTop: 12, borderTopWidth: 1, borderTopColor: t.colors.divider },
   handle: { alignSelf: 'center', width: 44, height: 5, borderRadius: 3, backgroundColor: t.colors.handle },
   title: { paddingHorizontal: 20, paddingTop: 10 },
 }));

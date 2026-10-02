@@ -66,7 +66,23 @@ export function FilterSheet({ visible, onClose, fields, value, defaults, onApply
   const pickerField = fields.find((f): f is Extract<FilterField, { kind: 'picker' }> => f.kind === 'picker' && f.key === picking);
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} title="Filters">
+    <BottomSheet
+      visible={visible}
+      onClose={onClose}
+      title="Filters"
+      footer={
+        <View style={styles.actions}>
+          <Button title="Reset" variant="ghost" onPress={() => setDraft(defaults)} style={styles.flex} />
+          <Button
+            title="Apply"
+            onPress={() => {
+              onApply(draft);
+              onClose();
+            }}
+            style={styles.flex}
+          />
+        </View>
+      }>
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         {fields.map((f) => (
           <View key={f.key} style={styles.group}>
@@ -90,17 +106,6 @@ export function FilterSheet({ visible, onClose, fields, value, defaults, onApply
             )}
           </View>
         ))}
-        <View style={styles.actions}>
-          <Button title="Reset" variant="ghost" onPress={() => setDraft(defaults)} style={styles.flex} />
-          <Button
-            title="Apply"
-            onPress={() => {
-              onApply(draft);
-              onClose();
-            }}
-            style={styles.flex}
-          />
-        </View>
       </ScrollView>
       {pickerField && (
         <PickerSheet
@@ -141,6 +146,6 @@ const useStyles = makeStyles((t) => ({
   rangeRoot: { gap: 12 },
   dates: { flexDirection: 'row', gap: 12 },
   pickerBox: { height: 50, borderRadius: t.radius.md, borderWidth: 1.5, borderColor: t.colors.border, backgroundColor: t.colors.fillSubtle, justifyContent: 'center', paddingHorizontal: 14 },
-  actions: { flexDirection: 'row', gap: 12, marginTop: 4 },
+  actions: { flexDirection: 'row', gap: 12 },
   flex: { flex: 1 },
 }));

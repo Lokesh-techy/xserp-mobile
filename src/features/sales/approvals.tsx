@@ -23,7 +23,7 @@ export const invoiceApproval = defineApproval<Invoice, SalesMaterial[]>({
   type: 'invoice',
   title: 'Invoices',
   noun: 'Invoice',
-  short: 'Invoices',
+  short: 'Invoice',
   permission: 'SALES',
   tint: 'sales',
   queueKey: salesKeys.draftInvoices(),
