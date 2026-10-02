@@ -52,6 +52,6 @@ const useStyles = makeStyles((t) => ({
   root: { flex: 1, backgroundColor: t.colors.bg },
   content: { paddingBottom: 40 },
   body: { paddingHorizontal: t.space.gutter, marginTop: -40, gap: 4 },
-  label: { marginTop: 22, marginBottom: 10 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 14 },
+  label: { marginTop: 24, marginBottom: 14 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -6 },
 }));
