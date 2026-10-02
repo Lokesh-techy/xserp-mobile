@@ -34,7 +34,7 @@ Run against **dev.xserp.in** on an Android phone, once in **light** and once in 
 - [ ] **Stores**: stock statement and charts; indent counts; GRN status and approvals; Stock check for a material, with the Faulty / Exclude drafts toggles.
 - [ ] **Audit**: pending notes with GRN / invoice / note documents; Verify and Return move items into the session's Verified / Returned tabs.
 - [ ] **Masters**: party detail (call, email, copy GSTIN); material detail (prices, stock, price history, BOM, taxes); rate approvals.
-- [ ] **Expenses**: tabs with counts; create a draft, add lines, Save draft, Confirm; an approver sees Approve / Return; an auditor sees Check / Verify.
+- [ ] **Expenses**: tabs with counts; create a draft, add lines, Save draft, Confirm; an approver sees Hold to approve; an auditor sees Check / Verify.
 
 ## Profile & notifications
 - [ ] System / Light / Dark switch the whole app instantly (no restart).
