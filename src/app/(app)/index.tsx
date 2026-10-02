@@ -7,7 +7,7 @@ import { useSessionStore } from '@/core/auth';
 import { approvalTints } from '@/core/theme';
 import { useSessionRefreshAction } from '@/features/auth';
 import { usePendingClaims } from '@/features/expenses';
-import { AUTO_SYNC_AFTER_MS, HomeScreen, runSync, syncLabel, useLastSync } from '@/features/home';
+import { AUTO_SYNC_AFTER_MS, HomeScreen, runSync, serializeTypes, syncLabel, useLastSync } from '@/features/home';
 import { syncAllMasters } from '@/features/master-data';
 import { useUnreadCount } from '@/features/notifications';
 import { summarizeByType, useApprovalFeed } from '@/modules/approval-feed';
@@ -60,7 +60,7 @@ export default function Home() {
   const modules = HOME_MODULES.map((m) => ({ id: m.id, title: m.title, subtitle: m.subtitle, icon: m.icon, tint: m.tint, href: m.href, access: moduleAccess(m, session), badge: moduleBadge(m, session) }));
   const groups = [
     ...summarizeByType(feed.entries).map((g) => ({ key: g.type, label: g.label, tint: approvalTints[g.type], count: g.count })),
-    ...(claims.enabled && claims.count > 0 ? [{ key: 'expenses', label: 'Claims', tint: approvalTints.expenses, count: claims.count }] : []),
+    ...(claims.enabled && claims.count > 0 ? [{ key: 'expenses', label: 'Claims', tint: approvalTints.expenses, count: claims.count, direct: () => router.push('/expenses?tab=confirmed') }] : []),
   ];
 
   return (
@@ -73,10 +73,7 @@ export default function Home() {
         show: feed.enabled || claims.enabled,
         groups,
         loading: feed.loading,
-        onReview: (key) => {
-          if (key === 'expenses') router.push('/expenses?tab=confirmed');
-          else router.push({ pathname: '/approvals/review', params: key ? { type: key } : {} });
-        },
+        onReview: (types) => router.push({ pathname: '/approvals/review', params: types.length ? { types: serializeTypes(types) } : {} }),
       }}
     />
   );

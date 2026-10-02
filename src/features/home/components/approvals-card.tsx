@@ -8,9 +8,12 @@ import Animated, { cancelAnimation, Easing, FadeIn, useAnimatedStyle, useSharedV
 import { enter, makeStyles, useTheme } from '@/core/theme';
 import { Bone, CountUp, PressableScale, Text } from '@/ui';
 
-export type ApprovalGroup = { key: string; label: string; tint: string; count: number };
+import { selectionTotal, toggleType } from '../selection';
 
-type Props = { groups: ApprovalGroup[]; loading: boolean; syncing: boolean; onReview: (key: string | null) => void };
+/** `direct` groups (e.g. expense claims) open their own screen instead of joining a review. */
+export type ApprovalGroup = { key: string; label: string; tint: string; count: number; direct?: () => void };
+
+type Props = { groups: ApprovalGroup[]; loading: boolean; syncing: boolean; onReview: (types: string[]) => void };
 
 const compact = (n: number) => (n >= 1000 ? `${Math.round(n / 100) / 10}k` : String(n));
 
@@ -42,6 +45,12 @@ export function ApprovalsCard({ groups, loading, syncing, onReview }: Props) {
   const t = useTheme();
   const styles = useStyles();
   const total = groups.reduce((n, g) => n + g.count, 0);
+  // Tap types to build the review: none selected = everything; any combination otherwise.
+  const [selected, setSelected] = useState<string[]>([]);
+  const reviewable = groups.filter((g) => !g.direct);
+  const live = selected.filter((k) => reviewable.some((g) => g.key === k));
+  const reviewCount = selectionTotal(reviewable, live);
+  const isOn = (key: string) => live.length === 0 || live.includes(key);
 
   if (loading && total === 0) {
     return (
@@ -71,7 +80,7 @@ export function ApprovalsCard({ groups, loading, syncing, onReview }: Props) {
 
   return (
     <Animated.View entering={enter(40)} style={styles.card}>
-      <PressableScale onPress={() => onReview(null)} style={styles.head} scaleTo={0.98} accessibilityLabel={`Review all ${total} approvals`}>
+      <PressableScale onPress={() => onReview(live)} style={styles.head} scaleTo={0.98} accessibilityLabel={`Review ${reviewCount} approvals`}>
         <View>
           <Text variant="overline" color={t.colors.textMuted}>
             {syncing ? 'Approvals · updating…' : 'Approvals'}
@@ -85,7 +94,7 @@ export function ApprovalsCard({ groups, loading, syncing, onReview }: Props) {
         </View>
         <View style={styles.reviewPill}>
           <Text variant="label" weight="bold" color={t.colors.white}>
-            Review
+            {live.length ? `Review ${compact(reviewCount)}` : 'Review all'}
           </Text>
           <Ionicons name="arrow-forward" size={14} color={t.colors.white} />
         </View>
@@ -93,19 +102,28 @@ export function ApprovalsCard({ groups, loading, syncing, onReview }: Props) {
 
       <View style={styles.bar}>
         {groups.map((g) => (
-          <View key={g.key} style={[styles.segment, { flex: g.count, backgroundColor: g.tint }]} />
+          <View key={g.key} style={[styles.segment, { flex: g.count, backgroundColor: g.tint, opacity: isOn(g.key) || g.direct ? 1 : 0.22 }]} />
         ))}
         <SyncSweep active={syncing} />
       </View>
 
       <View style={styles.grid}>
         {groups.map((g) => (
-          <PressableScale key={g.key} onPress={() => onReview(g.key)} style={styles.cell} scaleTo={0.95} accessibilityLabel={`${g.count} ${g.label}`}>
+          <PressableScale
+            key={g.key}
+            onPress={() => (g.direct ? g.direct() : setSelected((s) => toggleType(s, g.key)))}
+            style={[styles.cell, live.includes(g.key) && { backgroundColor: `${g.tint}1F` }]}
+            scaleTo={0.95}
+            accessibilityRole={g.direct ? 'button' : 'checkbox'}
+            accessibilityState={g.direct ? undefined : { checked: live.includes(g.key) }}
+            accessibilityLabel={`${g.count} ${g.label}`}>
             <View style={styles.cellTop}>
               <View style={[styles.dot, { backgroundColor: g.tint }]} />
-              <Text variant="caption" color={t.colors.textMuted} numberOfLines={1}>
+              <Text variant="caption" color={live.includes(g.key) ? t.colors.text : t.colors.textMuted} weight={live.includes(g.key) ? 'bold' : undefined} numberOfLines={1}>
                 {g.label}
               </Text>
+              {live.includes(g.key) && <Ionicons name="checkmark-circle" size={14} color={g.tint} style={styles.check} />}
+              {!!g.direct && <Ionicons name="open-outline" size={12} color={t.colors.textFaint} style={styles.check} />}
             </View>
             <Animated.View entering={FadeIn.duration(300)}>
               <CountUp value={g.count} format={compact} variant="heading" style={styles.cellCount} />
@@ -127,10 +145,11 @@ const useStyles = makeStyles((t) => ({
   segment: { height: 8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 10, marginHorizontal: -4 },
   // Fixed thirds: counts changing width can never reflow the grid.
-  cell: { width: '33.333%', paddingHorizontal: 4, paddingVertical: 8, borderRadius: t.radius.sm },
+  cell: { width: '33.333%', paddingHorizontal: 8, paddingVertical: 8, borderRadius: t.radius.sm },
   cellTop: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   cellCount: { marginTop: 2, marginLeft: 14, fontVariant: ['tabular-nums'] },
   dot: { width: 8, height: 8, borderRadius: 4 },
+  check: { marginLeft: 'auto' },
   clear: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   clearIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: t.colors.successSoft, alignItems: 'center', justifyContent: 'center' },
   flex: { flex: 1, gap: 2 },

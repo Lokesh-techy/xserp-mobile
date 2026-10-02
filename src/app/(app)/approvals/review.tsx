@@ -1,20 +1,25 @@
 /** @author Lokesh */
 import { useLocalSearchParams } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 
+import { approvalTints } from '@/core/theme';
 import { ReviewPager } from '@/features/approvals/engine';
-import { useApprovalFeed } from '@/modules/approval-feed';
-import { ListSkeleton, ScreenHeader } from '@/ui';
+import { parseTypes } from '@/features/home';
+import { summarizeByType, useApprovalFeed } from '@/modules/approval-feed';
+import { ListSkeleton, ScreenHeader, TypeFilterBar } from '@/ui';
 
-/** Focus review across every module, opened from Home's "Waiting for you". */
+/** Focus review across modules — everything, one type, or any combination (adjustable mid-review). */
 export default function Review() {
-  const { start, type } = useLocalSearchParams<{ start?: string; type?: string }>();
+  const { start, types } = useLocalSearchParams<{ start?: string; types?: string }>();
   const feed = useApprovalFeed();
-  // `type` narrows the review to one document type (tapped from the Home chips).
-  const entries = useMemo(() => (type ? feed.entries.filter((e) => e.config.type === type) : feed.entries), [feed.entries, type]);
-  const title = type ? (entries[0]?.config.title ?? 'Approvals') : 'Waiting for you';
-  if (feed.loading && entries.length === 0) {
+  const [selected, setSelected] = useState<string[]>(() => parseTypes(types));
+  const options = useMemo(() => summarizeByType(feed.entries).map((g) => ({ key: g.type, label: g.label, tint: approvalTints[g.type], count: g.count })), [feed.entries]);
+  const entries = useMemo(() => (selected.length ? feed.entries.filter((e) => selected.includes(e.config.type)) : feed.entries), [feed.entries, selected]);
+  const title = selected.length === 1 ? (options.find((o) => o.key === selected[0])?.label ?? 'Review') : selected.length ? 'Your selection' : 'Waiting for you';
+  const filter = options.length > 1 ? <TypeFilterBar options={options} selected={selected} onChange={setSelected} /> : null;
+
+  if (feed.loading && feed.entries.length === 0) {
     return (
       <View style={{ flex: 1 }}>
         <ScreenHeader title={title} />
@@ -24,5 +29,5 @@ export default function Review() {
       </View>
     );
   }
-  return <ReviewPager title={title} entries={entries} initialKey={start ?? null} empty={{ title: 'All clear', message: 'Nothing is waiting for your approval.' }} />;
+  return <ReviewPager key={selected.join(',')} title={title} entries={entries} initialKey={start ?? null} accessory={filter} empty={{ title: 'All clear', message: 'Nothing left in this selection.' }} />;
 }

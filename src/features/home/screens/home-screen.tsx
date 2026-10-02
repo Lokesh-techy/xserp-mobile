@@ -15,7 +15,7 @@ export type HomeModule = { id: string; title: string; subtitle: string; icon: Ic
 type Props = {
   modules: HomeModule[];
   unread: number;
-  approvals: { show: boolean; groups: ApprovalGroup[]; loading: boolean; onReview: (key: string | null) => void };
+  approvals: { show: boolean; groups: ApprovalGroup[]; loading: boolean; onReview: (types: string[]) => void };
   sync: { text: string; syncing: boolean };
   onRefresh: () => Promise<unknown>;
 };

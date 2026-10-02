@@ -1,5 +1,5 @@
 /** @author Lokesh */
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { FlatList, useWindowDimensions, View } from 'react-native';
 
 import { useSession } from '@/core/auth';
@@ -17,13 +17,21 @@ import { useApprovalActions } from './use-approval-action';
 export type ReviewEntry = { key: string; config: AnyApproval; item: unknown };
 export const entryKey = (config: AnyApproval, item: unknown) => `${config.type}:${config.id(item)}`;
 
-type Props = { title: string; entries: ReviewEntry[]; initialKey: string | null; onActed?: (entry: ReviewEntry) => void; empty?: { title: string; message: string } };
+type Props = {
+  title: string;
+  entries: ReviewEntry[];
+  initialKey: string | null;
+  onActed?: (entry: ReviewEntry) => void;
+  empty?: { title: string; message: string };
+  /** Shown under the header bar, e.g. a document-type filter. */
+  accessory?: ReactNode;
+};
 
 /**
  * One document at a time, swipe for the next. Entries may mix approval types (the Home review)
  * or come from one queue (a module's pager). The document acted on is always the one on screen.
  */
-export function ReviewPager({ title, entries, initialKey, onActed, empty }: Props) {
+export function ReviewPager({ title, entries, initialKey, onActed, empty, accessory }: Props) {
   const styles = useStyles();
   const session = useSession();
   const { width } = useWindowDimensions();
@@ -38,7 +46,7 @@ export function ReviewPager({ title, entries, initialKey, onActed, empty }: Prop
   if (!current || !entry) {
     return (
       <View style={styles.root}>
-        <ScreenHeader title={title} />
+        <ScreenHeader title={title} tabs={accessory} />
         <View style={styles.pad}>
           <StateView icon="checkmark-done-outline" title={empty?.title ?? 'All caught up'} message={empty?.message ?? 'Nothing is waiting for you.'} />
         </View>
@@ -50,7 +58,7 @@ export function ReviewPager({ title, entries, initialKey, onActed, empty }: Prop
   const actions = canAct ? visibleActions(entry.config, entry.item, { session }) : [];
   return (
     <View style={styles.root}>
-      <ScreenHeader title={title} subtitle={`${current.index + 1} of ${entries.length} · ${entry.config.title}`} />
+      <ScreenHeader title={title} subtitle={`${current.index + 1} of ${entries.length} · ${entry.config.title}`} tabs={accessory} />
       <FlatList
         // Remount at the right page whenever the list changes size (load, approve, refresh).
         key={entries.length}
