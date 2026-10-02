@@ -1,9 +1,10 @@
 /** @author Lokesh */
 import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback } from 'react';
-import { ScrollView } from 'react-native';
+import { useCallback, useState } from 'react';
+import { ScrollView, View, type LayoutRectangle } from 'react-native';
+import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 
-import { makeStyles, useTheme } from '@/core/theme';
+import { makeStyles, springs, useTheme } from '@/core/theme';
 
 import { Badge } from './badge';
 import { PressableScale } from './pressable-scale';
@@ -11,22 +12,42 @@ import { Text } from './text';
 
 type Tab<K extends string> = { key: K; label: string; badge?: number };
 
+/** Text tabs with a sliding underline, shown on the page background just under the header bar. */
 export function SegmentedTabs<K extends string>({ tabs, value, onChange }: { tabs: Tab<K>[]; value: K; onChange: (k: K) => void }) {
   const t = useTheme();
   const styles = useStyles();
+  const [layouts, setLayouts] = useState<Partial<Record<K, LayoutRectangle>>>({});
+  const active = layouts[value];
+  const indicator = useAnimatedStyle(() => ({
+    opacity: active ? 1 : 0,
+    transform: [{ translateX: withSpring(active?.x ?? 0, springs.snappy) }],
+    width: withSpring(active?.width ?? 0, springs.snappy),
+  }));
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
       {tabs.map((tab) => {
-        const active = tab.key === value;
+        const on = tab.key === value;
         return (
-          <PressableScale key={tab.key} onPress={() => onChange(tab.key)} style={[styles.tab, active && styles.active]} accessibilityRole="tab" accessibilityState={{ selected: active }}>
-            <Text variant="label" color={active ? t.colors.primary : t.alpha.onGradientMuted}>
+          <PressableScale
+            key={tab.key}
+            onPress={() => onChange(tab.key)}
+            onLayout={(e) => {
+              const l = e.nativeEvent.layout;
+              setLayouts((prev) => (prev[tab.key]?.x === l.x && prev[tab.key]?.width === l.width ? prev : { ...prev, [tab.key]: l }));
+            }}
+            style={styles.tab}
+            scaleTo={0.96}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: on }}>
+            <Text variant="label" weight={on ? 'bold' : 'semibold'} color={on ? t.colors.text : t.colors.textMuted}>
               {tab.label}
             </Text>
-            {!!tab.badge && <Badge count={tab.badge} style={styles.badge} />}
+            {!!tab.badge && <Badge count={tab.badge} tone={on ? 'primary' : 'danger'} style={styles.badge} />}
           </PressableScale>
         );
       })}
+      <Animated.View style={[styles.indicator, indicator]} />
+      <View style={styles.baseline} />
     </ScrollView>
   );
 }
@@ -40,8 +61,9 @@ export function useTabParam<K extends string>(keys: readonly K[], fallback: K): 
 }
 
 const useStyles = makeStyles((t) => ({
-  row: { gap: 8, paddingRight: 8 },
-  tab: { height: 36, paddingHorizontal: 14, borderRadius: t.radius.pill, backgroundColor: t.alpha.glassFill, borderWidth: 1, borderColor: t.alpha.glassBorder, flexDirection: 'row', alignItems: 'center', gap: 6 },
-  active: { backgroundColor: t.colors.white, borderColor: t.colors.white },
+  row: { paddingHorizontal: 18, gap: 22 },
+  tab: { height: 44, flexDirection: 'row', alignItems: 'center', gap: 6 },
   badge: { borderColor: 'transparent' },
+  indicator: { position: 'absolute', left: 0, bottom: 0, height: 3, borderRadius: 2, backgroundColor: t.colors.accent },
+  baseline: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 1, backgroundColor: t.colors.divider },
 }));
