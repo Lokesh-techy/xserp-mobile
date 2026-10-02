@@ -1,7 +1,7 @@
 /** @author Lokesh */
 import { create } from 'zustand';
 
-import type { FetchedDocument } from '@/core/api';
+import type { DocumentRequest } from '@/core/api';
 
-/** The document currently open in the in-app viewer (too large for route params). */
-export const useDocumentViewer = create<{ doc: FetchedDocument | null }>(() => ({ doc: null }));
+/** What the in-app viewer should open; it fetches the file itself so it can appear instantly. */
+export const useDocumentViewer = create<{ request: DocumentRequest | null; regenerate: boolean }>(() => ({ request: null, regenerate: false }));

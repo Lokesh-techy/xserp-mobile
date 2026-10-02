@@ -1,6 +1,6 @@
 /** @author Lokesh */
-import { useState } from 'react';
-import { View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { View, type TextInput } from 'react-native';
 
 import { makeStyles } from '@/core/theme';
 import { BottomSheet, Button, Input } from '@/ui';
@@ -19,11 +19,18 @@ function RemarksBody<T>({ action, onClose, onConfirm }: Props<T> & { action: App
   const styles = useStyles();
   const [remarks, setRemarks] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const input = useRef<TextInput>(null);
+  // Focus once the sheet has slid up, so the sheet (not just the keyboard) is what the user sees first.
+  useEffect(() => {
+    if (action.remarks === 'none') return;
+    const timer = setTimeout(() => input.current?.focus(), 380);
+    return () => clearTimeout(timer);
+  }, [action.remarks]);
   return (
     <BottomSheet visible onClose={onClose} title={action.label}>
       <View style={styles.body}>
         {action.remarks !== 'none' && (
-          <Input label={action.remarks === 'required' ? 'Remarks (required)' : 'Remarks (optional)'} icon="chatbox-ellipses-outline" value={remarks} onChangeText={setRemarks} multiline error={error} autoFocus />
+          <Input label={action.remarks === 'required' ? 'Remarks (required)' : 'Remarks (optional)'} icon="chatbox-ellipses-outline" value={remarks} onChangeText={setRemarks} multiline error={error} ref={input} />
         )}
         <Button
           title={action.label}

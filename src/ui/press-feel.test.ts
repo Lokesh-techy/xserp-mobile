@@ -1,14 +1,8 @@
 /** @author Lokesh */
-import { FEEL_MS, withPressFeel } from './press-feel';
+import { withPressFeel } from './press-feel';
 
-beforeEach(() => jest.useFakeTimers());
-afterEach(() => jest.useRealTimers());
-
-test('runs the action after the morph has had time to play', async () => {
+test('navigates immediately on press (the next page shows its skeleton at once)', () => {
   const action = jest.fn();
-  const p = withPressFeel(action)();
-  expect(action).not.toHaveBeenCalled();
-  jest.advanceTimersByTime(FEEL_MS);
-  await p;
+  withPressFeel(action)();
   expect(action).toHaveBeenCalledTimes(1);
 });

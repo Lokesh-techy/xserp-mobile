@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { cancelAnimation, Easing, FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 
-import { enter, makeStyles, useTheme } from '@/core/theme';
+import { makeStyles, useTheme } from '@/core/theme';
 import { Bone, Button, CountUp, PressableScale, Text, withPressFeel } from '@/ui';
 
 import { selectionTotal, toggleType } from '../selection';
@@ -64,7 +64,7 @@ export function ApprovalsCard({ groups, loading, syncing, onReview }: Props) {
 
   if (total === 0) {
     return (
-      <Animated.View entering={enter(40)} style={[styles.card, styles.clear]}>
+      <Animated.View style={[styles.card, styles.clear]}>
         <View style={styles.clearIcon}>
           <Ionicons name="checkmark-done" size={20} color={t.colors.success} />
         </View>
@@ -79,7 +79,7 @@ export function ApprovalsCard({ groups, loading, syncing, onReview }: Props) {
   }
 
   return (
-    <Animated.View entering={enter(40)} style={styles.card}>
+    <Animated.View style={styles.card}>
       <View style={styles.head}>
         <View>
           <Text variant="overline" color={t.colors.textMuted}>

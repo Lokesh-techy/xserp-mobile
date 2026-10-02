@@ -54,7 +54,7 @@ export function QueueList<T, D>({ config, host, sorts }: { config: ApprovalConfi
                 )}
               </View>
             }
-            renderItem={({ item }) => <ApprovalCard summary={config.summary(item)} tint={t.tints[config.tint]} onPress={() => openPager(config, items, config.id(item))} />}
+            renderItem={({ item }) => <ApprovalCard summary={config.summary(item)} tint={t.tints[config.tint]} showStatus={false} onPress={() => openPager(config, items, config.id(item))} />}
           />,
         )
       }

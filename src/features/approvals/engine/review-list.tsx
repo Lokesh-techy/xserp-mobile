@@ -3,9 +3,9 @@ import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { makeStyles, useTheme } from '@/core/theme';
+import { approvalTints, makeStyles } from '@/core/theme';
 import { filterItems } from '@/core/utils';
-import { ListSkeleton, ModuleScreen, SearchField, StateView, Text, useHostRefresh, type ScrollHost } from '@/ui';
+import { ListSkeleton, ModuleScreen, SearchField, StateView, useHostRefresh, type ScrollHost } from '@/ui';
 
 import { ApprovalCard } from './approval-card';
 import type { ReviewEntry } from './review-pager';
@@ -30,7 +30,6 @@ export function ReviewList(props: Props) {
 }
 
 function Body({ host, entries, loading, onOpen, onRefresh }: Props & { host: ScrollHost }) {
-  const t = useTheme();
   const styles = useStyles();
   const [query, setQuery] = useState('');
   useHostRefresh(host, useCallback(() => onRefresh(), [onRefresh]));
@@ -57,16 +56,10 @@ function Body({ host, entries, loading, onOpen, onRefresh }: Props & { host: Scr
         </View>
       }
       ListEmptyComponent={loading ? <ListSkeleton rows={4} /> : <StateView icon="checkmark-done-outline" title={query ? 'No matches' : 'All clear'} message={query ? 'Try a different search.' : 'Nothing left in this selection.'} />}
-      renderItem={({ item }) => (
-        <View>
-          <Text variant="caption" weight="bold" color={t.tints[item.config.tint]} style={styles.kind}>
-            {item.config.short ?? item.config.noun}
-          </Text>
-          <ApprovalCard summary={item.config.summary(item.item)} tint={t.tints[item.config.tint]} onPress={() => onOpen(item)} />
-        </View>
-      )}
+      // Everything here is pending, and the stripe colour says the document type — no labels needed.
+      renderItem={({ item }) => <ApprovalCard summary={item.config.summary(item.item)} tint={approvalTints[item.config.type]} showStatus={false} onPress={() => onOpen(item)} />}
     />,
   );
 }
 
-const useStyles = makeStyles((t) => ({ pad: { padding: t.space.gutter, paddingBottom: 48 }, head: { marginBottom: 14 }, kind: { marginBottom: 4, marginLeft: 4 } }));
+const useStyles = makeStyles((t) => ({ pad: { padding: t.space.gutter, paddingBottom: 48 }, head: { marginBottom: 14 } }));

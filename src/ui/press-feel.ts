@@ -1,18 +1,11 @@
 /** @author Lokesh */
 import * as Haptics from 'expo-haptics';
 
-/** Long enough for a button's label-to-line morph to read before the next page appears. */
-export const FEEL_MS = 420;
-
 /**
- * Wraps a navigation so a Button shows its morph, then a crisp haptic, then the page opens.
- * Return value is a promise, which is what makes Button play its loading morph.
+ * For buttons that open a page: a crisp haptic and the page opens on the same frame (it shows its
+ * skeleton until data arrives). Snappy first — never wait on an animation to navigate.
  */
-export const withPressFeel = (action: () => void) => () =>
-  new Promise<void>((resolve) =>
-    setTimeout(() => {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-      action();
-      resolve();
-    }, FEEL_MS),
-  );
+export const withPressFeel = (action: () => void) => () => {
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+  action();
+};

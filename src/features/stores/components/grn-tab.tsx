@@ -79,7 +79,7 @@ export function GrnTab({ host }: { host: ScrollHost }) {
           ListEmptyComponent={
             !canApprove ? null : queue.isPending ? <ListSkeleton rows={3} /> : <StateView icon="checkmark-done-outline" title="All caught up" message="No goods receipts are waiting for you." />
           }
-          renderItem={({ item }) => <ApprovalCard summary={grnApproval.summary(item)} tint={t.tints.stores} onPress={() => openPager(grnApproval, rows, item.receiptNo)} />}
+          renderItem={({ item }) => <ApprovalCard summary={grnApproval.summary(item)} tint={t.tints.stores} showStatus={false} onPress={() => openPager(grnApproval, rows, item.receiptNo)} />}
         />,
       )}
       <PickerSheet visible={picking} title="Supplier" items={suppliers} selectedId={supplier} onSelect={(i) => setSupplier(i?.id ?? null)} onClose={() => setPicking(false)} />

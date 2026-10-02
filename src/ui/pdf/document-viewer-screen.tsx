@@ -1,10 +1,11 @@
 /** @author Lokesh */
+import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { View } from 'react-native';
 import Animated, { FadeOut } from 'react-native-reanimated';
 import { WebView } from 'react-native-webview';
 
-import { errorMessage, shareDocument } from '@/core/api';
+import { errorMessage, fetchDocument, shareDocument } from '@/core/api';
 import { makeStyles, useTheme } from '@/core/theme';
 
 import { ScreenHeader } from '../screen-header';
@@ -18,12 +19,22 @@ import { useDocumentViewer } from './viewer-store';
 export function DocumentViewerScreen() {
   const t = useTheme();
   const styles = useStyles();
-  const doc = useDocumentViewer((s) => s.doc);
+  const request = useDocumentViewer((s) => s.request);
+  const regenerate = useDocumentViewer((s) => s.regenerate);
+  const query = useQuery({
+    queryKey: ['document', request?.path, request?.params, regenerate],
+    queryFn: () => fetchDocument(request!, { regenerate }),
+    enabled: !!request,
+    gcTime: 0,
+    staleTime: 0,
+    retry: 0,
+  });
+  const doc = query.data;
   const [pages, setPages] = useState<number | null>(null);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
 
-  if (!doc) {
+  if (!request) {
     return (
       <View style={styles.root}>
         <ScreenHeader title="Document" />
@@ -34,12 +45,26 @@ export function DocumentViewerScreen() {
     );
   }
 
-  const share = () => shareDocument(doc).catch((e: unknown) => void toast.show({ message: errorMessage(e), tone: 'danger' }));
+  const share = () => (doc ? shareDocument(doc).catch((e: unknown) => void toast.show({ message: errorMessage(e), tone: 'danger' })) : undefined);
+  const title = request.filename.replace(/\.pdf$/i, '');
 
   return (
     <View style={styles.root}>
-      <ScreenHeader title={doc.title.replace(/\.pdf$/i, '')} subtitle={pages ? `${pages} page${pages === 1 ? '' : 's'}` : 'PDF'} actions={[{ icon: 'share-outline', label: 'Share', onPress: () => void share() }]} />
-      {failed ? (
+      <ScreenHeader
+        title={title}
+        subtitle={pages ? `${pages} page${pages === 1 ? '' : 's'}` : query.isPending ? 'Downloading…' : 'PDF'}
+        actions={doc ? [{ icon: 'share-outline', label: 'Share', onPress: () => void share() }] : []}
+      />
+      {query.isError ? (
+        <View style={styles.pad}>
+          <StateView icon="cloud-offline-outline" title="Couldn't download this document" message={errorMessage(query.error)} action={{ label: 'Try again', onPress: () => void query.refetch() }} />
+        </View>
+      ) : !doc ? (
+        <View style={styles.loading}>
+          <CardSkeleton />
+          <CardSkeleton />
+        </View>
+      ) : failed ? (
         <View style={styles.pad}>
           <StateView icon="alert-circle-outline" title="Couldn't preview this PDF" message="You can still share or open it in another app." action={{ label: 'Share', onPress: () => void share() }} />
         </View>

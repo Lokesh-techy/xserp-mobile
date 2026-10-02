@@ -1,6 +1,6 @@
 /** @author Lokesh */
 import { useEffect, useState, type ReactNode } from 'react';
-import { Modal, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Dimensions, Keyboard, Modal, Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,6 +9,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { markActive } from '@/core/auth/idle-timeout';
 import { makeStyles, springs } from '@/core/theme';
 
+import { keyboardOffset } from './keyboard-offset';
 import { Text } from './text';
 
 type Props = {
@@ -26,6 +27,24 @@ export function BottomSheet({ visible, onClose, title, children, maxHeightRatio 
   const [mounted, setMounted] = useState(visible);
   const y = useSharedValue(height);
   const backdrop = useSharedValue(0);
+  const kb = useSharedValue(0);
+
+  // Rise with the keyboard so the field being typed into is never hidden behind it.
+  useEffect(() => {
+    if (!mounted) return;
+    const base = Dimensions.get('window').height;
+    const show = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', (e) => {
+      const lift = keyboardOffset({ keyboard: e.endCoordinates.height, windowShrink: base - Dimensions.get('window').height });
+      kb.set(withTiming(lift, { duration: Platform.OS === 'ios' ? e.duration || 250 : 200 }));
+    });
+    const hide = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', (e) => {
+      kb.set(withTiming(0, { duration: Platform.OS === 'ios' ? e.duration || 250 : 180 }));
+    });
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, [mounted, kb]);
 
   // Mount as soon as it becomes visible; unmount only after the exit animation finishes.
   if (visible && !mounted) setMounted(true);
@@ -54,7 +73,7 @@ export function BottomSheet({ visible, onClose, title, children, maxHeightRatio 
       else y.set(withSpring(0, springs.snappy));
     });
 
-  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: y.get() }] }));
+  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: y.get() - kb.get() }], maxHeight: height * maxHeightRatio - kb.get() }));
   const backdropStyle = useAnimatedStyle(() => ({ opacity: backdrop.get() }));
 
   if (!mounted) return null;
@@ -66,7 +85,7 @@ export function BottomSheet({ visible, onClose, title, children, maxHeightRatio 
         <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, backdropStyle]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
         </Animated.View>
-        <Animated.View style={[styles.sheet, { maxHeight: height * maxHeightRatio, paddingBottom: Math.max(insets.bottom, 16) }, sheetStyle]}>
+        <Animated.View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) }, sheetStyle]}>
           <GestureDetector gesture={pan}>
             <View style={styles.handleArea}>
               <View style={styles.handle} />

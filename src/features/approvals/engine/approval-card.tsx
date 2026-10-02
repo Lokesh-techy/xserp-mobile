@@ -8,7 +8,8 @@ import { Card, StatusPill, Text } from '@/ui';
 
 import type { ApprovalSummary } from './types';
 
-export function ApprovalCard({ summary, tint, onPress }: { summary: ApprovalSummary; tint: string; onPress?: () => void }) {
+/** `showStatus` off for pending queues, where every item has the same status anyway. */
+export function ApprovalCard({ summary, tint, onPress, showStatus = true }: { summary: ApprovalSummary; tint: string; onPress?: () => void; showStatus?: boolean }) {
   const t = useTheme();
   const styles = useStyles();
   return (
@@ -17,7 +18,7 @@ export function ApprovalCard({ summary, tint, onPress }: { summary: ApprovalSumm
         <Text variant="heading" numberOfLines={1} style={styles.flex}>
           {summary.code}
         </Text>
-        <StatusPill label={summary.status.label} tone={summary.status.tone} />
+        {showStatus && <StatusPill label={summary.status.label} tone={summary.status.tone} />}
       </View>
       <View style={styles.party}>
         <Ionicons name="business-outline" size={14} color={t.colors.textMuted} />
