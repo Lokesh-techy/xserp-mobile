@@ -1,3 +1,3 @@
 /** @author Lokesh */
-// Replaced by Task 23.
-export const useUnreadCount = () => 0;
+export { NotificationsScreen } from './screens/notifications-screen';
+export { useUnreadCount, useNotifications } from './hooks';
