@@ -30,7 +30,7 @@ export function HomeScreen({ modules, unread, approvals, sync, onRefresh }: Prop
         <Animated.ScrollView {...pull.scrollProps} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <HomeHeader pull={pull.indicator} scrollY={pull.scrollY} syncText={sync.text} syncing={sync.syncing} />
           <View style={styles.body}>
-            {approvals.show && <ApprovalsCard groups={approvals.groups} loading={approvals.loading} onReview={approvals.onReview} />}
+            {approvals.show && <ApprovalsCard groups={approvals.groups} loading={approvals.loading} syncing={sync.syncing} onReview={approvals.onReview} />}
             <Text variant="overline" color={t.colors.textMuted} style={styles.label}>
               Modules
             </Text>

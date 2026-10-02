@@ -22,7 +22,10 @@ export function buildFeed(groups: { config: AnyApproval; items: unknown[] }[]): 
 
 export type TypeSummary = { type: ApprovalType; label: string; tint: ModuleTint; count: number };
 
-/** Pending counts per document type, largest first — drives the Home composition bar. */
+/** Display order for document types: fixed, so the Home card never reshuffles on refresh. */
+export const TYPE_ORDER: ApprovalType[] = ['po', 'invoice', 'oa', 'grn', 'icd', 'rate'];
+
+/** Pending counts per document type, in TYPE_ORDER — drives the Home approvals card. */
 export function summarizeByType(entries: ReviewEntry[]): TypeSummary[] {
   const byType = new Map<ApprovalType, TypeSummary>();
   for (const e of entries) {
@@ -30,7 +33,7 @@ export function summarizeByType(entries: ReviewEntry[]): TypeSummary[] {
     if (cur) cur.count += 1;
     else byType.set(e.config.type, { type: e.config.type, label: e.config.short ?? e.config.noun, tint: e.config.tint, count: 1 });
   }
-  return [...byType.values()].sort((a, b) => b.count - a.count);
+  return [...byType.values()].sort((a, b) => TYPE_ORDER.indexOf(a.type) - TYPE_ORDER.indexOf(b.type));
 }
 
 /** Live, polled feed of everything the signed-in user can approve. */

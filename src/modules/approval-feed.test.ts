@@ -30,7 +30,7 @@ test('merges every queue newest first, undated last, with stable keys', () => {
   expect(feed.map((e) => e.key)).toEqual(['invoice:1', 'po:1', 'po:2']);
 });
 
-test('summarises the feed by document type, largest first', () => {
+test('summarises the feed by document type in a fixed order (stable across refreshes)', () => {
   const po = make('po');
   const inv = make('invoice');
   const feed = buildFeed([
@@ -38,8 +38,8 @@ test('summarises the feed by document type, largest first', () => {
     { config: inv, items: [{ id: '1', date: null }, { id: '2', date: null }] },
   ]);
   expect(summarizeByType(feed)).toEqual([
-    { type: 'invoice', label: 'invoice', tint: 'purchase', count: 2 },
     { type: 'po', label: 'po', tint: 'purchase', count: 1 },
+    { type: 'invoice', label: 'invoice', tint: 'purchase', count: 2 },
   ]);
   expect(summarizeByType([])).toEqual([]);
 });

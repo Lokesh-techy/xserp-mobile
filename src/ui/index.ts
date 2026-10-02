@@ -30,3 +30,4 @@ export * from './module-screen';
 export * from './range-chips';
 export * from './hold-button';
 export * from './go-back';
+export * from './count-up';
