@@ -37,6 +37,7 @@ export const Input = forwardRef<TextInput, Props>(function Input({ label, icon, 
         <TextInput
           ref={ref}
           {...rest}
+          accessibilityLabel={label}
           secureTextEntry={secure && hidden}
           placeholderTextColor={t.colors.textFaint}
           style={styles.input}
