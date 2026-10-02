@@ -56,7 +56,7 @@ and data states consistently.
 | App returns to foreground / network reconnects | Every active query (TanStack `focusManager` / `onlineManager`) |
 | Screen regains focus | That screen's queries (`useFocusRefetch`) |
 | Every 60 s while the app is open | Approval queues, notification list |
-| Pull down (PullToSync) | The tab currently on screen (registered via `useHostRefresh`) |
+| Pull down (PullToSync) | The tab on screen (`useHostRefresh`); on Home: session, all master lists, approval queues, notifications, with the last-synced time shown |
 | After approve/reject/save | The affected queue, dashboards, searches and session counts |
 | Launch / foreground, if older than 12 h | Master lists: parties, materials, ledgers, projects, taxes |
 
@@ -74,7 +74,9 @@ sections, document and actions. The engine provides:
   receipts") → 4-second undo toast → request → success toast and haptic → item leaves the pager → caches
   and counts refresh. `createActionRunner` guarantees one request per (document, action), so double taps
   and repeated presses never double-approve.
-- **Approvals inbox**: aggregates every registered queue the user can approve, plus Expense claims.
+- **Waiting for you** (Home): `modules/approval-feed.ts` merges every queue the user can approve, newest first;
+  tapping a card opens `ReviewPager` over that mixed feed, so all approvals are cleared in one flow.
+  Positive actions are press-and-hold (`ui/HoldButton`), so there is no extra confirmation step.
 
 ## Theming
 

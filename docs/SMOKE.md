@@ -12,18 +12,20 @@ Run against **dev.xserp.in** on an Android phone, once in **light** and once in 
 - [ ] An older app version shows "Update available" (or a blocking "Update required").
 
 ## Home
-- [ ] 12 tiles in two columns overlap the gradient header; tiles without permission show a lock.
-- [ ] Production, HR and Reports show "SOON" and open XSERP web.
-- [ ] Badges match the pending counts; pulling down shows the X petals, "RELEASE TO SYNC", a spinning X, then "UP TO DATE".
-- [ ] The bell badge shows unread notifications; the avatar opens Profile.
+- [ ] After login (Android and iOS) Home is the first screen; Back/Close on Profile returns to Home.
+- [ ] The header shows only the date, greeting, name and "Synced … ago"; no enterprise name.
+- [ ] "Waiting for you" shows the newest pending documents from every module; "Review all" and tapping a card open the focus review; with nothing pending it reads "All clear".
+- [ ] Module tiles (7) overlap the header; tiles without permission show a lock; no coming-soon tiles.
+- [ ] Pulling down syncs everything (X animation), then the sync line updates.
+- [ ] Scrolling down fades the big header into a compact bar with the name, bell and avatar.
 
 ## Approvals (each: Purchase PO, Sales Invoice, Sales OA, Stores GRN, Audit ICD, Masters Rate)
 - [ ] The pending list loads; search and sort work; an empty queue shows "All caught up".
 - [ ] Opening an item shows the pager "1 of N"; swiping changes documents; line items and sections load.
-- [ ] Approve opens the remarks sheet, then the undo toast; Undo cancels; letting it run sends one request, shows a success toast, removes the item and lowers the badge.
+- [ ] Approve is press-and-hold (releasing early cancels), then the undo toast; Undo cancels; letting it run sends one request, shows a success toast, removes the item and lowers the badge.
 - [ ] Reject without remarks is blocked; a server precheck failure (PO with receipts, OA with invoices) shows the server message.
 - [ ] View PDF opens the system viewer/share sheet; long-press offers Regenerate.
-- [ ] Approvals inbox lists every queue you can approve, plus Expense claims.
+- [ ] The Home focus review moves across modules (PO → Invoice → GRN …) in one flow.
 
 ## Modules
 - [ ] **Finance**: dashboard stats and chart for the selected range; Ageing buckets drill into ledgers → ledger vouchers and open bills.
@@ -34,9 +36,8 @@ Run against **dev.xserp.in** on an Android phone, once in **light** and once in 
 - [ ] **Masters**: party detail (call, email, copy GSTIN); material detail (prices, stock, price history, BOM, taxes); rate approvals.
 - [ ] **Expenses**: tabs with counts; create a draft, add lines, Save draft, Confirm; an approver sees Approve / Return; an auditor sees Check / Verify.
 
-## Settings & notifications
+## Profile & notifications
 - [ ] System / Light / Dark switch the whole app instantly (no restart).
-- [ ] Offline data shows each master list's count and age; Sync now refreshes them.
 - [ ] Notifications: grouped by day; tapping marks one read; swipe deletes; Delete all asks first.
 - [ ] Change password signs you out with a notice; Sign out returns to login.
 

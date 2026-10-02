@@ -1,7 +1,8 @@
 # XSERP Mobile
 
 The XSERP Schnell ERP on your phone: approvals, dashboards and lookups for Finance, Audit, Purchase, Sales,
-Stores, Masters and Expenses. It replaces the legacy **XSManager** Android app (same package id
+Stores, Masters and Expenses. Everything awaiting you appears on Home under "Waiting for you"; pull down
+on Home to sync permissions, master data, approvals and notifications in one go. It replaces the legacy **XSManager** Android app (same package id
 `com.schnell.xsmanager`, so it installs as an update) and talks only to the existing XSERP JSON endpoints.
 
 Built with Expo SDK 57 / React Native 0.86 / TypeScript. Look and feel follow Despack, with live light and
@@ -78,4 +79,5 @@ auto-refresh rules and the approval engine.
 - xserp's mobile token never expires server-side, so the app signs out after 30 idle minutes
   (`EXPO_PUBLIC_IDLE_TIMEOUT_MINUTES`).
 - Not in v1: push notifications, expense bill attachments, sign-up, in-app payments. Production, HR and
-  Reports show a "coming soon" tile that opens XSERP web.
+  Reports are registered but hidden from Home until they have mobile APIs.
+- Approve is press-and-hold (about 0.6 s); reject asks for a reason. Both have a 4 s undo.
