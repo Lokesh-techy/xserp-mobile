@@ -39,8 +39,8 @@ describe('workflow', () => {
     expect(nextSteps(draft, as(8, { EXPENSES: { ...none, edit: true } })).map((s) => s.to)).toEqual([STATUS.CONFIRMED]);
     expect(nextSteps(draft, as(9, { EXPENSES: { ...none, approve: true } }))).toEqual([]);
   });
-  it('approver (not the claimant) approves or returns', () => {
-    expect(nextSteps(confirmed, as(9, { EXPENSES: { ...none, approve: true } })).map((s) => s.id)).toEqual(['approve', 'return']);
+  it('approver (not the claimant) approves; there is no return step because xserp never lowers a status', () => {
+    expect(nextSteps(confirmed, as(9, { EXPENSES: { ...none, approve: true } })).map((s) => s.id)).toEqual(['approve']);
     expect(nextSteps(confirmed, as(8, { EXPENSES: { ...none, approve: true } }))).toEqual([]);
   });
   it('auditor checks then verifies', () => {

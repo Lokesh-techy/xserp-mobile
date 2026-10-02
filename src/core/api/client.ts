@@ -91,3 +91,6 @@ export async function post<S extends z.ZodType>(path: string, params: FormParams
 export function postOk(path: string, params: FormParams, opts: RequestOptions = {}): Promise<Envelope> {
   return request(path, params, opts);
 }
+
+/** Company of the signed-in user, for scoping on-device caches. */
+export const currentEnterpriseId = () => hooks.getAuth()?.enterpriseId ?? null;

@@ -14,6 +14,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { clearDocumentCache } from '@/core/api';
 import { bootstrapAuth, markActive, useIdleSignOut, useSessionStore } from '@/core/auth';
 import { queryClient, setupQueryManagers } from '@/core/query';
 import { applySavedAppearance, ThemeProvider, useTheme } from '@/core/theme';
@@ -66,7 +67,16 @@ export default function RootLayout() {
   }, []);
 
   // Sign-out must drop every cached response so the next user never sees the previous one's data.
-  useEffect(() => useSessionStore.subscribe((s, prev) => prev.status === 'signedIn' && s.status === 'signedOut' && queryClient.clear()), []);
+  useEffect(
+    () =>
+      useSessionStore.subscribe((s, prev) => {
+        if (prev.status === 'signedIn' && s.status === 'signedOut') {
+          queryClient.clear();
+          clearDocumentCache();
+        }
+      }),
+    [],
+  );
 
   return (
     // Every touch counts as activity for the idle sign-out.
