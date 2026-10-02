@@ -63,8 +63,11 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   },
 
   update: async (s) => {
-    if (get().status !== 'signedIn') return;
+    const sameUser = () => get().status === 'signedIn' && get().session?.token === s.token;
+    if (!sameUser()) return;
     await persist(s);
+    // A sign-out may have landed during the write: never resurrect the session or its credentials.
+    if (!sameUser()) return wipe();
     set({ session: s });
   },
 
@@ -78,9 +81,17 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   clearNotice: () => set({ notice: null }),
 }));
 
-/** For screens under the auth guard only. */
+let lastSession: Session | null = null;
+useSessionStore.subscribe((st) => {
+  if (st.session) lastSession = st.session;
+});
+
+/**
+ * For screens under the auth guard only. During sign-out those screens can render once more before
+ * they unmount, so this returns the last known session instead of throwing.
+ */
 export function useSession(): Session {
-  const s = useSessionStore((st) => st.session);
-  if (!s) throw new Error('useSession called while signed out');
+  const s = useSessionStore((st) => st.session) ?? lastSession;
+  if (!s) throw new Error('useSession called before sign-in');
   return s;
 }

@@ -1,7 +1,9 @@
 /** @author Lokesh */
 import fixture from '../../../__fixtures__/login_api.json';
 import { toSession, userPayloadSchema } from './session-mapper';
-import { useSessionStore } from './session-store';
+import { act, renderHook } from '@testing-library/react-native';
+
+import { useSession, useSessionStore } from './session-store';
 
 const session = () => toSession(userPayloadSchema.parse(fixture));
 
@@ -17,6 +19,29 @@ test('signOut clears storage and keeps the notice; repeated signOut is harmless'
   await useSessionStore.getState().signIn(session());
   await Promise.all([useSessionStore.getState().signOut('Expired'), useSessionStore.getState().signOut('Expired')]);
   expect(useSessionStore.getState()).toMatchObject({ status: 'signedOut', session: null, notice: 'Expired' });
+  await useSessionStore.getState().hydrate();
+  expect(useSessionStore.getState().status).toBe('signedOut');
+});
+
+test('useSession keeps returning the last session while screens unmount after sign-out', async () => {
+  await useSessionStore.getState().signIn(session());
+  const renders: string[] = [];
+  await renderHook(() => renders.push(useSession().token));
+  await act(async () => {
+    await useSessionStore.getState().signOut('bye');
+  });
+  expect(renders.length).toBeGreaterThan(1);
+  expect(renders.at(-1)).toBe('FIXTURE_TOKEN');
+});
+
+test('an update that finishes after sign-out does not bring the session back', async () => {
+  const s = session();
+  await useSessionStore.getState().signIn(s);
+  const pending = useSessionStore.getState().update({ ...s, refreshedAt: 1 });
+  await useSessionStore.getState().signOut('Expired');
+  await pending;
+  expect(useSessionStore.getState()).toMatchObject({ status: 'signedOut', session: null });
+  useSessionStore.setState({ status: 'loading', session: null });
   await useSessionStore.getState().hydrate();
   expect(useSessionStore.getState().status).toBe('signedOut');
 });
