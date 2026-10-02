@@ -23,3 +23,4 @@ export * from './picker-sheet';
 export * from './date-field';
 export * from './filter-sheet';
 export * from './charts';
+export * from './brand';
