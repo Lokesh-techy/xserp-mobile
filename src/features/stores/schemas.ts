@@ -31,13 +31,23 @@ export const receiptSchema = z.looseObject({
   currency_symbol: zStr,
   note_id: zId.optional(),
   note_is_credit: zBool,
-  note_code: zStr,
+  note_code: z.preprocess((v) => (v === '-' ? '' : v), zStr),
   note_value: zNum,
   materials: zList(z.looseObject({ item_id: zId, make_id: zId, name: zStr, drawing_no: zStr, received_qty: zNum, accepted_qty: zNum, quantity: zNum, rate: zNum, price: zNum, unit: zStr })),
   remarks: zList(remark),
   audit_remarks: zList(remark),
-  // XSManager typed this as one Document; some responses send a list.
-  documents: z.preprocess((v) => (Array.isArray(v) ? v : v && typeof v === 'object' ? [v] : []), z.array(doc)),
+  // XSManager typed this as one Document; the server may also send a list, a JSON string or null.
+  documents: z.preprocess((v) => {
+    let d: unknown = v;
+    if (typeof d === 'string') {
+      try {
+        d = JSON.parse(d);
+      } catch {
+        d = null;
+      }
+    }
+    return Array.isArray(d) ? d : d && typeof d === 'object' ? [d] : [];
+  }, z.array(doc)),
 });
 export type ReceiptRow = z.infer<typeof receiptSchema>;
 export const grnListSchema = z.looseObject({ grn_list: zList(receiptSchema) });

@@ -1,6 +1,2 @@
 /** @author Lokesh */
-import { PendingModuleScreen } from '@/features/home';
-
-export default function Screen() {
-  return <PendingModuleScreen title="Audit" />;
-}
+export { AuditScreen as default } from '@/features/audit';
