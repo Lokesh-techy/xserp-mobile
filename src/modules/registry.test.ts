@@ -2,15 +2,15 @@
 import fixture from '../../__fixtures__/login_api.json';
 import { toSession, userPayloadSchema, type Session } from '@/core/auth';
 
-import { MODULES, moduleAccess, moduleBadge } from './registry';
+import { HOME_MODULES, MODULES, moduleAccess, moduleBadge } from './registry';
 
 const base = toSession(userPayloadSchema.parse(fixture));
 const none = { view: false, edit: false, delete: false, approve: false, alert: false };
 const user = (perms: Session['permissions'], extra: Partial<Session> = {}): Session => ({ ...base, ...extra, user: { ...base.user, isSuper: false }, permissions: perms });
 const byId = (id: string) => MODULES.find((m) => m.id === id)!;
 
-test('tile order matches the spec', () => {
-  expect(MODULES.map((m) => m.id)).toEqual(['finance', 'audit', 'purchase', 'sales', 'stores', 'masters', 'expenses', 'approvals', 'production', 'hr', 'reports', 'settings']);
+test('home shows only live modules, in order (no settings, approvals or coming-soon tiles)', () => {
+  expect(HOME_MODULES.map((m) => m.id)).toEqual(['finance', 'audit', 'purchase', 'sales', 'stores', 'masters', 'expenses']);
 });
 
 test('locks tiles without view permission and marks API-less modules soon', () => {
@@ -18,7 +18,6 @@ test('locks tiles without view permission and marks API-less modules soon', () =
   expect(moduleAccess(byId('sales'), s)).toBe('open');
   expect(moduleAccess(byId('purchase'), s)).toBe('locked');
   expect(moduleAccess(byId('production'), s)).toBe('soon');
-  expect(moduleAccess(byId('settings'), s)).toBe('open');
 });
 
 test('audit needs ICD enabled', () => {

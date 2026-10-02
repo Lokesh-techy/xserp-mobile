@@ -1,5 +1,8 @@
 /** @author Lokesh */
 import { Ionicons } from '@expo/vector-icons';
+import * as Application from 'expo-application';
+import * as Updates from 'expo-updates';
+import * as WebBrowser from 'expo-web-browser';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -8,10 +11,12 @@ import { Alert, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { displayName, initials, logout, useSession, useSessionStore } from '@/core/auth';
+import { env, serverHost } from '@/core/config/env';
 import { makeStyles, useTheme, type Theme } from '@/core/theme';
 import { formatDate } from '@/core/utils';
 import { GlassIconButton, PressableScale, Section, Text, type IconName } from '@/ui';
 
+import { AppearanceControl } from '../components/appearance-control';
 import { ChangePasswordSheet } from '../components/change-password-sheet';
 
 function Row({ icon, label, value, onPress, tone }: { icon: IconName; label: string; value?: string; onPress?: () => void; tone?: 'danger' }) {
@@ -80,17 +85,28 @@ export function ProfileScreen() {
           <Text variant="body" color={t.alpha.onGradientMuted}>
             {user.email}
           </Text>
-          <Text variant="label" color={t.alpha.onGradientFaint}>
-            {user.enterpriseName}
-          </Text>
         </LinearGradient>
         <View style={styles.body}>
+          <Section title="Appearance">
+            <AppearanceControl />
+          </Section>
           <Section title="Account">
             <View style={styles.group}>
               {user.isSuper && <Row icon="star-outline" label="Administrator" value="Full access to every module" />}
               {(sub.plan || sub.expiredOn) && <Row icon="ribbon-outline" label={sub.plan ? `${sub.plan} plan` : 'Subscription'} value={sub.expiredOn ? `${sub.isExpired ? 'Expired' : 'Renews'} ${formatDate(sub.expiredOn)}` : undefined} />}
-              <Row icon="settings-outline" label="Settings" value="Appearance, offline data, about" onPress={() => router.push('/settings')} />
               <Row icon="key-outline" label="Change password" onPress={() => setPwOpen(true)} />
+            </View>
+          </Section>
+          <Section title="About">
+            <View style={styles.group}>
+              <Row icon="server-outline" label="Server" value={`${serverHost} · ${env.appEnv.toUpperCase()}`} />
+              <Row
+                icon="information-circle-outline"
+                label="Version"
+                value={`${Application.nativeApplicationVersion ?? '3.0.0'} (${Application.nativeBuildVersion ?? '66'}) · ${Updates.updateId ? Updates.updateId.slice(0, 8) : 'embedded'}`}
+              />
+              <Row icon="document-text-outline" label="Terms of service" onPress={() => void WebBrowser.openBrowserAsync(`${env.serverUrl}/erp/public/terms/`)} />
+              <Row icon="lock-closed-outline" label="Privacy policy" onPress={() => void WebBrowser.openBrowserAsync(`${env.serverUrl}/erp/public/privacy/`)} />
             </View>
           </Section>
           <Section title="Session">

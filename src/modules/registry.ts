@@ -6,7 +6,7 @@ import { can } from '@/core/permissions';
 import type { ModuleTint } from '@/core/theme';
 import type { IconName } from '@/ui';
 
-export type ModuleId = 'finance' | 'audit' | 'purchase' | 'sales' | 'stores' | 'masters' | 'expenses' | 'approvals' | 'production' | 'hr' | 'reports' | 'settings';
+export type ModuleId = 'finance' | 'audit' | 'purchase' | 'sales' | 'stores' | 'masters' | 'expenses' | 'production' | 'hr' | 'reports';
 
 export type ModuleDef = {
   id: ModuleId;
@@ -31,12 +31,13 @@ export const MODULES: readonly ModuleDef[] = [
   { id: 'stores', title: 'Stores', subtitle: 'Stock · Indents · GRN', icon: 'cube-outline', tint: 'stores', permission: ['STORES'], badge: (s) => approved(s, 'STORES', s.counts.grn), href: '/stores', status: 'live' },
   { id: 'masters', title: 'Masters', subtitle: 'Parties · Materials · Rates', icon: 'albums-outline', tint: 'masters', permission: ['MASTERS'], badge: (s) => approved(s, 'MASTERS', s.counts.rate), href: '/masters', status: 'live' },
   { id: 'expenses', title: 'Expenses', subtitle: 'Claims · Approvals', icon: 'receipt-outline', tint: 'expenses', permission: ['EXPENSES'], href: '/expenses', status: 'live' },
-  { id: 'approvals', title: 'Approvals', subtitle: 'Everything awaiting you', icon: 'checkmark-done-circle-outline', tint: 'approvals', href: '/approvals', status: 'live' },
   { id: 'production', title: 'Production', subtitle: 'Plans · Issues · Shortages', icon: 'construct-outline', tint: 'production', href: '/soon/production', status: 'soon' },
   { id: 'hr', title: 'HR', subtitle: 'Employees · Attendance · Pay', icon: 'people-outline', tint: 'hr', href: '/soon/hr', status: 'soon' },
   { id: 'reports', title: 'Reports', subtitle: 'GST · P&L · Cash flow', icon: 'bar-chart-outline', tint: 'reports', href: '/soon/reports', status: 'soon' },
-  { id: 'settings', title: 'Settings', subtitle: 'Profile · Theme · Sync', icon: 'settings-outline', tint: 'settings', href: '/settings', status: 'live' },
 ];
+
+/** Tiles on Home: live modules only (coming-soon modules stay registered for deep links). */
+export const HOME_MODULES = MODULES.filter((m) => m.status === 'live');
 
 export function moduleAccess(def: ModuleDef, s: Session): 'open' | 'locked' | 'soon' {
   if (def.status === 'soon') return 'soon';
