@@ -7,10 +7,11 @@ import { View } from 'react-native';
 import { makeStyles, useTheme } from '@/core/theme';
 import { formatMoney, formatQty } from '@/core/utils';
 import { useMaterialItems, useMaterials } from '@/features/master-data';
-import { Button, PickerSheet, PressableScale, StateView, Text, toast } from '@/ui';
+import { Button, PressableScale, StateView, Text, toast } from '@/ui';
 
 import { fetchPartyRate } from './api';
 import { ItemEditorSheet } from './item-editor-sheet';
+import { MaterialPickerSheet } from './material-picker-sheet';
 import type { InvoiceForm, InvoiceItem } from './schema';
 
 const lineValue = (i: InvoiceItem) => i.quantity * i.rate * (1 - i.discount / 100);
@@ -28,24 +29,28 @@ export function ItemsStep() {
   const [editing, setEditing] = useState<number | null>(null);
   const [adding, setAdding] = useState(false);
 
-  const addMany = async (ids: string[]) => {
-    const existing = new Set(fields.map((f) => `${f.itemId}:${f.makeId}`));
-    const fresh = ids.filter((id) => !existing.has(id));
-    if (fresh.length < ids.length) toast.show({ message: `${ids.length - fresh.length} already on this invoice — skipped`, tone: 'info' });
+  const addMany = async (picks: { id: string; quantity: number }[]) => {
+    // A material already on the invoice gets its quantity topped up instead of a duplicate line.
+    const fresh: typeof picks = [];
+    for (const p of picks) {
+      const at = fields.findIndex((f) => `${f.itemId}:${f.makeId}` === p.id);
+      if (at >= 0) update(at, { ...fields[at]!, quantity: fields[at]!.quantity + p.quantity });
+      else fresh.push(p);
+    }
     if (!fresh.length) return;
     setAdding(true);
     const rows = await Promise.all(
-      fresh.map(async (key) => {
+      fresh.map(async ({ id: key, quantity }) => {
         const m = materials.find((x) => `${x.itemId}:${x.makeId}` === key);
         if (!m) return null;
         const rate = partyId ? await fetchPartyRate(partyId, m.itemId, m.makeId).catch(() => ({ rate: 0, discount: 0 })) : { rate: 0, discount: 0 };
-        return { itemId: m.itemId, makeId: m.makeId, name: m.name, unit: m.unit, hsnCode: m.hsnCode, quantity: 1, rate: rate.rate, discount: rate.discount, taxCodes: [] } satisfies InvoiceItem;
+        return { itemId: m.itemId, makeId: m.makeId, name: m.name, unit: m.unit, hsnCode: m.hsnCode, quantity, rate: rate.rate, discount: rate.discount, taxCodes: [] } satisfies InvoiceItem;
       }),
     );
     rows.forEach((r) => r && append(r));
     setAdding(false);
     void trigger('items');
-    toast.show({ message: `${fresh.length} item${fresh.length === 1 ? '' : 's'} added — tap a line to set quantity and taxes`, tone: 'success' });
+    toast.show({ message: `${fresh.length} item${fresh.length === 1 ? '' : 's'} added — tap a line to adjust rate or taxes`, tone: 'success' });
   };
 
   const total = fields.reduce((n, f) => n + lineValue(f), 0);
@@ -83,7 +88,7 @@ export function ItemsStep() {
         </View>
       )}
       <Button title={adding ? 'Adding' : fields.length ? 'Add more items' : 'Add items'} icon="add-circle-outline" variant="ghost" loading={adding} onPress={() => setPicking(true)} />
-      <PickerSheet multiple visible={picking} title="Materials" items={materialItems} confirmLabel={(n) => (n ? `Add ${n} item${n === 1 ? '' : 's'}` : 'Select materials')} onConfirm={(items) => void addMany(items.map((i) => i.id))} onClose={() => setPicking(false)} />
+      <MaterialPickerSheet visible={picking} items={materialItems} onConfirm={(picks) => void addMany(picks)} onClose={() => setPicking(false)} />
       <ItemEditorSheet
         item={editing === null ? null : (fields[editing] ?? null)}
         onClose={() => setEditing(null)}
