@@ -70,6 +70,7 @@ export function LaunchAnimation({ ready, onDone }: { ready: boolean; onDone: () 
 
 const styles = StyleSheet.create({
   root: { alignItems: 'center', justifyContent: 'center', zIndex: 100 },
-  words: { position: 'absolute', top: '58%', alignItems: 'center', gap: 6 },
-  wordmark: { letterSpacing: 6 },
+  // Full width (not content-sized) so Android can't clip the letter-spaced wordmark.
+  words: { position: 'absolute', top: '58%', left: 0, right: 0, alignItems: 'center', gap: 6 },
+  wordmark: { letterSpacing: 6, textAlign: 'center' },
 });

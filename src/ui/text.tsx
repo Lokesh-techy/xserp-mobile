@@ -1,5 +1,5 @@
 /** @author Lokesh */
-import { Text as RNText, type TextProps } from 'react-native';
+import { Platform, Text as RNText, StyleSheet, type TextProps } from 'react-native';
 
 import { useTheme, type Fonts } from '@/core/theme';
 
@@ -20,12 +20,16 @@ type Props = TextProps & { variant?: TextVariant; color?: string; weight?: keyof
 export function Text({ variant = 'body', color, weight, style, children, ...rest }: Props) {
   const t = useTheme();
   const v = variants[variant];
+  const spacing = StyleSheet.flatten(style)?.letterSpacing ?? v.letterSpacing ?? 0;
   return (
     <RNText
       {...rest}
       style={[
         { fontSize: v.fontSize, lineHeight: v.lineHeight, letterSpacing: v.letterSpacing, color: color ?? t.colors.text, fontFamily: t.fonts[weight ?? v.weight] },
         style,
+        // Android measures letter-spaced text (with custom fonts) too narrowly and clips the last glyphs
+        // ("XSER", "SCHNELL ENERG"). Trailing room equal to the spacing keeps every character visible.
+        Platform.OS === 'android' && spacing > 0 && { paddingRight: Math.ceil(spacing) + 2 },
       ]}>
       {variant === 'overline' ? upper(children) : children}
     </RNText>

@@ -168,5 +168,6 @@ const useStyles = makeStyles((t) => ({
   flex: { flex: 1 },
   spacer: { overflow: 'hidden' },
   indicator: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, alignItems: 'center', justifyContent: 'center', gap: 6 },
-  caption: { fontFamily: t.fonts.semibold, fontSize: 11, letterSpacing: 0.6, color: t.alpha.onGradientMuted },
+  // paddingRight: Android clips the last glyphs of letter-spaced text otherwise.
+  caption: { fontFamily: t.fonts.semibold, fontSize: 11, letterSpacing: 0.6, paddingRight: 3, color: t.alpha.onGradientMuted },
 }));
