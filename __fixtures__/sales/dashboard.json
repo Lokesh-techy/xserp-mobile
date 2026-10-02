@@ -1,0 +1,1 @@
+{"response_code":200,"oa_pending":4,"oa_on_track":3,"oa_overdue":1,"pending_on_track":"2","pending_delayed":1,"sales_performance":[{"month":"Aug","value":"450000","key_to_sort":"2026-08"},{"month":"Sep","value":520000}],"delivery_performance":[{"month":"Sep","on_time":8,"delayed":2}],"payment_collection":[{"month":"Sep","value":300000,"advance":20000}]}

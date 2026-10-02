@@ -59,8 +59,6 @@ export const poDashboardSchema = z.looseObject({
   performance: zList(z.looseObject({ po_month: zStr, on_time: zNum, delayed: zNum })),
 });
 
-export const financeYearsSchema = z.looseObject({ financial_years: zList(zStr) });
-
 const priceRow = z.looseObject({
   price: zNum,
   status: zNum,
@@ -74,12 +72,4 @@ const priceRow = z.looseObject({
 });
 export const supplierProfileSchema = z.looseObject({ supplier_prices: zList(priceRow), supplier_history: zList(priceRow) });
 
-export const agingSchema = z.looseObject({ age1: zNum, age2: zNum, age3: zNum, age4: zNum, overdue: zNum, total: zNum, advance: zNum, billable: zNum });
-export const outstandingSchema = z.looseObject({
-  outstanding: zList(z.looseObject({ id: zId, name: zStr, due: zNum, total: zNum, overdue: zNum, aging: agingSchema.nullish() })),
-});
-
-export const materialStockSchema = z.looseObject({
-  material_stock: zList(z.looseObject({ closing_stock: zNum, opening_stock: zNum, location: zStr.optional(), name: zStr.optional() })),
-  closing_stock: zNum.optional(),
-});
+export { financeYearsSchema, materialStockSchema, outstandingSchema } from '@/core/erp';

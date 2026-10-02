@@ -1,0 +1,1 @@
+{"response_code":200,"invoice_list":[{"id":91,"invoice_no":"0042","invoice_code":"25-26/INV/0042","type":"GST","status":0,"date":"2026-09-30","issued_on":"2026-09-30 10:00:00","party_id":12,"party_name":"Acme Ltd","gstin":"33AAAAA0000A1Z5","project_code":"PRJ1","project_name":"Solar Plant","value":"10000","grand_total":"11800.00","currency_symbol":"₹","due_days":30}]}

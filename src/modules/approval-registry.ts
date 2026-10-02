@@ -7,9 +7,10 @@ import { can } from '@/core/permissions';
 import { POLL_MS } from '@/core/query';
 import { erase, type AnyApproval, type ApprovalType } from '@/features/approvals/engine';
 import { poApproval } from '@/features/purchase';
+import { invoiceApproval, oaApproval } from '@/features/sales';
 
 // Each module task adds its config here, e.g. `po: erase(poApproval)`.
-export const APPROVALS: Partial<Record<ApprovalType, AnyApproval>> = { po: erase(poApproval) };
+export const APPROVALS: Partial<Record<ApprovalType, AnyApproval>> = { po: erase(poApproval), invoice: erase(invoiceApproval), oa: erase(oaApproval) };
 
 const HREF: Record<ApprovalType, Href> = {
   po: '/purchase?tab=pending',
