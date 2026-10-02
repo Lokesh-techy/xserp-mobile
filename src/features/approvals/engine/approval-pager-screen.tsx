@@ -1,15 +1,16 @@
 /** @author Lokesh */
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FlatList, useWindowDimensions, View } from 'react-native';
 
 import { useSession } from '@/core/auth';
 import { can } from '@/core/permissions';
 import { makeStyles } from '@/core/theme';
-import { ScreenHeader, StateView, toast } from '@/ui';
+import { ListSkeleton, QueryState, ScreenHeader, StateView, toast } from '@/ui';
 
 import { ActionBar } from './action-bar';
 import { ApprovalPage } from './approval-page';
+import { pickCurrent } from './pager-selection';
 import { removeFromPager, usePagerStore } from './pager-store';
 import { RemarksSheet } from './remarks-sheet';
 import { visibleActions, type ApprovalAction, type ApprovalConfig } from './types';
@@ -22,18 +23,23 @@ export function ApprovalPagerScreen<T, D>({ config }: { config: ApprovalConfig<T
   const { width } = useWindowDimensions();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const pager = usePagerStore();
-  // Deep links / app restarts land here without pager items: fall back to the live queue.
-  const fromStore = pager.type === config.type && pager.items.length > 0;
+  // Decided once: items handed over by a list (queue or lookup), or the live queue for deep links.
+  const [fromStore] = useState(() => pager.type === config.type && pager.items.length > 0);
   const queue = useApprovalQueue(config, !fromStore);
   const items = useMemo(() => (fromStore ? (pager.items as T[]) : (queue.data ?? [])), [fromStore, pager.items, queue.data]);
-  const startIndex = Math.max(0, items.findIndex((i) => config.id(i) === (pager.startId ?? id)));
-  const [index, setIndex] = useState(startIndex);
+  const [selectedId, setSelectedId] = useState<string | null>(() => id ?? (fromStore ? pager.startId : null));
+  const [lastIndex, setLastIndex] = useState(0);
   const [picked, setPicked] = useState<ApprovalAction<T> | null>(null);
-  const list = useRef<FlatList<T>>(null);
-  const current = items[Math.min(index, items.length - 1)];
+  const current = pickCurrent(items, selectedId, lastIndex, config.id);
+  const item = current ? items[current.index] : undefined;
+  // Remember where the selected document sits, so removing it keeps the user at that position.
+  if (current && current.id === selectedId && current.index !== lastIndex) setLastIndex(current.index);
   const canAct = can(session, config.permission, 'approve');
 
   const { start, isBusy } = useApprovalAction(config, (doneId) => removeFromPager(doneId, config.id as (i: unknown) => string));
+
+  // Leaving the pager drops the hand-over so a later deep link can't reuse stale items.
+  useEffect(() => () => usePagerStore.setState({ type: null, items: [], startId: null }), []);
 
   useEffect(() => {
     if (fromStore && items.length === 0) {
@@ -42,7 +48,20 @@ export function ApprovalPagerScreen<T, D>({ config }: { config: ApprovalConfig<T
     }
   }, [fromStore, items.length, config.title]);
 
-  if (!current) {
+  if (!fromStore && queue.status !== 'success') {
+    return (
+      <View style={styles.root}>
+        <ScreenHeader title={config.title} />
+        <View style={styles.pad}>
+          <QueryState query={queue} skeleton={<ListSkeleton rows={2} />}>
+            {() => null}
+          </QueryState>
+        </View>
+      </View>
+    );
+  }
+
+  if (!current || !item) {
     return (
       <View style={styles.root}>
         <ScreenHeader title={config.title} />
@@ -53,24 +72,31 @@ export function ApprovalPagerScreen<T, D>({ config }: { config: ApprovalConfig<T
     );
   }
 
-  const actions = canAct ? visibleActions(config, current, { session }) : [];
+  const actions = canAct ? visibleActions(config, item, { session }) : [];
   return (
     <View style={styles.root}>
-      <ScreenHeader title={config.title} subtitle={`${Math.min(index, items.length - 1) + 1} of ${items.length}`} />
+      <ScreenHeader title={config.title} subtitle={`${current.index + 1} of ${items.length}`} />
       <FlatList
-        ref={list}
+        // Remount at the right page whenever the list changes size (load, approve, refresh).
+        key={items.length}
         data={items}
         horizontal
         pagingEnabled
-        initialScrollIndex={startIndex}
+        initialScrollIndex={current.index}
         getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
         keyExtractor={config.id}
         showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={(e) => setIndex(Math.round(e.nativeEvent.contentOffset.x / width))}
-        renderItem={({ item, index: i }) => <ApprovalPage config={config} item={item} active={Math.abs(i - index) <= 1} width={width} />}
+        onMomentumScrollEnd={(e) => {
+          const i = Math.round(e.nativeEvent.contentOffset.x / width);
+          const next = items[i];
+          if (!next) return;
+          setLastIndex(i);
+          setSelectedId(config.id(next));
+        }}
+        renderItem={({ item: page, index: i }) => <ApprovalPage config={config} item={page} active={Math.abs(i - current.index) <= 1} width={width} />}
       />
-      <ActionBar actions={actions} canAct={canAct} busy={isBusy(current)} onPick={setPicked} />
-      <RemarksSheet action={picked} onClose={() => setPicked(null)} onConfirm={(remarks) => picked && start(current, picked, remarks)} />
+      <ActionBar actions={actions} canAct={canAct} busy={isBusy(item)} onPick={setPicked} />
+      <RemarksSheet action={picked} onClose={() => setPicked(null)} onConfirm={(remarks) => picked && start(item, picked, remarks)} />
     </View>
   );
 }
