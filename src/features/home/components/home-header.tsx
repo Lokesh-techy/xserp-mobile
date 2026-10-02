@@ -13,70 +13,58 @@ import { initials, useSession } from '@/core/auth';
 import { makeStyles, useTheme } from '@/core/theme';
 import { GlassIconButton, PressableScale, Text } from '@/ui';
 
-const greeting = (h: number) => (h < 12 ? 'Good morning,' : h < 17 ? 'Good afternoon,' : 'Good evening,');
-export const COMPACT_AT = 96;
+const greeting = (h: number) => (h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening');
 
-type Props = { pull: ReactNode; scrollY: SharedValue<number>; syncText: string; syncing: boolean };
-
-const BIG = 44;
-const SMALL = 36;
+// One geometry shared by the large header, the mini bar and the morphing icons.
+const BIG = 44; // icon size in the large header
+const SMALL = 36; // icon size in the mini bar
 const GAP = 10;
+const BIG_TOP = 14; // below the safe area
+const BIG_RIGHT = 22;
+const MINI_PAD_X = 20;
+const MINI_PAD_TOP = 10;
+const MINI_PAD_BOTTOM = 14;
+const MINI_ROW = 40; // two text lines: title 22 + caption 16 (+2)
 
-/**
- * Bell + avatar stay on screen the whole time and shrink from the large header into the compact bar,
- * so they morph instead of swapping. Pinned top-right above both headers.
- */
-export function HomeActions({ unread, scrollY }: { unread: number; scrollY: SharedValue<number> }) {
-  const t = useTheme();
-  const styles = useStyles();
-  const insets = useSafeAreaInsets();
-  const { user } = useSession();
-  const width = BIG * 2 + GAP;
-  const morph = useAnimatedStyle(() => {
-    const p = interpolate(scrollY.get(), [COMPACT_AT - 30, COMPACT_AT + 10], [0, 1], Extrapolation.CLAMP);
-    const s = 1 - p * (1 - SMALL / BIG);
-    // Scale happens around the centre; shift so the right/top edges land where the compact bar wants them.
-    const shrinkX = (width * (1 - s)) / 2;
-    const shrinkY = (BIG * (1 - s)) / 2;
-    return { transform: [{ translateX: shrinkX + p * 4 }, { translateY: -shrinkY - p * 8 }, { scale: s }] };
-  });
-  return (
-    <Animated.View style={[styles.floating, { top: insets.top + 14, width }, morph]}>
-      <GlassIconButton icon="notifications-outline" size={BIG} badge={unread} onPress={() => router.push('/notifications')} accessibilityLabel="Notifications" />
-      <PressableScale onPress={() => router.push('/profile')} style={styles.avatar} accessibilityLabel="Profile">
-        <Text variant="label" weight="extrabold" color={t.colors.primary}>
-          {initials(user) || 'U'}
-        </Text>
-      </PressableScale>
-    </Animated.View>
-  );
-}
+/** Scroll distance over which the large header dissolves into the mini one. */
+export const COLLAPSE = { start: 24, end: 120 } as const;
 
-/** The large Home header: date, greeting and sync state. It drifts and fades as the page scrolls. */
-export function HomeHeader({ pull, scrollY, syncText, syncing }: Props) {
+const progress = (y: number) => {
+  'worklet';
+  return interpolate(y, [COLLAPSE.start, COLLAPSE.end], [0, 1], Extrapolation.CLAMP);
+};
+
+type HeaderProps = { pull: ReactNode; scrollY: SharedValue<number>; syncText: string; syncing: boolean };
+
+/** Large Home header: date, greeting, name, sync state. Shrinks and fades as the page scrolls. */
+export function HomeHeader({ pull, scrollY, syncText, syncing }: HeaderProps) {
   const t = useTheme();
   const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { user } = useSession();
   const now = new Date();
-  const drift = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollY.get(), [0, COMPACT_AT], [1, 0], Extrapolation.CLAMP),
-    transform: [{ translateY: interpolate(scrollY.get(), [0, COMPACT_AT], [0, 28], Extrapolation.CLAMP) }, { scale: interpolate(scrollY.get(), [0, COMPACT_AT], [1, 0.96], Extrapolation.CLAMP) }],
-  }));
+  const dissolve = useAnimatedStyle(() => {
+    const p = progress(scrollY.get());
+    return {
+      opacity: interpolate(p, [0, 0.75], [1, 0], Extrapolation.CLAMP),
+      // Drifts slower than the page (parallax) and shrinks toward its top-left corner.
+      transform: [{ translateY: scrollY.get() * 0.35 }, { scale: 1 - p * 0.08 }],
+    };
+  });
   const orb = useAnimatedStyle(() => ({ transform: [{ translateY: scrollY.get() * 0.5 }] }));
   return (
-    <LinearGradient colors={t.gradients.header} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.root, { paddingTop: insets.top + 14 }]}>
+    <LinearGradient colors={t.gradients.header} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.root, { paddingTop: insets.top + BIG_TOP }]}>
       <StatusBar style="light" />
       <Animated.View style={[styles.orb, orb]} />
       {pull}
-      <Animated.View style={drift}>
+      <Animated.View style={[styles.content, dissolve]}>
         <View style={styles.top}>
           <Text variant="overline" color={t.alpha.onGradientFaint}>
             {format(now, 'EEEE, d MMMM')}
           </Text>
         </View>
         <Text variant="body" color={t.alpha.onGradientMuted} style={styles.greeting}>
-          {greeting(now.getHours())}
+          {greeting(now.getHours())},
         </Text>
         <Text variant="display" color={t.alpha.onGradient} numberOfLines={1}>
           {user.firstName || user.username || 'there'}
@@ -92,36 +80,88 @@ export function HomeHeader({ pull, scrollY, syncText, syncing }: Props) {
   );
 }
 
-/** Slim bar that takes over once the large header has scrolled away. */
-export function CompactHomeBar({ scrollY }: { scrollY: SharedValue<number> }) {
+/** The mini header: the same greeting, name, date and sync state, condensed into one padded bar. */
+export function MiniHomeHeader({ scrollY, syncText }: { scrollY: SharedValue<number>; syncText: string }) {
   const t = useTheme();
   const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { user } = useSession();
-  const show = useAnimatedStyle(() => {
-    const p = interpolate(scrollY.get(), [COMPACT_AT - 30, COMPACT_AT + 10], [0, 1], Extrapolation.CLAMP);
-    return { opacity: p, transform: [{ translateY: (1 - p) * -12 }] };
+  const now = new Date();
+  const bar = useAnimatedStyle(() => ({ opacity: interpolate(progress(scrollY.get()), [0.35, 1], [0, 1], Extrapolation.CLAMP) }));
+  const text = useAnimatedStyle(() => {
+    const p = interpolate(progress(scrollY.get()), [0.5, 1], [0, 1], Extrapolation.CLAMP);
+    return { opacity: p, transform: [{ translateY: (1 - p) * 8 }] };
   });
   return (
-    <Animated.View pointerEvents="box-none" style={[styles.compact, show]}>
-      <LinearGradient colors={t.gradients.header} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.compactInner, { paddingTop: insets.top + 6 }]}>
-        <Text variant="heading" color={t.alpha.onGradient} numberOfLines={1} style={styles.compactName}>
-          {user.firstName || user.username}
-        </Text>
+    <Animated.View pointerEvents="none" style={[styles.mini, bar]}>
+      <LinearGradient
+        colors={t.gradients.header}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.miniInner, { paddingTop: insets.top + MINI_PAD_TOP }]}>
+        <Animated.View style={[styles.miniText, text]}>
+          <Text variant="heading" color={t.alpha.onGradient} numberOfLines={1}>
+            {greeting(now.getHours())}, {user.firstName || user.username}
+          </Text>
+          <Text variant="caption" color={t.alpha.onGradientFaint} numberOfLines={1}>
+            {format(now, 'EEE, d MMM')} · {syncText}
+          </Text>
+        </Animated.View>
       </LinearGradient>
     </Animated.View>
   );
 }
 
+/**
+ * Bell + avatar stay on screen the whole time and glide from the large header into the mini bar,
+ * so they morph instead of swapping.
+ */
+export function HomeActions({ unread, scrollY }: { unread: number; scrollY: SharedValue<number> }) {
+  const t = useTheme();
+  const styles = useStyles();
+  const insets = useSafeAreaInsets();
+  const { user } = useSession();
+  const width = BIG * 2 + GAP;
+  const morph = useAnimatedStyle(() => {
+    const p = progress(scrollY.get());
+    const s = 1 - p * (1 - SMALL / BIG);
+    // Scaling is about the centre: shift so the right edge ends MINI_PAD_X from the screen edge and the
+    // icons sit vertically centred in the mini bar's text row.
+    const shrinkX = (width * (1 - s)) / 2;
+    const shrinkY = (BIG * (1 - s)) / 2;
+    const toRight = BIG_RIGHT - MINI_PAD_X;
+    const toTop = BIG_TOP - (MINI_PAD_TOP + (MINI_ROW - SMALL) / 2);
+    return { transform: [{ translateX: shrinkX + p * toRight }, { translateY: -shrinkY - p * toTop }, { scale: s }] };
+  });
+  return (
+    <Animated.View style={[styles.actions, { top: insets.top + BIG_TOP, width }, morph]}>
+      <GlassIconButton icon="notifications-outline" size={BIG} badge={unread} onPress={() => router.push('/notifications')} accessibilityLabel="Notifications" />
+      <PressableScale onPress={() => router.push('/profile')} style={styles.avatar} accessibilityLabel="Profile">
+        <Text variant="label" weight="extrabold" color={t.colors.primary}>
+          {initials(user) || 'U'}
+        </Text>
+      </PressableScale>
+    </Animated.View>
+  );
+}
+
 const useStyles = makeStyles((t) => ({
-  root: { paddingHorizontal: 22, paddingBottom: 64, borderBottomLeftRadius: 32, borderBottomRightRadius: 32, overflow: 'hidden' },
+  root: { paddingHorizontal: BIG_RIGHT, paddingBottom: 64, borderBottomLeftRadius: 32, borderBottomRightRadius: 32, overflow: 'hidden' },
   orb: { position: 'absolute', width: 260, height: 260, borderRadius: 130, top: -80, right: -90, backgroundColor: t.alpha.orb },
+  content: { transformOrigin: 'left top' },
   top: { minHeight: BIG, justifyContent: 'center', paddingRight: BIG * 2 + GAP + 8 },
-  floating: { position: 'absolute', right: 22, zIndex: 20, flexDirection: 'row', alignItems: 'center', gap: GAP },
-  avatar: { width: BIG, height: BIG, borderRadius: BIG / 2, backgroundColor: t.colors.white, borderWidth: 3, borderColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center' },
   greeting: { marginTop: 18 },
   sync: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
-  compact: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 },
-  compactInner: { flexDirection: 'row', alignItems: 'center', minHeight: 0, paddingLeft: 18, paddingRight: 18 + SMALL * 2 + GAP, paddingBottom: 10, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, ...t.shadow.lifted },
-  compactName: { flex: 1, lineHeight: SMALL },
+  mini: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 },
+  miniInner: {
+    paddingLeft: MINI_PAD_X,
+    paddingRight: MINI_PAD_X + SMALL * 2 + GAP + 12,
+    paddingBottom: MINI_PAD_BOTTOM,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    ...t.shadow.lifted,
+  },
+  miniText: { minHeight: MINI_ROW, justifyContent: 'center' },
+  actions: { position: 'absolute', right: BIG_RIGHT, zIndex: 20, flexDirection: 'row', alignItems: 'center', gap: GAP },
+  avatar: { width: BIG, height: BIG, borderRadius: BIG / 2, backgroundColor: t.colors.white, borderWidth: 3, borderColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center' },
 }));

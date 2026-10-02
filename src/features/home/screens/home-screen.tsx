@@ -7,7 +7,7 @@ import { makeStyles, useTheme, type ModuleTint } from '@/core/theme';
 import { Text, usePullToSync, type IconName } from '@/ui';
 
 import { ApprovalsCard, type ApprovalGroup } from '../components/approvals-card';
-import { CompactHomeBar, HomeActions, HomeHeader } from '../components/home-header';
+import { HomeActions, HomeHeader, MiniHomeHeader } from '../components/home-header';
 import { ModuleTile } from '../components/module-tile';
 
 export type HomeModule = { id: string; title: string; subtitle: string; icon: IconName; tint: ModuleTint; href: Href; access: 'open' | 'locked' | 'soon'; badge: number };
@@ -42,7 +42,7 @@ export function HomeScreen({ modules, unread, approvals, sync, onRefresh }: Prop
           </View>
         </Animated.ScrollView>,
       )}
-      <CompactHomeBar scrollY={pull.scrollY} />
+      <MiniHomeHeader scrollY={pull.scrollY} syncText={sync.text} />
       <HomeActions unread={unread} scrollY={pull.scrollY} />
     </View>
   );
