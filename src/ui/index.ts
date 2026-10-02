@@ -26,3 +26,4 @@ export * from './charts';
 export * from './brand';
 export * from './pull-to-sync';
 export * from './document-button';
+export * from './module-screen';
