@@ -21,6 +21,7 @@ export const rateApproval = defineApproval<RateRequest>({
   type: 'rate',
   title: 'Rate approvals',
   noun: 'Rate',
+  short: 'Rates',
   permission: 'MASTERS',
   tint: 'masters',
   queueKey: mastersKeys.rates(),

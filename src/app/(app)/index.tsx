@@ -4,13 +4,13 @@ import { router } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useSessionStore } from '@/core/auth';
-import { useTheme } from '@/core/theme';
+import { approvalTints } from '@/core/theme';
 import { useSessionRefreshAction } from '@/features/auth';
 import { usePendingClaims } from '@/features/expenses';
 import { AUTO_SYNC_AFTER_MS, HomeScreen, runSync, syncLabel, useLastSync } from '@/features/home';
 import { syncAllMasters } from '@/features/master-data';
 import { useUnreadCount } from '@/features/notifications';
-import { useApprovalFeed } from '@/modules/approval-feed';
+import { summarizeByType, useApprovalFeed } from '@/modules/approval-feed';
 import { HOME_MODULES, moduleAccess, moduleBadge } from '@/modules/registry';
 
 /** Re-render once a minute so "Synced 5 minutes ago" stays true. */
@@ -24,7 +24,6 @@ function useMinuteTick() {
 }
 
 export default function Home() {
-  const t = useTheme();
   const qc = useQueryClient();
   const session = useSessionStore((s) => s.session);
   const refreshSession = useSessionRefreshAction();
@@ -59,10 +58,10 @@ export default function Home() {
 
   if (!session) return null;
   const modules = HOME_MODULES.map((m) => ({ id: m.id, title: m.title, subtitle: m.subtitle, icon: m.icon, tint: m.tint, href: m.href, access: moduleAccess(m, session), badge: moduleBadge(m, session) }));
-  const cards = feed.entries.map((e) => {
-    const s = e.config.summary(e.item);
-    return { key: e.key, noun: e.config.noun, tint: t.tints[e.config.tint], code: s.code, party: s.party, amount: s.amount, currency: s.currency, date: s.date, status: s.status };
-  });
+  const groups = [
+    ...summarizeByType(feed.entries).map((g) => ({ key: g.type, label: g.label, tint: approvalTints[g.type], count: g.count })),
+    ...(claims.enabled && claims.count > 0 ? [{ key: 'expenses', label: 'Claims', tint: approvalTints.expenses, count: claims.count }] : []),
+  ];
 
   return (
     <HomeScreen
@@ -70,12 +69,14 @@ export default function Home() {
       unread={unread}
       sync={{ text: syncLabel(last.at, last.syncing, now), syncing: last.syncing }}
       onRefresh={sync}
-      deck={{
+      approvals={{
         show: feed.enabled || claims.enabled,
-        cards,
+        groups,
         loading: feed.loading,
-        onOpen: (key) => router.push({ pathname: '/approvals/review', params: key ? { start: key } : {} }),
-        extra: claims.enabled ? { label: 'Expense claims', count: claims.count, onPress: () => router.push('/expenses?tab=confirmed') } : undefined,
+        onReview: (key) => {
+          if (key === 'expenses') router.push('/expenses?tab=confirmed');
+          else router.push({ pathname: '/approvals/review', params: key ? { type: key } : {} });
+        },
       }}
     />
   );

@@ -25,6 +25,7 @@ export const icdApproval = defineApproval<Receipt, ReceiptMaterial[]>({
   type: 'icd',
   title: 'GRN audit',
   noun: 'GRN',
+  short: 'Audit',
   permission: 'ICD',
   tint: 'audit',
   queueKey: auditKeys.pending(),

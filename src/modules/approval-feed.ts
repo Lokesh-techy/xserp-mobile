@@ -6,7 +6,8 @@ import { useSessionStore } from '@/core/auth';
 import { can } from '@/core/permissions';
 import { POLL_MS } from '@/core/query';
 import { parseServerDate } from '@/core/utils';
-import type { AnyApproval, ReviewEntry } from '@/features/approvals/engine';
+import type { ModuleTint } from '@/core/theme';
+import type { AnyApproval, ApprovalType, ReviewEntry } from '@/features/approvals/engine';
 
 import { APPROVALS } from './approval-registry';
 
@@ -17,6 +18,19 @@ export function buildFeed(groups: { config: AnyApproval; items: unknown[] }[]): 
   return groups
     .flatMap(({ config, items }) => items.map((item) => ({ key: `${config.type}:${config.id(item)}`, config, item })))
     .sort((a, b) => time(b) - time(a));
+}
+
+export type TypeSummary = { type: ApprovalType; label: string; tint: ModuleTint; count: number };
+
+/** Pending counts per document type, largest first — drives the Home composition bar. */
+export function summarizeByType(entries: ReviewEntry[]): TypeSummary[] {
+  const byType = new Map<ApprovalType, TypeSummary>();
+  for (const e of entries) {
+    const cur = byType.get(e.config.type);
+    if (cur) cur.count += 1;
+    else byType.set(e.config.type, { type: e.config.type, label: e.config.short ?? e.config.noun, tint: e.config.tint, count: 1 });
+  }
+  return [...byType.values()].sort((a, b) => b.count - a.count);
 }
 
 /** Live, polled feed of everything the signed-in user can approve. */

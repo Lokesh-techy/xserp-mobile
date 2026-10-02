@@ -13,6 +13,7 @@ export const poApproval = defineApproval<PurchaseOrder, PoMaterial[]>({
   type: 'po',
   title: 'Purchase orders',
   noun: 'PO',
+  short: 'PO',
   permission: 'PURCHASE',
   tint: 'purchase',
   queueKey: purchaseKeys.drafts(),

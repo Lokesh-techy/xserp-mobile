@@ -64,6 +64,17 @@ export const moduleTints = {
 export type ModuleTints = typeof moduleTints;
 export type ModuleTint = keyof ModuleTints;
 
+/** One distinct hue per approval document type, so the Home composition bar reads at a glance. */
+export const approvalTints = {
+  po: '#E59A1A',
+  invoice: '#1D9D74',
+  oa: '#0E7C86',
+  grn: '#209BE1',
+  icd: '#6A5ACD',
+  rate: '#C2417B',
+  expenses: '#D9534F',
+} as const;
+
 export const chartSeries = {
   light: ['#004195', '#209BE1', '#1D9D74', '#E59A1A', '#6A5ACD', '#D9534F', '#0E7C86'],
   dark: ['#5B9BFF', '#6CC4F5', '#3CC79A', '#F2B84B', '#9B8CFF', '#F07B77', '#3FB8C2'],

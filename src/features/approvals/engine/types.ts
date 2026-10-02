@@ -47,6 +47,8 @@ export type ApprovalConfig<T, D = undefined> = {
   type: ApprovalType;
   title: string;
   noun: string;
+  /** Compact label for summaries (defaults to `noun`), e.g. "Audit" vs "GRN". */
+  short?: string;
   permission: PermissionCode;
   tint: ModuleTint;
   queueKey: readonly unknown[];

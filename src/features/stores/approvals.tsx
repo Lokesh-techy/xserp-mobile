@@ -36,6 +36,7 @@ export const grnApproval = defineApproval<Receipt>({
   type: 'grn',
   title: 'Goods receipts',
   noun: 'GRN',
+  short: 'GRN',
   permission: 'STORES',
   tint: 'stores',
   queueKey: storesKeys.drafts(),
