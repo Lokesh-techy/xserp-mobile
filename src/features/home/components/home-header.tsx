@@ -4,9 +4,9 @@ import { format } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { View } from 'react-native';
-import Animated, { Extrapolation, interpolate, useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
+import Animated, { Extrapolation, interpolate, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { initials, useSession } from '@/core/auth';
@@ -69,18 +69,35 @@ export function HomeHeader({ pull, scrollY, syncText, syncing }: HeaderProps) {
         <Text variant="display" color={t.alpha.onGradient} numberOfLines={1}>
           {user.firstName || user.username || 'there'}
         </Text>
-        <View style={styles.sync}>
-          <Ionicons name={syncing ? 'sync-outline' : 'cloud-done-outline'} size={13} color={t.alpha.onGradientFaint} />
-          <Text variant="caption" color={t.alpha.onGradientFaint}>
-            {syncText}
-          </Text>
-        </View>
+        <SyncLine text={syncText} syncing={syncing} />
       </Animated.View>
     </LinearGradient>
   );
 }
 
-/** The mini header: the same greeting, name, date and sync state, condensed into one padded bar. */
+/** Sync status; pops with a green check the moment a sync finishes. */
+function SyncLine({ text, syncing }: { text: string; syncing: boolean }) {
+  const t = useTheme();
+  const styles = useStyles();
+  const pop = useSharedValue(0);
+  const wasSyncing = useSharedValue(syncing);
+  useEffect(() => {
+    if (wasSyncing.get() && !syncing) pop.set(withSequence(withSpring(1, { dampingRatio: 0.5, duration: 420 }), withTiming(0, { duration: 1400 })));
+    wasSyncing.set(syncing);
+  }, [syncing, pop, wasSyncing]);
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: 1 + pop.get() * 0.06 }], opacity: 0.85 + pop.get() * 0.15 }));
+  const done = !syncing && text.endsWith('just now');
+  return (
+    <Animated.View style={[styles.sync, style]}>
+      <Ionicons name={syncing ? 'sync-outline' : done ? 'checkmark-circle' : 'cloud-done-outline'} size={13} color={done ? t.alpha.successOnGradient : t.alpha.onGradientFaint} />
+      <Text variant="caption" color={done ? t.alpha.successOnGradient : t.alpha.onGradientFaint}>
+        {text}
+      </Text>
+    </Animated.View>
+  );
+}
+
+/** The mini header: name, date and sync state condensed into one padded bar (no greeting). */
 export function MiniHomeHeader({ scrollY, syncText }: { scrollY: SharedValue<number>; syncText: string }) {
   const t = useTheme();
   const styles = useStyles();
@@ -101,7 +118,7 @@ export function MiniHomeHeader({ scrollY, syncText }: { scrollY: SharedValue<num
         style={[styles.miniInner, { paddingTop: insets.top + MINI_PAD_TOP }]}>
         <Animated.View style={[styles.miniText, text]}>
           <Text variant="heading" color={t.alpha.onGradient} numberOfLines={1}>
-            {greeting(now.getHours())}, {user.firstName || user.username}
+            {user.firstName || user.username}
           </Text>
           <Text variant="caption" color={t.alpha.onGradientFaint} numberOfLines={1}>
             {format(now, 'EEE, d MMM')} · {syncText}
@@ -116,7 +133,7 @@ export function MiniHomeHeader({ scrollY, syncText }: { scrollY: SharedValue<num
  * Bell + avatar stay on screen the whole time and glide from the large header into the mini bar,
  * so they morph instead of swapping.
  */
-export function HomeActions({ unread, scrollY }: { unread: number; scrollY: SharedValue<number> }) {
+export function HomeActions({ unread, scrollY, pull }: { unread: number; scrollY: SharedValue<number>; pull: SharedValue<number> }) {
   const t = useTheme();
   const styles = useStyles();
   const insets = useSafeAreaInsets();
@@ -131,7 +148,8 @@ export function HomeActions({ unread, scrollY }: { unread: number; scrollY: Shar
     const shrinkY = (BIG * (1 - s)) / 2;
     const toRight = BIG_RIGHT - MINI_PAD_X;
     const toTop = BIG_TOP - (MINI_PAD_TOP + (MINI_ROW - SMALL) / 2);
-    return { transform: [{ translateX: shrinkX + p * toRight }, { translateY: -shrinkY - p * toTop }, { scale: s }] };
+    // While pulling to refresh, ride down with the stretching header instead of staying pinned.
+    return { transform: [{ translateX: shrinkX + p * toRight }, { translateY: -shrinkY - p * toTop + pull.get() }, { scale: s }] };
   });
   return (
     <Animated.View style={[styles.actions, { top: insets.top + BIG_TOP, width }, morph]}>
@@ -151,7 +169,7 @@ const useStyles = makeStyles((t) => ({
   content: { transformOrigin: 'left top' },
   top: { minHeight: BIG, justifyContent: 'center', paddingRight: BIG * 2 + GAP + 8 },
   greeting: { marginTop: 18 },
-  sync: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
+  sync: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, alignSelf: 'flex-start', transformOrigin: 'left center' },
   mini: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 },
   miniInner: {
     paddingLeft: MINI_PAD_X,

@@ -43,7 +43,7 @@ export function HomeScreen({ modules, unread, approvals, sync, onRefresh }: Prop
         </Animated.ScrollView>,
       )}
       <MiniHomeHeader scrollY={pull.scrollY} syncText={sync.text} />
-      <HomeActions unread={unread} scrollY={pull.scrollY} />
+      <HomeActions unread={unread} scrollY={pull.scrollY} pull={pull.pull} />
     </View>
   );
 }

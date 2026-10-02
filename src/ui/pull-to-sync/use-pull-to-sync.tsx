@@ -161,7 +161,8 @@ export function usePullToSync(onRefresh: () => Promise<unknown>, enabled = true)
     [blocked],
   );
 
-  return { indicator, attach, scrollProps, nestedProps, scrollY };
+  // `pull` is the live stretch distance, for chrome outside the header that should travel with it.
+  return { indicator, attach, scrollProps, nestedProps, scrollY, pull };
 }
 
 const useStyles = makeStyles((t) => ({
