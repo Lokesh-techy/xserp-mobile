@@ -1,6 +1,6 @@
 /** @author Lokesh */
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
+import { goBack } from './go-back';
 import { StatusBar } from 'expo-status-bar';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
@@ -35,7 +35,7 @@ export function ScreenHeader({ title, subtitle, back = true, actions = [], tabs,
       <StatusBar style="light" />
       {pull}
       <View style={styles.row}>
-        {back && <GlassIconButton icon="chevron-back" size={40} onPress={() => router.back()} accessibilityLabel="Back" />}
+        {back && <GlassIconButton icon="chevron-back" size={40} onPress={goBack} accessibilityLabel="Back" />}
         <View style={styles.titles}>
           <Text variant="heading" color={t.alpha.onGradient} numberOfLines={1} style={styles.title}>
             {title}

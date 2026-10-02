@@ -4,7 +4,6 @@ import * as Application from 'expo-application';
 import * as Updates from 'expo-updates';
 import * as WebBrowser from 'expo-web-browser';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import { Alert, ScrollView, View } from 'react-native';
@@ -14,7 +13,7 @@ import { displayName, initials, logout, useSession, useSessionStore } from '@/co
 import { env, serverHost } from '@/core/config/env';
 import { makeStyles, useTheme, type Theme } from '@/core/theme';
 import { formatDate } from '@/core/utils';
-import { GlassIconButton, PressableScale, Section, Text, type IconName } from '@/ui';
+import { GlassIconButton, goBack, PressableScale, Section, Text, type IconName } from '@/ui';
 
 import { AppearanceControl } from '../components/appearance-control';
 import { ChangePasswordSheet } from '../components/change-password-sheet';
@@ -70,7 +69,7 @@ export function ProfileScreen() {
       <ScrollView contentContainerStyle={styles.scroll}>
         <LinearGradient colors={t.gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.hero, { paddingTop: insets.top + 8 }]}>
           <View style={styles.top}>
-            <GlassIconButton icon="chevron-down" onPress={() => router.back()} accessibilityLabel="Close" />
+            <GlassIconButton icon="chevron-down" onPress={goBack} accessibilityLabel="Close" />
           </View>
           <LinearGradient colors={['#5CC3FF', '#209BE1', '#004195']} style={styles.ring}>
             <View style={styles.avatar}>

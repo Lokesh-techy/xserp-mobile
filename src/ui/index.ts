@@ -29,3 +29,4 @@ export * from './document-button';
 export * from './module-screen';
 export * from './range-chips';
 export * from './hold-button';
+export * from './go-back';
