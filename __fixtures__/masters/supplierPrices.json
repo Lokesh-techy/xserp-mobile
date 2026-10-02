@@ -1,0 +1,1 @@
+{"response_code":200,"supplier_prices":[{"supplier":{"id":12,"code":"P001","name":"Acme Ltd"},"material":{"item_id":45,"name":"Copper wire","drawing_no":"DRG-1","unit":"Kg"},"make":"-NA-","make_id":1,"price":"130","currency":"INR","effect_since":"2026-10-01","effect_till":"2027-03-31","status":0,"remarks":"Revised","reject_remarks":"","rate_approval_id":"77"}]}
