@@ -27,3 +27,4 @@ export * from './brand';
 export * from './pull-to-sync';
 export * from './document-button';
 export * from './module-screen';
+export * from './range-chips';

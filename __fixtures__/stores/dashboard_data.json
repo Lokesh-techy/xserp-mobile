@@ -1,0 +1,1 @@
+{"response_code":200,"stock_statement":{"opening_stock":"1500000","closing_stock":1625000,"stock_issues":300000,"stock_receipt":425000},"stock_mix":[{"category":"Raw material","value":900000},{"category":"Finished goods","value":"725000"}],"monthly_closing_stock":[{"month":"Aug","closing_stock":1500000},{"month":"Sep","closing_stock":1625000}]}

@@ -1,6 +1,2 @@
 /** @author Lokesh */
-import { PendingModuleScreen } from '@/features/home';
-
-export default function Screen() {
-  return <PendingModuleScreen title="Stores" />;
-}
+export { StoresScreen as default } from '@/features/stores';
