@@ -36,7 +36,10 @@ export function BottomSheet({ visible, onClose, title, children, footer, maxHeig
     if (!mounted) return;
     const base = Dimensions.get('window').height;
     const show = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', (e) => {
-      const lift = keyboardOffset({ keyboard: e.endCoordinates.height, windowShrink: base - Dimensions.get('window').height });
+      const lift = keyboardOffset({
+        keyboard: e.endCoordinates.height,
+        windowShrink: base - Dimensions.get('window').height,
+      });
       kb.set(withTiming(lift, { duration: Platform.OS === 'ios' ? e.duration || 250 : 200 }));
     });
     const hide = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', (e) => {
@@ -75,13 +78,22 @@ export function BottomSheet({ visible, onClose, title, children, footer, maxHeig
       else y.set(withSpring(0, springs.snappy));
     });
 
-  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: y.get() - kb.get() }], maxHeight: height * maxHeightRatio - kb.get() }));
+  const sheetStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: y.get() - kb.get() }],
+    maxHeight: height * maxHeightRatio - kb.get(),
+  }));
   const backdropStyle = useAnimatedStyle(() => ({ opacity: backdrop.get() }));
 
   if (!mounted) return null;
 
   return (
-    <Modal transparent visible statusBarTranslucent navigationBarTranslucent animationType="none" onRequestClose={onClose}>
+    <Modal
+      transparent
+      visible
+      statusBarTranslucent
+      navigationBarTranslucent
+      animationType="none"
+      onRequestClose={onClose}>
       {/* Sheets render in their own window, outside the root activity tracker. */}
       <GestureHandlerRootView style={styles.flex} onTouchStart={markActive}>
         <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, backdropStyle]}>

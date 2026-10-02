@@ -2,7 +2,15 @@
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { scheduleOnRN } from 'react-native-worklets';
 
@@ -28,10 +36,20 @@ export function LaunchAnimation({ ready, onDone }: { ready: boolean; onDone: () 
 
   useEffect(() => {
     SplashScreen.hideAsync().catch(() => {});
-    spread.set(withSequence(withTiming(0.7, { duration: 360, easing: Easing.out(Easing.cubic) }), withSpring(0, { dampingRatio: 0.55, duration: 520 })));
+    spread.set(
+      withSequence(
+        withTiming(0.7, { duration: 360, easing: Easing.out(Easing.cubic) }),
+        withSpring(0, { dampingRatio: 0.55, duration: 520 }),
+      ),
+    );
     glow.set(withDelay(420, withSequence(withTiming(1, { duration: 220 }), withTiming(0.55, { duration: 480 }))));
     lift.set(withDelay(700, withSpring(1, { dampingRatio: 0.85, duration: 600 })));
-    word.set(withDelay(820, withTiming(1, { duration: 420 }, () => played.set(true))));
+    word.set(
+      withDelay(
+        820,
+        withTiming(1, { duration: 420 }, () => played.set(true)),
+      ),
+    );
   }, [spread, glow, lift, word, played]);
 
   useEffect(() => {
@@ -39,19 +57,28 @@ export function LaunchAnimation({ ready, onDone }: { ready: boolean; onDone: () 
     const timer = setInterval(() => {
       if (!played.get()) return;
       clearInterval(timer);
-      overlay.set(withTiming(0, { duration: 320 }, (done) => {
-        if (done) scheduleOnRN(onDone);
-      }));
+      overlay.set(
+        withTiming(0, { duration: 320 }, (done) => {
+          if (done) scheduleOnRN(onDone);
+        }),
+      );
     }, 50);
     return () => clearInterval(timer);
   }, [ready, onDone, overlay, played]);
 
-  const markStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -40 * lift.get() }, { scale: 1 - 0.3 * lift.get() }] }));
-  const wordStyle = useAnimatedStyle(() => ({ opacity: word.get(), transform: [{ translateY: 12 * (1 - word.get()) - 40 * lift.get() + 40 }] }));
+  const markStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -40 * lift.get() }, { scale: 1 - 0.3 * lift.get() }],
+  }));
+  const wordStyle = useAnimatedStyle(() => ({
+    opacity: word.get(),
+    transform: [{ translateY: 12 * (1 - word.get()) - 40 * lift.get() + 40 }],
+  }));
   const rootStyle = useAnimatedStyle(() => ({ opacity: overlay.get() }));
 
   return (
-    <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.root, { backgroundColor: t.colors.navy900 }, rootStyle]}>
+    <Animated.View
+      pointerEvents="none"
+      style={[StyleSheet.absoluteFill, styles.root, { backgroundColor: t.colors.navy900 }, rootStyle]}>
       <Animated.View style={markStyle}>
         <XMark size={MARK} variant="onDark" spread={spread} glow={glow} />
       </Animated.View>

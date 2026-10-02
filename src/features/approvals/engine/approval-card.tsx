@@ -69,7 +69,17 @@ export function ApprovalCard({ summary, tint, onPress, showStatus = true, kind }
 }
 
 const useStyles = makeStyles((t) => ({
-  card: { backgroundColor: t.colors.surface, borderRadius: 16, paddingVertical: 12, paddingLeft: 18, paddingRight: 14, marginBottom: 8, gap: 5, overflow: 'hidden', ...t.shadow.card },
+  card: {
+    backgroundColor: t.colors.surface,
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingLeft: 18,
+    paddingRight: 14,
+    marginBottom: 8,
+    gap: 5,
+    overflow: 'hidden',
+    ...t.shadow.card,
+  },
   stripe: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   flex: { flex: 1 },

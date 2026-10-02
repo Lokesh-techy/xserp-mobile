@@ -30,7 +30,15 @@ function RemarksBody<T>({ action, onClose, onConfirm }: Props<T> & { action: App
     <BottomSheet visible onClose={onClose} title={action.label}>
       <View style={styles.body}>
         {action.remarks !== 'none' && (
-          <Input label={action.remarks === 'required' ? 'Remarks (required)' : 'Remarks (optional)'} icon="chatbox-ellipses-outline" value={remarks} onChangeText={setRemarks} multiline error={error} ref={input} />
+          <Input
+            label={action.remarks === 'required' ? 'Remarks (required)' : 'Remarks (optional)'}
+            icon="chatbox-ellipses-outline"
+            value={remarks}
+            onChangeText={setRemarks}
+            multiline
+            error={error}
+            ref={input}
+          />
         )}
         <Button
           title={action.label}

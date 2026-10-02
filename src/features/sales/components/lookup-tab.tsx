@@ -10,7 +10,7 @@ import { makeStyles, useTheme } from '@/core/theme';
 import { filterItems, type DateRange } from '@/core/utils';
 import { ApprovalCard, openPager } from '@/features/approvals/engine';
 import { useMaterialItems, usePartyItems, useProjectItems, useProjects } from '@/features/master-data';
-import { Button, Chip, countActiveFilters, type FilterField, FilterSheet, type FilterValues, QueryState, type ScrollHost, SearchField, Text, useHostRefresh, withPressFeel } from '@/ui';
+import { Button, countActiveFilters, type FilterField, FilterSheet, type FilterValues, QueryState, type ScrollHost, Text, useHostRefresh, withPressFeel, SegmentedControl, useScreenSearch } from '@/ui';
 
 import { DEFAULT_SALES_FILTERS, type SalesFilters } from '../api';
 import { invoiceApproval, oaApproval } from '../approvals';
@@ -28,7 +28,7 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
   const [filters, setFilters] = useState<SalesFilters>(() => DEFAULT_SALES_FILTERS('invoice'));
   const [values, setValues] = useState<FilterValues>(() => toValues(DEFAULT_SALES_FILTERS()));
   const [defaults] = useState<FilterValues>(() => toValues(DEFAULT_SALES_FILTERS()));
-  const [search, setSearch] = useState('');
+  const search = useScreenSearch(filters.kind === 'invoice' ? 'Search invoice, customer or project' : 'Search OA, customer or project');
   const invoices = useInvoiceSearch(filters);
   const oas = useOaSearch(filters);
   const parties = usePartyItems();
@@ -82,11 +82,7 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
   const header = (
     <View style={styles.head}>
       {canCreate && <Button title="Create invoice" icon="add-circle-outline" onPress={withPressFeel(() => router.push('/sales/invoice/new'))} />}
-      <View style={styles.chips}>
-        <Chip label="Invoices" icon="receipt-outline" active={isInvoice} onPress={() => switchKind('invoice')} />
-        <Chip label="Order acks" icon="document-text-outline" active={!isInvoice} onPress={() => switchKind('oa')} />
-      </View>
-      <SearchField value={search} onChangeText={setSearch} placeholder={isInvoice ? 'Search invoice, customer or project' : 'Search OA, customer or project'} />
+      <SegmentedControl options={[{ key: 'invoice', label: 'Invoices' }, { key: 'oa', label: 'Order acknowledgements' }]} value={filters.kind} onChange={switchKind} />
     </View>
   );
   const footer = (
@@ -131,6 +127,5 @@ const useStyles = makeStyles((t) => ({
   pad: { padding: t.space.gutter, paddingBottom: 48 },
   grow: { flexGrow: 1 },
   head: { gap: 12, marginBottom: 14 },
-  chips: { flexDirection: 'row', gap: 8 },
   footer: { textAlign: 'center', marginTop: 8 },
 }));

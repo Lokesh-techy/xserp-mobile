@@ -25,14 +25,31 @@ export function StateView({ icon, title, message, action }: Props) {
           {message}
         </Text>
       )}
-      {action && <Button title={action.label} variant="ghost" size="sm" onPress={action.onPress} style={styles.action} />}
+      {action && (
+        <Button title={action.label} variant="ghost" size="sm" onPress={action.onPress} style={styles.action} />
+      )}
     </View>
   );
 }
 
 const useStyles = makeStyles((t) => ({
-  card: { backgroundColor: t.colors.surface, borderRadius: t.radius.lg, padding: 24, alignItems: 'center', gap: 10, ...t.shadow.card },
-  iconTile: { width: 60, height: 60, borderRadius: t.radius.lg, backgroundColor: t.colors.primarySoft, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  card: {
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.lg,
+    padding: 24,
+    alignItems: 'center',
+    gap: 10,
+    ...t.shadow.card,
+  },
+  iconTile: {
+    width: 60,
+    height: 60,
+    borderRadius: t.radius.lg,
+    backgroundColor: t.colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
   center: { textAlign: 'center' },
   action: { alignSelf: 'stretch', marginTop: 6 },
 }));

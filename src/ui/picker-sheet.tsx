@@ -16,8 +16,18 @@ import { Text } from './text';
 export type PickerItem = { id: string; label: string; sublabel?: string };
 
 type Common = { visible: boolean; title: string; items: PickerItem[]; onClose: () => void };
-type Single = Common & { multiple?: false; selectedId?: string | null; onSelect: (item: PickerItem | null) => void; allowClear?: boolean };
-type Multi = Common & { multiple: true; initial?: string[]; confirmLabel?: (n: number) => string; onConfirm: (items: PickerItem[]) => void };
+type Single = Common & {
+  multiple?: false;
+  selectedId?: string | null;
+  onSelect: (item: PickerItem | null) => void;
+  allowClear?: boolean;
+};
+type Multi = Common & {
+  multiple: true;
+  initial?: string[];
+  confirmLabel?: (n: number) => string;
+  onConfirm: (items: PickerItem[]) => void;
+};
 
 /**
  * The one dropdown used everywhere: searchable, virtualised, aligned rows (name over detail), clear
@@ -55,12 +65,23 @@ export function PickerSheet(props: Single | Multi) {
       onClose={close}
       title={title}
       maxHeightRatio={0.92}
-      footer={props.multiple ? <Button title={props.confirmLabel ? props.confirmLabel(picked.length) : `Add ${picked.length}`} icon="add-circle-outline" disabled={picked.length === 0} onPress={confirm} /> : undefined}>
+      footer={
+        props.multiple ? (
+          <Button
+            title={props.confirmLabel ? props.confirmLabel(picked.length) : `Add ${picked.length}`}
+            icon="add-circle-outline"
+            disabled={picked.length === 0}
+            onPress={confirm}
+          />
+        ) : undefined
+      }>
       <View style={styles.search}>
         <SearchField value={query} onChangeText={setQuery} placeholder={`Search ${title.toLowerCase()}`} />
         <View style={styles.meta}>
           <Text variant="caption" color={t.colors.textMuted}>
-            {shown.length === items.length ? `${items.length} ${items.length === 1 ? 'option' : 'options'}` : `${shown.length} of ${items.length}`}
+            {shown.length === items.length
+              ? `${items.length} ${items.length === 1 ? 'option' : 'options'}`
+              : `${shown.length} of ${items.length}`}
           </Text>
           {props.multiple && picked.length > 0 && (
             <PressableScale onPress={() => setPicked([])} hitSlop={8}>
@@ -88,7 +109,12 @@ export function PickerSheet(props: Single | Multi) {
         renderItem={({ item }) => {
           const on = props.multiple ? picked.includes(item.id) : item.id === selectedId;
           return (
-            <PressableScale onPress={() => (props.multiple ? setPicked((p) => togglePick(p, item.id)) : choose(item))} style={[styles.row, on && styles.rowOn]} scaleTo={0.99} accessibilityRole={props.multiple ? 'checkbox' : 'button'} accessibilityState={{ checked: on }}>
+            <PressableScale
+              onPress={() => (props.multiple ? setPicked((p) => togglePick(p, item.id)) : choose(item))}
+              style={[styles.row, on && styles.rowOn]}
+              scaleTo={0.99}
+              accessibilityRole={props.multiple ? 'checkbox' : 'button'}
+              accessibilityState={{ checked: on }}>
               <View style={styles.text}>
                 <Text variant="label" weight={on ? 'bold' : 'semibold'} numberOfLines={1}>
                   {item.label}
@@ -100,7 +126,11 @@ export function PickerSheet(props: Single | Multi) {
                 )}
               </View>
               {props.multiple ? (
-                <Ionicons name={on ? 'checkbox' : 'square-outline'} size={22} color={on ? t.colors.accent : t.colors.textFaint} />
+                <Ionicons
+                  name={on ? 'checkbox' : 'square-outline'}
+                  size={22}
+                  color={on ? t.colors.accent : t.colors.textFaint}
+                />
               ) : (
                 on && <Ionicons name="checkmark-circle" size={22} color={t.colors.accent} />
               )}
@@ -122,9 +152,23 @@ export function PickerSheet(props: Single | Multi) {
 
 const useStyles = makeStyles((t) => ({
   search: { paddingHorizontal: 18, paddingBottom: 6, gap: 8 },
-  meta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', minHeight: 20, paddingHorizontal: 2 },
+  meta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    minHeight: 20,
+    paddingHorizontal: 2,
+  },
   list: { paddingHorizontal: 10 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 10, paddingHorizontal: 10, borderRadius: t.radius.sm },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    minHeight: 56,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: t.radius.sm,
+  },
   rowOn: { backgroundColor: t.colors.primarySoft },
   text: { flex: 1, gap: 2 },
   empty: { alignItems: 'center', gap: 8, paddingVertical: 36 },

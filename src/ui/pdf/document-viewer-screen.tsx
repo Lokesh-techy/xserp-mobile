@@ -45,7 +45,10 @@ export function DocumentViewerScreen() {
     );
   }
 
-  const share = () => (doc ? shareDocument(doc).catch((e: unknown) => void toast.show({ message: errorMessage(e), tone: 'danger' })) : undefined);
+  const share = () =>
+    doc
+      ? shareDocument(doc).catch((e: unknown) => void toast.show({ message: errorMessage(e), tone: 'danger' }))
+      : undefined;
   const title = request.filename.replace(/\.pdf$/i, '');
 
   return (
@@ -57,7 +60,12 @@ export function DocumentViewerScreen() {
       />
       {query.isError ? (
         <View style={styles.pad}>
-          <StateView icon="cloud-offline-outline" title="Couldn't download this document" message={errorMessage(query.error)} action={{ label: 'Try again', onPress: () => void query.refetch() }} />
+          <StateView
+            icon="cloud-offline-outline"
+            title="Couldn't download this document"
+            message={errorMessage(query.error)}
+            action={{ label: 'Try again', onPress: () => void query.refetch() }}
+          />
         </View>
       ) : !doc ? (
         <View style={styles.loading}>
@@ -66,7 +74,12 @@ export function DocumentViewerScreen() {
         </View>
       ) : failed ? (
         <View style={styles.pad}>
-          <StateView icon="alert-circle-outline" title="Couldn't preview this PDF" message="You can still share or open it in another app." action={{ label: 'Share', onPress: () => void share() }} />
+          <StateView
+            icon="alert-circle-outline"
+            title="Couldn't preview this PDF"
+            message="You can still share or open it in another app."
+            action={{ label: 'Share', onPress: () => void share() }}
+          />
         </View>
       ) : (
         <View style={styles.flex}>

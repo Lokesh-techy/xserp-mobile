@@ -13,7 +13,15 @@ import { Text } from './text';
 type Tab<K extends string> = { key: K; label: string; badge?: number };
 
 /** Text tabs with a sliding underline, shown on the page background just under the header bar. */
-export function SegmentedTabs<K extends string>({ tabs, value, onChange }: { tabs: Tab<K>[]; value: K; onChange: (k: K) => void }) {
+export function SegmentedTabs<K extends string>({
+  tabs,
+  value,
+  onChange,
+}: {
+  tabs: Tab<K>[];
+  value: K;
+  onChange: (k: K) => void;
+}) {
   const t = useTheme();
   const styles = useStyles();
   const [layouts, setLayouts] = useState<Partial<Record<K, LayoutRectangle>>>({});
@@ -33,7 +41,9 @@ export function SegmentedTabs<K extends string>({ tabs, value, onChange }: { tab
             onPress={() => onChange(tab.key)}
             onLayout={(e) => {
               const l = e.nativeEvent.layout;
-              setLayouts((prev) => (prev[tab.key]?.x === l.x && prev[tab.key]?.width === l.width ? prev : { ...prev, [tab.key]: l }));
+              setLayouts((prev) =>
+                prev[tab.key]?.x === l.x && prev[tab.key]?.width === l.width ? prev : { ...prev, [tab.key]: l },
+              );
             }}
             style={styles.tab}
             scaleTo={0.96}

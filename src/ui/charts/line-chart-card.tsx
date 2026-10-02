@@ -15,7 +15,11 @@ export function LineChartCard({ title, data, format = (n) => formatCompact(n, ''
   const t = useTheme();
   const styles = useStyles();
   const [width, setWidth] = useState(0);
-  const points = data.map((d) => ({ value: d.value, label: d.label, labelTextStyle: { color: t.colors.textMuted, fontSize: 10 } }));
+  const points = data.map((d) => ({
+    value: d.value,
+    label: d.label,
+    labelTextStyle: { color: t.colors.textMuted, fontSize: 10 },
+  }));
   return (
     <Card style={styles.card}>
       <Text variant="heading">{title}</Text>

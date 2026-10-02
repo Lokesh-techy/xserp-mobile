@@ -5,7 +5,10 @@ import { useTheme, type Fonts } from '@/core/theme';
 
 export type TextVariant = 'display' | 'title' | 'heading' | 'body' | 'label' | 'caption' | 'overline';
 
-const variants: Record<TextVariant, { fontSize: number; lineHeight: number; weight: keyof Fonts; letterSpacing?: number }> = {
+const variants: Record<
+  TextVariant,
+  { fontSize: number; lineHeight: number; weight: keyof Fonts; letterSpacing?: number }
+> = {
   display: { fontSize: 30, lineHeight: 36, weight: 'extrabold', letterSpacing: -0.6 },
   title: { fontSize: 22, lineHeight: 28, weight: 'bold', letterSpacing: -0.3 },
   heading: { fontSize: 16, lineHeight: 22, weight: 'bold', letterSpacing: -0.1 },
@@ -25,7 +28,13 @@ export function Text({ variant = 'body', color, weight, style, children, ...rest
     <RNText
       {...rest}
       style={[
-        { fontSize: v.fontSize, lineHeight: v.lineHeight, letterSpacing: v.letterSpacing, color: color ?? t.colors.text, fontFamily: t.fonts[weight ?? v.weight] },
+        {
+          fontSize: v.fontSize,
+          lineHeight: v.lineHeight,
+          letterSpacing: v.letterSpacing,
+          color: color ?? t.colors.text,
+          fontFamily: t.fonts[weight ?? v.weight],
+        },
         style,
         // Android measures letter-spaced text (with custom fonts) too narrowly and clips the last glyphs
         // ("XSER", "SCHNELL ENERG"). Trailing room equal to the spacing keeps every character visible.
@@ -39,6 +48,7 @@ export function Text({ variant = 'body', color, weight, style, children, ...rest
 // Android measures `textTransform: 'uppercase'` at lowercase width and clips, so upper-case the string.
 function upper(node: TextProps['children']): TextProps['children'] {
   if (typeof node === 'string') return node.toUpperCase();
-  if (Array.isArray(node)) return node.map((n: unknown) => (typeof n === 'string' ? n.toUpperCase() : n)) as TextProps['children'];
+  if (Array.isArray(node))
+    return node.map((n: unknown) => (typeof n === 'string' ? n.toUpperCase() : n)) as TextProps['children'];
   return node;
 }

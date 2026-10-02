@@ -35,3 +35,7 @@ export * from './type-filter-bar';
 export * from './press-feel';
 export * from './pdf';
 export * from './select-field';
+export * from './segmented-control';
+export * from './menu-button';
+export * from './switch-row';
+export { Popover, placePopover, type Anchor } from './popover';

@@ -70,3 +70,10 @@ jest.mock('react-native-webview', () => {
   const { View } = require('react-native');
   return { WebView: View };
 });
+
+// Anchored popovers measure their trigger; host mocks have no layout, so report a fixed box.
+jest
+  .requireActual<{ default: { measureInWindow: jest.Mock } }>('@react-native/jest-preset/jest/MockNativeMethods')
+  .default.measureInWindow.mockImplementation((cb: (x: number, y: number, w: number, h: number) => void) =>
+    cb(0, 0, 100, 32),
+  );

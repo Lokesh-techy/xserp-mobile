@@ -14,7 +14,9 @@ const flush = async () => {
 test('a pending action blocks every other action on the same document, across screens', async () => {
   const approve = jest.fn(async () => {});
   const reject = jest.fn(async () => {});
-  expect(scheduleApprovalAction({ type: 'po', id: '1', action: 'approve' }, approve, { onError: jest.fn() })).toBe(true);
+  expect(scheduleApprovalAction({ type: 'po', id: '1', action: 'approve' }, approve, { onError: jest.fn() })).toBe(
+    true,
+  );
   // the user leaves and reopens the pager: a new screen instance, same module-level queue
   expect(scheduleApprovalAction({ type: 'po', id: '1', action: 'reject' }, reject, { onError: jest.fn() })).toBe(false);
   expect(isActionPending('po', '1')).toBe(true);

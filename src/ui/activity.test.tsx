@@ -7,7 +7,9 @@ import { ThemeProvider } from '@/core/theme';
 
 import { Input } from './input';
 
-jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+}));
 
 test('typing in a field counts as activity for the idle sign-out', async () => {
   const t0 = 5_000_000_000;

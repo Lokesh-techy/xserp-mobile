@@ -9,7 +9,7 @@ import Animated from 'react-native-reanimated';
 import { useFocusRefetch } from '@/core/query';
 import { makeStyles, useTheme } from '@/core/theme';
 import { formatMoney } from '@/core/utils';
-import { Card, Chip, QueryState, Section, Text, useHostRefresh, type ScrollHost } from '@/ui';
+import { Card, QueryState, SegmentedControl, Section, Text, useHostRefresh, type ScrollHost } from '@/ui';
 
 import { fetchAging } from '../api';
 import { BUCKETS, bucketAmount, bucketParam } from '../buckets';
@@ -26,8 +26,7 @@ export function AgeingTab({ host }: { host: ScrollHost }) {
   return host.attach(
     <Animated.ScrollView {...host.scrollProps} contentContainerStyle={styles.pad}>
       <View style={styles.chips}>
-        <Chip label="Receivable" icon="arrow-down-circle-outline" active={receivable} onPress={() => setReceivable(true)} />
-        <Chip label="Payable" icon="arrow-up-circle-outline" active={!receivable} onPress={() => setReceivable(false)} />
+        <SegmentedControl options={[{ key: 'r', label: 'Receivable' }, { key: 'p', label: 'Payable' }]} value={receivable ? 'r' : 'p'} onChange={(k) => setReceivable(k === 'r')} />
       </View>
       <QueryState query={query}>
         {(d) => {
@@ -66,7 +65,7 @@ export function AgeingTab({ host }: { host: ScrollHost }) {
 
 const useStyles = makeStyles((t) => ({
   pad: { padding: t.space.gutter, paddingTop: 8, paddingBottom: 48 },
-  chips: { flexDirection: 'row', gap: 8, marginBottom: 4 },
+  chips: { marginBottom: 4 },
   card: { marginBottom: 10, gap: 10 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   flex: { flex: 1 },

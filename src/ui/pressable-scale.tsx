@@ -1,7 +1,13 @@
 /** @author Lokesh */
 import type { ReactNode } from 'react';
 import { useRef, useState } from 'react';
-import { Pressable, type GestureResponderEvent, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
+import {
+  Pressable,
+  type GestureResponderEvent,
+  type PressableProps,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { tapFeedback } from '@/core/utils';
@@ -23,7 +29,17 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const isPromise = (v: unknown): v is Promise<unknown> => !!v && typeof (v as Promise<unknown>).then === 'function';
 
-export function PressableScale({ children, style, scaleTo = 0.97, haptic = true, onPressIn, onPressOut, onPress, disabled, ...rest }: Props) {
+export function PressableScale({
+  children,
+  style,
+  scaleTo = 0.97,
+  haptic = true,
+  onPressIn,
+  onPressOut,
+  onPress,
+  disabled,
+  ...rest
+}: Props) {
   const scale = useSharedValue(1);
   const dim = useSharedValue(1);
   const lastPress = useRef(0);

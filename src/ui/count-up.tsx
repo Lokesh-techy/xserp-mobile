@@ -5,7 +5,8 @@ import { Text, type TextVariant } from './text';
 
 export const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
 
-export const tweenValue = (from: number, to: number, t: number) => Math.round(from + (to - from) * easeOutCubic(Math.min(1, Math.max(0, t))));
+export const tweenValue = (from: number, to: number, t: number) =>
+  Math.round(from + (to - from) * easeOutCubic(Math.min(1, Math.max(0, t))));
 
 const DURATION = 600;
 
@@ -31,7 +32,14 @@ export function useCountUp(value: number): number {
   return shown;
 }
 
-type Props = { value: number; format?: (n: number) => string; variant?: TextVariant; color?: string; weight?: Parameters<typeof Text>[0]['weight']; style?: Parameters<typeof Text>[0]['style'] };
+type Props = {
+  value: number;
+  format?: (n: number) => string;
+  variant?: TextVariant;
+  color?: string;
+  weight?: Parameters<typeof Text>[0]['weight'];
+  style?: Parameters<typeof Text>[0]['style'];
+};
 
 export function CountUp({ value, format = String, ...text }: Props) {
   return <Text {...text}>{format(useCountUp(value))}</Text>;

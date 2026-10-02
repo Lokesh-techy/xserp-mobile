@@ -37,7 +37,11 @@ const runner = createActionRunner({
   },
 });
 
-export function scheduleApprovalAction(ref: Ref, task: () => Promise<void>, cb: Callbacks & { precheck?: () => Promise<void> }): boolean {
+export function scheduleApprovalAction(
+  ref: Ref,
+  task: () => Promise<void>,
+  cb: Callbacks & { precheck?: () => Promise<void> },
+): boolean {
   const doc = docKey(ref.type, ref.id);
   if (usePending.getState().docs.includes(doc)) return false;
   const key = `${doc}:${ref.action}`;

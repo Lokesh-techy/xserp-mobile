@@ -21,8 +21,14 @@ export function ApprovalPagerScreen<T, D>({ config }: { config: ApprovalConfig<T
   const [initialId] = useState(() => id ?? (fromStore ? pager.startId : null));
   const queue = useApprovalQueue(config, !fromStore);
   const any = useMemo(() => erase(config), [config]);
-  const items = useMemo(() => (fromStore ? (pager.items as T[]) : (queue.data ?? [])), [fromStore, pager.items, queue.data]);
-  const entries = useMemo<ReviewEntry[]>(() => items.map((item) => ({ key: `${config.type}:${config.id(item)}`, config: any, item })), [items, config, any]);
+  const items = useMemo(
+    () => (fromStore ? (pager.items as T[]) : (queue.data ?? [])),
+    [fromStore, pager.items, queue.data],
+  );
+  const entries = useMemo<ReviewEntry[]>(
+    () => items.map((item) => ({ key: `${config.type}:${config.id(item)}`, config: any, item })),
+    [items, config, any],
+  );
 
   // Leaving the pager drops the hand-over so a later deep link can't reuse stale items.
   useEffect(() => () => usePagerStore.setState({ type: null, items: [], startId: null }), []);
@@ -57,4 +63,7 @@ export function ApprovalPagerScreen<T, D>({ config }: { config: ApprovalConfig<T
   );
 }
 
-const useStyles = makeStyles((t) => ({ root: { flex: 1, backgroundColor: t.colors.bg }, pad: { padding: t.space.gutter } }));
+const useStyles = makeStyles((t) => ({
+  root: { flex: 1, backgroundColor: t.colors.bg },
+  pad: { padding: t.space.gutter },
+}));

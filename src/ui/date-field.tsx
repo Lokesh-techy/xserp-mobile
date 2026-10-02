@@ -46,5 +46,15 @@ export function DateField({ label, value, onChange, minimumDate, maximumDate }: 
 
 const useStyles = makeStyles((t) => ({
   root: { flex: 1, gap: 8 },
-  box: { height: 50, borderRadius: t.radius.md, borderWidth: 1.5, borderColor: t.colors.border, backgroundColor: t.colors.fillSubtle, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14 },
+  box: {
+    height: 50,
+    borderRadius: t.radius.md,
+    borderWidth: 1.5,
+    borderColor: t.colors.border,
+    backgroundColor: t.colors.fillSubtle,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+  },
 }));

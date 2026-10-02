@@ -18,7 +18,14 @@ export type ApprovalSummary = {
   meta?: { icon: IconName; text: string }[];
 };
 
-export type LineItem = { key: string; title: string; subtitle?: string; qty?: string; amount?: number | null; currency?: string | null };
+export type LineItem = {
+  key: string;
+  title: string;
+  subtitle?: string;
+  qty?: string;
+  amount?: number | null;
+  currency?: string | null;
+};
 
 export type ApprovalCtx = { session: Session };
 
@@ -74,4 +81,5 @@ export const defineApproval = <T, D = undefined>(c: ApprovalConfig<T, D>) => c;
 export type AnyApproval = ApprovalConfig<unknown, unknown>;
 export const erase = <T, D>(c: ApprovalConfig<T, D>) => c as unknown as AnyApproval;
 
-export const visibleActions = <T, D>(c: ApprovalConfig<T, D>, item: T, ctx: ApprovalCtx) => c.actions.filter((a) => a.visible(item, ctx));
+export const visibleActions = <T, D>(c: ApprovalConfig<T, D>, item: T, ctx: ApprovalCtx) =>
+  c.actions.filter((a) => a.visible(item, ctx));

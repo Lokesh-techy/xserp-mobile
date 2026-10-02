@@ -11,7 +11,7 @@ test('each petal peaks a quarter-cycle after the previous one', () => {
     }
     return at;
   });
-  for (let i = 1; i < 4; i++) expect(((peaks[i]! - peaks[i - 1]! + 1) % 1)).toBeCloseTo(0.25, 1);
+  for (let i = 1; i < 4; i++) expect((peaks[i]! - peaks[i - 1]! + 1) % 1).toBeCloseTo(0.25, 1);
   expect(petalPulse(0.3, 2)).toBeGreaterThanOrEqual(0);
   expect(petalPulse(0.3, 2)).toBeLessThanOrEqual(1);
 });

@@ -23,15 +23,15 @@ type Props = {
   initialKey: string | null;
   onActed?: (entry: ReviewEntry) => void;
   empty?: { title: string; message: string };
-  /** Shown under the header bar, e.g. a document-type filter. */
-  accessory?: ReactNode;
+  /** At the right of the header bar, e.g. the document-type menu. */
+  headerRight?: ReactNode;
 };
 
 /**
  * One document at a time, swipe for the next. Entries may mix approval types (the Home review)
  * or come from one queue (a module's pager). The document acted on is always the one on screen.
  */
-export function ReviewPager({ title, entries, initialKey, onActed, empty, accessory }: Props) {
+export function ReviewPager({ title, entries, initialKey, onActed, empty, headerRight }: Props) {
   const styles = useStyles();
   const session = useSession();
   const { width } = useWindowDimensions();
@@ -41,14 +41,20 @@ export function ReviewPager({ title, entries, initialKey, onActed, empty, access
   const current = pickCurrent(entries, selectedKey, lastIndex, (e) => e.key);
   const entry = current ? entries[current.index] : undefined;
   if (current && current.id === selectedKey && current.index !== lastIndex) setLastIndex(current.index);
-  const { start, isBusy } = useApprovalActions((config, id) => onActed?.({ key: `${config.type}:${id}`, config, item: null }));
+  const { start, isBusy } = useApprovalActions((config, id) =>
+    onActed?.({ key: `${config.type}:${id}`, config, item: null }),
+  );
 
   if (!current || !entry) {
     return (
       <View style={styles.root}>
-        <ScreenHeader title={title} tabs={accessory} />
+        <ScreenHeader title={title} right={headerRight} />
         <View style={styles.pad}>
-          <StateView icon="checkmark-done-outline" title={empty?.title ?? 'All caught up'} message={empty?.message ?? 'Nothing is waiting for you.'} />
+          <StateView
+            icon="checkmark-done-outline"
+            title={empty?.title ?? 'All caught up'}
+            message={empty?.message ?? 'Nothing is waiting for you.'}
+          />
         </View>
       </View>
     );
@@ -58,7 +64,11 @@ export function ReviewPager({ title, entries, initialKey, onActed, empty, access
   const actions = canAct ? visibleActions(entry.config, entry.item, { session }) : [];
   return (
     <View style={styles.root}>
-      <ScreenHeader title={title} subtitle={`${current.index + 1} of ${entries.length} · ${entry.config.title}`} tabs={accessory} />
+      <ScreenHeader
+        title={title}
+        subtitle={`${current.index + 1} of ${entries.length} · ${entry.config.title}`}
+        right={headerRight}
+      />
       <FlatList
         // Remount at the right page whenever the list changes size (load, approve, refresh).
         key={entries.length}
@@ -76,7 +86,9 @@ export function ReviewPager({ title, entries, initialKey, onActed, empty, access
           setLastIndex(i);
           setSelectedKey(next.key);
         }}
-        renderItem={({ item: e, index: i }) => <ApprovalPage config={e.config} item={e.item} active={Math.abs(i - current.index) <= 1} width={width} />}
+        renderItem={({ item: e, index: i }) => (
+          <ApprovalPage config={e.config} item={e.item} active={Math.abs(i - current.index) <= 1} width={width} />
+        )}
       />
       <ActionBar
         actions={actions}
@@ -85,9 +97,16 @@ export function ReviewPager({ title, entries, initialKey, onActed, empty, access
         onPick={setPicked}
         onHold={(a) => start(entry.config, entry.item, a, '')}
       />
-      <RemarksSheet action={picked} onClose={() => setPicked(null)} onConfirm={(remarks) => picked && start(entry.config, entry.item, picked, remarks)} />
+      <RemarksSheet
+        action={picked}
+        onClose={() => setPicked(null)}
+        onConfirm={(remarks) => picked && start(entry.config, entry.item, picked, remarks)}
+      />
     </View>
   );
 }
 
-const useStyles = makeStyles((t) => ({ root: { flex: 1, backgroundColor: t.colors.bg }, pad: { padding: t.space.gutter } }));
+const useStyles = makeStyles((t) => ({
+  root: { flex: 1, backgroundColor: t.colors.bg },
+  pad: { padding: t.space.gutter },
+}));

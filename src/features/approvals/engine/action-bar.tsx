@@ -36,9 +36,25 @@ export function ActionBar<T>({ actions, canAct, busy, onPick, onHold }: Props<T>
     <View style={[styles.bar, styles.row, { paddingBottom: insets.bottom + 10 }]}>
       {actions.map((a) =>
         a.tone === 'success' && a.remarks !== 'required' ? (
-          <HoldButton key={a.id} title={`Hold to ${a.label.toLowerCase()}`} icon={a.icon} disabled={busy} onComplete={() => onHold(a)} style={styles.hold} />
+          <HoldButton
+            key={a.id}
+            title={`Hold to ${a.label.toLowerCase()}`}
+            icon={a.icon}
+            disabled={busy}
+            onComplete={() => onHold(a)}
+            style={styles.hold}
+          />
         ) : (
-          <Button key={a.id} title={a.label} icon={a.icon} variant={a.tone} size="sm" disabled={busy} onPress={() => onPick(a)} style={styles.flex} />
+          <Button
+            key={a.id}
+            title={a.label}
+            icon={a.icon}
+            variant={a.tone}
+            size="sm"
+            disabled={busy}
+            onPress={() => onPick(a)}
+            style={styles.flex}
+          />
         ),
       )}
     </View>
@@ -46,7 +62,18 @@ export function ActionBar<T>({ actions, canAct, busy, onPick, onHold }: Props<T>
 }
 
 const useStyles = makeStyles((t) => ({
-  bar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 14, paddingTop: 10, backgroundColor: t.colors.surface, borderTopWidth: 1, borderTopColor: t.colors.divider, ...t.shadow.lifted },
+  bar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    backgroundColor: t.colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: t.colors.divider,
+    ...t.shadow.lifted,
+  },
   row: { flexDirection: 'row', gap: 10 },
   flex: { flex: 1 },
   hold: { flex: 1.6 },

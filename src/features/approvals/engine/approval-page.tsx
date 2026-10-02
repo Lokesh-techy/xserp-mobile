@@ -12,7 +12,17 @@ import { LineItemsCard } from './line-items-card';
 import type { ApprovalConfig } from './types';
 
 /** One document in the pager: hero summary, line items, extra sections, document button. */
-export function ApprovalPage<T, D>({ config, item, active, width }: { config: ApprovalConfig<T, D>; item: T; active: boolean; width: number }) {
+export function ApprovalPage<T, D>({
+  config,
+  item,
+  active,
+  width,
+}: {
+  config: ApprovalConfig<T, D>;
+  item: T;
+  active: boolean;
+  width: number;
+}) {
   const t = useTheme();
   const styles = useStyles();
   const session = useSession();
@@ -56,7 +66,13 @@ export function ApprovalPage<T, D>({ config, item, active, width }: { config: Ap
           ))}
         </View>
       </Card>
-      {config.lines && <LineItemsCard lines={lines} loading={detail.isPending && !!config.detail} onPress={LineSheet ? setLine : undefined} />}
+      {config.lines && (
+        <LineItemsCard
+          lines={lines}
+          loading={detail.isPending && !!config.detail}
+          onPress={LineSheet ? setLine : undefined}
+        />
+      )}
       {config.sections
         ?.filter((sec) => sec.visible?.(item, { session }) ?? true)
         .map((sec) => (

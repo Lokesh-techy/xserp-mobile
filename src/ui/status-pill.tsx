@@ -20,6 +20,14 @@ export function StatusPill({ label, tone }: { label: string; tone: Tone }) {
 }
 
 const useStyles = makeStyles((t) => ({
-  pill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 4, borderRadius: t.radius.pill, alignSelf: 'flex-start' },
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: t.radius.pill,
+    alignSelf: 'flex-start',
+  },
   dot: { width: 6, height: 6, borderRadius: 3 },
 }));

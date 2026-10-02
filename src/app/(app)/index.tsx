@@ -28,9 +28,14 @@ export default function Home() {
     return runSync([
       // Labels are shown in order while each step is still running (pull caption + sync line).
       { label: 'Checking your access…', run: refreshSession },
-      { label: 'Fetching approvals…', run: () => Promise.all(queues.map((c) => qc.refetchQueries({ queryKey: c!.queueKey }))) },
+      {
+        label: 'Fetching approvals…',
+        run: () => Promise.all(queues.map((c) => qc.refetchQueries({ queryKey: c!.queueKey }))),
+      },
       { label: 'Checking notifications…', run: () => qc.refetchQueries({ queryKey: ['notifications'] }) },
-      ...(can(s, 'EXPENSES', 'approve') ? [{ label: 'Fetching expense claims…', run: () => qc.refetchQueries({ queryKey: expenseKeys.groups() }) }] : []),
+      ...(can(s, 'EXPENSES', 'approve')
+        ? [{ label: 'Fetching expense claims…', run: () => qc.refetchQueries({ queryKey: expenseKeys.groups() }) }]
+        : []),
       { label: 'Syncing parties, materials & ledgers…', run: () => syncAllMasters({ force: true }) },
     ]);
   }, [refreshSession, qc]);
@@ -48,7 +53,16 @@ export default function Home() {
   const modules = useMemo(
     () =>
       session
-        ? HOME_MODULES.map((m) => ({ id: m.id, title: m.title, subtitle: m.subtitle, icon: m.icon, tint: m.tint, href: m.href, access: moduleAccess(m, session), badge: moduleBadge(m, session) }))
+        ? HOME_MODULES.map((m) => ({
+            id: m.id,
+            title: m.title,
+            subtitle: m.subtitle,
+            icon: m.icon,
+            tint: m.tint,
+            href: m.href,
+            access: moduleAccess(m, session),
+            badge: moduleBadge(m, session),
+          }))
         : [],
     [session],
   );

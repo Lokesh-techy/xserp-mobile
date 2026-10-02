@@ -22,7 +22,16 @@ type Props = {
 };
 
 /** A form dropdown: label (✱ when required), selected name over its detail, ✕ to clear, inline error. */
-export function SelectField({ label, items, value, onChange, icon = 'chevron-down', required, error, placeholder }: Props) {
+export function SelectField({
+  label,
+  items,
+  value,
+  onChange,
+  icon = 'chevron-down',
+  required,
+  error,
+  placeholder,
+}: Props) {
   const t = useTheme();
   const styles = useStyles();
   const [open, setOpen] = useState(false);
@@ -31,11 +40,24 @@ export function SelectField({ label, items, value, onChange, icon = 'chevron-dow
     <View style={styles.root}>
       <Text variant="label" color={t.colors.textMuted}>
         {label}
-        {required && <Text variant="label" color={t.colors.danger}> ✱</Text>}
+        {required && (
+          <Text variant="label" color={t.colors.danger}>
+            {' '}
+            ✱
+          </Text>
+        )}
       </Text>
-      <PressableScale onPress={() => setOpen(true)} scaleTo={0.99} style={[styles.box, !!error && { borderColor: t.colors.danger }]} accessibilityLabel={`${label}${picked ? `, ${picked.label}` : ', not selected'}`}>
+      <PressableScale
+        onPress={() => setOpen(true)}
+        scaleTo={0.99}
+        style={[styles.box, !!error && { borderColor: t.colors.danger }]}
+        accessibilityLabel={`${label}${picked ? `, ${picked.label}` : ', not selected'}`}>
         <View style={styles.text}>
-          <Text variant="label" weight={picked ? 'semibold' : 'medium'} color={picked ? t.colors.text : t.colors.textFaint} numberOfLines={1}>
+          <Text
+            variant="label"
+            weight={picked ? 'semibold' : 'medium'}
+            color={picked ? t.colors.text : t.colors.textFaint}
+            numberOfLines={1}>
             {picked?.label ?? placeholder ?? `Choose ${label.toLowerCase()}`}
           </Text>
           {!!picked?.sublabel && (
@@ -57,13 +79,32 @@ export function SelectField({ label, items, value, onChange, icon = 'chevron-dow
           {error}
         </Text>
       )}
-      <PickerSheet visible={open} title={label} items={items} selectedId={value} allowClear={false} onSelect={(i) => i && onChange(i.id)} onClose={() => setOpen(false)} />
+      <PickerSheet
+        visible={open}
+        title={label}
+        items={items}
+        selectedId={value}
+        allowClear={false}
+        onSelect={(i) => i && onChange(i.id)}
+        onClose={() => setOpen(false)}
+      />
     </View>
   );
 }
 
 const useStyles = makeStyles((t) => ({
   root: { gap: 8 },
-  box: { minHeight: 54, flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: t.radius.md, borderWidth: 1.5, borderColor: t.colors.border, backgroundColor: t.colors.fillSubtle, paddingHorizontal: 16, paddingVertical: 8 },
+  box: {
+    minHeight: 54,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderRadius: t.radius.md,
+    borderWidth: 1.5,
+    borderColor: t.colors.border,
+    backgroundColor: t.colors.fillSubtle,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
   text: { flex: 1, gap: 2 },
 }));

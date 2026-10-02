@@ -6,7 +6,15 @@ import { makeStyles, useTheme } from '@/core/theme';
 
 import { Text } from './text';
 
-export function Section({ title, action, children }: { title: string; action?: { label: string; onPress: () => void }; children: ReactNode }) {
+export function Section({
+  title,
+  action,
+  children,
+}: {
+  title: string;
+  action?: { label: string; onPress: () => void };
+  children: ReactNode;
+}) {
   const t = useTheme();
   const styles = useStyles();
   return (

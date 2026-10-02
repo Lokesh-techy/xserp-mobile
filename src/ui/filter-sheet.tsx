@@ -24,7 +24,9 @@ export type FilterValues = Record<string, string | DateRange | null | undefined>
 
 const isRange = (v: unknown): v is DateRange => !!v && typeof v === 'object' && 'since' in v;
 const same = (a: FilterValues[string], b: FilterValues[string]) =>
-  isRange(a) && isRange(b) ? toApiDate(a.since) === toApiDate(b.since) && toApiDate(a.till) === toApiDate(b.till) : (a ?? null) === (b ?? null);
+  isRange(a) && isRange(b)
+    ? toApiDate(a.since) === toApiDate(b.since) && toApiDate(a.till) === toApiDate(b.till)
+    : (a ?? null) === (b ?? null);
 
 export function countActiveFilters(fields: FilterField[], value: FilterValues, defaults: FilterValues): number {
   return fields.filter((f) => !same(value[f.key], defaults[f.key])).length;
@@ -63,7 +65,9 @@ export function FilterSheet({ visible, onClose, fields, value, defaults, onApply
   }
 
   const set = (key: string, v: FilterValues[string]) => setDraft((d) => ({ ...d, [key]: v }));
-  const pickerField = fields.find((f): f is Extract<FilterField, { kind: 'picker' }> => f.kind === 'picker' && f.key === picking);
+  const pickerField = fields.find(
+    (f): f is Extract<FilterField, { kind: 'picker' }> => f.kind === 'picker' && f.key === picking,
+  );
 
   return (
     <BottomSheet
@@ -89,11 +93,18 @@ export function FilterSheet({ visible, onClose, fields, value, defaults, onApply
             <Text variant="overline" color={t.colors.textMuted}>
               {f.label}
             </Text>
-            {f.kind === 'dateRange' && <RangeEditor value={draft[f.key]} onChange={(r) => set(f.key, r)} fyStartDay={fyStartDay} />}
+            {f.kind === 'dateRange' && (
+              <RangeEditor value={draft[f.key]} onChange={(r) => set(f.key, r)} fyStartDay={fyStartDay} />
+            )}
             {f.kind === 'select' && (
               <View style={styles.wrap}>
                 {f.options.map((o) => (
-                  <Chip key={o.value} label={o.label} active={draft[f.key] === o.value} onPress={() => set(f.key, o.value)} />
+                  <Chip
+                    key={o.value}
+                    label={o.label}
+                    active={draft[f.key] === o.value}
+                    onPress={() => set(f.key, o.value)}
+                  />
                 ))}
               </View>
             )}
@@ -121,7 +132,15 @@ export function FilterSheet({ visible, onClose, fields, value, defaults, onApply
   );
 }
 
-function RangeEditor({ value, onChange, fyStartDay }: { value: FilterValues[string]; onChange: (r: DateRange) => void; fyStartDay?: string | null }) {
+function RangeEditor({
+  value,
+  onChange,
+  fyStartDay,
+}: {
+  value: FilterValues[string];
+  onChange: (r: DateRange) => void;
+  fyStartDay?: string | null;
+}) {
   const styles = useStyles();
   const range = isRange(value) ? value : lastDays(30);
   return (
@@ -132,8 +151,18 @@ function RangeEditor({ value, onChange, fyStartDay }: { value: FilterValues[stri
         ))}
       </View>
       <View style={styles.dates}>
-        <DateField label="From" value={range.since} maximumDate={range.till} onChange={(d) => onChange({ ...range, since: d })} />
-        <DateField label="To" value={range.till} minimumDate={range.since} onChange={(d) => onChange({ ...range, till: d })} />
+        <DateField
+          label="From"
+          value={range.since}
+          maximumDate={range.till}
+          onChange={(d) => onChange({ ...range, since: d })}
+        />
+        <DateField
+          label="To"
+          value={range.till}
+          minimumDate={range.since}
+          onChange={(d) => onChange({ ...range, till: d })}
+        />
       </View>
     </View>
   );
@@ -145,7 +174,15 @@ const useStyles = makeStyles((t) => ({
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   rangeRoot: { gap: 12 },
   dates: { flexDirection: 'row', gap: 12 },
-  pickerBox: { height: 50, borderRadius: t.radius.md, borderWidth: 1.5, borderColor: t.colors.border, backgroundColor: t.colors.fillSubtle, justifyContent: 'center', paddingHorizontal: 14 },
+  pickerBox: {
+    height: 50,
+    borderRadius: t.radius.md,
+    borderWidth: 1.5,
+    borderColor: t.colors.border,
+    backgroundColor: t.colors.fillSubtle,
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+  },
   actions: { flexDirection: 'row', gap: 12 },
   flex: { flex: 1 },
 }));

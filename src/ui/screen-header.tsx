@@ -19,6 +19,8 @@ type Props = {
   subtitle?: string;
   back?: boolean;
   actions?: HeaderAction[];
+  /** A compact control at the right of the bar, before any actions (e.g. a filter menu). */
+  right?: ReactNode;
   /** Rendered just under the bar, on the page background (e.g. SegmentedTabs). */
   tabs?: ReactNode;
   /** PullToSync indicator: stretches the header open while pulling. */
@@ -26,7 +28,7 @@ type Props = {
 };
 
 /** Slim gradient bar: back, title (+ subtitle), up to two actions. Tabs sit below it on the page. */
-export function ScreenHeader({ title, subtitle, back = true, actions = [], tabs, pull }: Props) {
+export function ScreenHeader({ title, subtitle, back = true, actions = [], right, tabs, pull }: Props) {
   const t = useTheme();
   const styles = useStyles();
   const insets = useSafeAreaInsets();
@@ -51,6 +53,7 @@ export function ScreenHeader({ title, subtitle, back = true, actions = [], tabs,
               </Text>
             )}
           </View>
+          {right}
           {actions.slice(0, 2).map((a) => (
             <GlassIconButton
               key={a.label}

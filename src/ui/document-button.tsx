@@ -21,7 +21,12 @@ export function DocumentButton({ request, label = 'View PDF' }: { request: Docum
       icon="document-text-outline"
       variant="ghost"
       onPress={() => open(false)}
-      onLongPress={() => Alert.alert('Document', 'Regenerate this document from the latest data?', [{ text: 'Cancel', style: 'cancel' }, { text: 'Regenerate', onPress: () => open(true) }])}
+      onLongPress={() =>
+        Alert.alert('Document', 'Regenerate this document from the latest data?', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Regenerate', onPress: () => open(true) },
+        ])
+      }
     />
   );
 }

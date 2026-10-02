@@ -11,9 +11,18 @@ import { tapFeedback } from '@/core/utils';
 import type { IconName } from './button';
 import { Text } from './text';
 
-type Props = TextInputProps & { label: string; icon: IconName; secure?: boolean; error?: string | null; required?: boolean };
+type Props = TextInputProps & {
+  label: string;
+  icon: IconName;
+  secure?: boolean;
+  error?: string | null;
+  required?: boolean;
+};
 
-export const Input = forwardRef<TextInput, Props>(function Input({ label, icon, secure, error, required, onFocus, onBlur, onChangeText, ...rest }, ref) {
+export const Input = forwardRef<TextInput, Props>(function Input(
+  { label, icon, secure, error, required, onFocus, onBlur, onChangeText, ...rest },
+  ref,
+) {
   const t = useTheme();
   const styles = useStyles();
   const focus = useSharedValue(0);
@@ -32,7 +41,12 @@ export const Input = forwardRef<TextInput, Props>(function Input({ label, icon, 
     <View style={styles.root}>
       <Text variant="label" color={t.colors.textMuted}>
         {label}
-        {required && <Text variant="label" color={t.colors.danger}> ✱</Text>}
+        {required && (
+          <Text variant="label" color={t.colors.danger}>
+            {' '}
+            ✱
+          </Text>
+        )}
       </Text>
       <Animated.View style={[styles.box, boxStyle]}>
         <Ionicons name={icon} size={18} color={focused ? t.colors.onPrimarySoft : t.colors.textFaint} />
@@ -94,5 +108,12 @@ const useStyles = makeStyles((t) => ({
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
   },
-  input: { flex: 1, fontFamily: t.fonts.semibold, fontSize: 15, color: t.colors.text, paddingVertical: 6, minHeight: 54 },
+  input: {
+    flex: 1,
+    fontFamily: t.fonts.semibold,
+    fontSize: 15,
+    color: t.colors.text,
+    paddingVertical: 6,
+    minHeight: 54,
+  },
 }));

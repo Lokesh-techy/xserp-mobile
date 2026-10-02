@@ -68,6 +68,8 @@ const config: ExpoConfig = {
     'expo-sharing',
     'expo-asset',
     '@react-native-community/datetimepicker',
+    // Full screen on punch-hole / notch devices (see plugins/with-display-cutout.js).
+    './plugins/with-display-cutout',
   ],
   experiments: { typedRoutes: true, reactCompiler: true },
   extra: {

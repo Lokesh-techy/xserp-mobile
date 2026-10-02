@@ -10,7 +10,12 @@ import { enter, fadeOut, makeStyles, useTheme } from '@/core/theme';
 
 import { Text } from './text';
 
-type ToastInput = { message: string; tone?: 'success' | 'danger' | 'info'; action?: { label: string; onPress: () => void }; durationMs?: number };
+type ToastInput = {
+  message: string;
+  tone?: 'success' | 'danger' | 'info';
+  action?: { label: string; onPress: () => void };
+  durationMs?: number;
+};
 type ToastItem = ToastInput & { id: string };
 
 const useToasts = create<{ items: ToastItem[] }>(() => ({ items: [] }));
@@ -35,7 +40,8 @@ function ToastRow({ item }: { item: ToastItem }) {
     return () => clearTimeout(timer);
   }, [item.id, item.durationMs]);
   const bg = item.tone === 'danger' ? t.colors.danger : item.tone === 'success' ? t.colors.success : t.colors.navy800;
-  const icon = item.tone === 'danger' ? 'alert-circle' : item.tone === 'success' ? 'checkmark-circle' : 'information-circle';
+  const icon =
+    item.tone === 'danger' ? 'alert-circle' : item.tone === 'success' ? 'checkmark-circle' : 'information-circle';
   return (
     <Animated.View entering={enter()} exiting={fadeOut} style={[styles.toast, { backgroundColor: bg }]}>
       <Ionicons name={icon} size={20} color={t.colors.white} />
@@ -74,6 +80,14 @@ export function ToastHost() {
 
 const useStyles = makeStyles((t) => ({
   host: { position: 'absolute', left: 16, right: 16, gap: 8 },
-  toast: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 14, borderRadius: t.radius.md, ...t.shadow.lifted },
+  toast: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: t.radius.md,
+    ...t.shadow.lifted,
+  },
   message: { flex: 1 },
 }));

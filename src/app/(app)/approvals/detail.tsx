@@ -20,6 +20,18 @@ export default function ReviewDetail() {
       </View>
     );
   }
-  const filter = options.length > 1 ? <TypeFilterBar options={options} selected={selected} onChange={setSelected} /> : undefined;
-  return <ReviewPager key={selected.join(',')} title={title} entries={entries} initialKey={start ?? null} accessory={filter} empty={{ title: 'All clear', message: 'Nothing left in this selection.' }} />;
+  const filter =
+    options.length > 1 ? (
+      <TypeFilterBar inHeader options={options} selected={selected} onChange={setSelected} />
+    ) : undefined;
+  return (
+    <ReviewPager
+      key={selected.join(',')}
+      title={title}
+      entries={entries}
+      initialKey={start ?? null}
+      headerRight={filter}
+      empty={{ title: 'All clear', message: 'Nothing left in this selection.' }}
+    />
+  );
 }

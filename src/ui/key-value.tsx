@@ -22,7 +22,14 @@ export function KeyValue({ label, value, mono }: { label: string; value?: string
 }
 
 const useStyles = makeStyles((t) => ({
-  row: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: t.colors.divider },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: t.colors.divider,
+  },
   label: { flexShrink: 0, maxWidth: '45%' },
   value: { flex: 1, textAlign: 'right' },
 }));

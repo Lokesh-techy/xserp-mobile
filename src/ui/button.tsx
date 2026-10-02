@@ -24,7 +24,17 @@ type Props = {
   onLongPress?: () => void;
 };
 
-export function Button({ title, onPress, variant = 'primary', icon, loading: loadingProp, disabled, size = 'md', style, onLongPress }: Props) {
+export function Button({
+  title,
+  onPress,
+  variant = 'primary',
+  icon,
+  loading: loadingProp,
+  disabled,
+  size = 'md',
+  style,
+  onLongPress,
+}: Props) {
   const t = useTheme();
   const styles = useStyles();
   const [running, setRunning] = useState(false);
@@ -55,9 +65,19 @@ export function Button({ title, onPress, variant = 'primary', icon, loading: loa
       onLongPress={onLongPress}
       disabled={inactive}
       scaleTo={0.98}
-      style={[styles.base, size === 'sm' && styles.sm, !filled && styles[variant === 'danger' ? 'danger' : 'ghost'], inactive && styles.inactive, style]}>
+      style={[
+        styles.base,
+        size === 'sm' && styles.sm,
+        !filled && styles[variant === 'danger' ? 'danger' : 'ghost'],
+        inactive && styles.inactive,
+        style,
+      ]}>
       {filled ? (
-        <LinearGradient colors={variant === 'success' ? t.gradients.success : t.gradients.accent} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fill}>
+        <LinearGradient
+          colors={variant === 'success' ? t.gradients.success : t.gradients.accent}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.fill}>
           {content}
         </LinearGradient>
       ) : (

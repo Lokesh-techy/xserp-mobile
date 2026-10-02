@@ -1,25 +1,34 @@
 /** @author Lokesh */
-import { ScrollView } from 'react-native';
+import { View } from 'react-native';
 
-import { makeStyles } from '@/core/theme';
 import { toApiDate, type DateRange } from '@/core/utils';
 
-import { Chip } from './chip';
 import { rangePresets } from './filter-sheet';
+import { MenuButton } from './menu-button';
 
 type Props = { value: DateRange; onChange: (r: DateRange) => void; fyStartDay?: string | null; nested?: object };
 
-/** Horizontal preset chips (7d / 30d / month / FY) for dashboards. */
-export function RangeChips({ value, onChange, fyStartDay, nested }: Props) {
-  const styles = useStyles();
-  const same = (r: DateRange) => toApiDate(r.since) === toApiDate(value.since) && toApiDate(r.till) === toApiDate(value.till);
+/** Date range as a menu button ("Last 30 days ⌄") — compact, and natural to change. */
+export function RangeChips({ value, onChange, fyStartDay }: Props) {
+  const presets = rangePresets(fyStartDay);
+  const same = (r: DateRange) =>
+    toApiDate(r.since) === toApiDate(value.since) && toApiDate(r.till) === toApiDate(value.till);
+  const current = presets.find((p) => same(p.range));
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row} {...nested}>
-      {rangePresets(fyStartDay).map((p) => (
-        <Chip key={p.key} label={p.label} active={same(p.range)} onPress={() => onChange(p.range)} />
-      ))}
-    </ScrollView>
+    <View style={{ flexDirection: 'row' }}>
+      <MenuButton
+        title="Date range"
+        icon="calendar-outline"
+        options={[
+          ...presets.map((p) => ({ key: p.key, label: p.label })),
+          ...(current ? [] : [{ key: 'custom', label: `${toApiDate(value.since)} – ${toApiDate(value.till)}` }]),
+        ]}
+        value={current?.key ?? 'custom'}
+        onChange={(k) => {
+          const p = presets.find((x) => x.key === k);
+          if (p) onChange(p.range);
+        }}
+      />
+    </View>
   );
 }
-
-const useStyles = makeStyles(() => ({ row: { gap: 8, paddingVertical: 4 } }));

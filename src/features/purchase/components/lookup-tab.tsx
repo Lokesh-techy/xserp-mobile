@@ -1,6 +1,6 @@
 /** @author Lokesh */
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { useFocusRefetch } from '@/core/query';
@@ -8,7 +8,7 @@ import { makeStyles, useTheme } from '@/core/theme';
 import { filterItems, normalize, type DateRange } from '@/core/utils';
 import { ApprovalCard, openPager } from '@/features/approvals/engine';
 import { useMaterialItems, usePartyItems, useProjectItems, useProjects } from '@/features/master-data';
-import { Chip, countActiveFilters, FilterSheet, QueryState, SearchField, Text, useHostRefresh, type FilterField, type FilterValues, type ScrollHost, pullable } from '@/ui';
+import { countActiveFilters, FilterSheet, QueryState, Text, useHostRefresh, type FilterField, type FilterValues, type ScrollHost, pullable, MenuButton, useScreenSearch } from '@/ui';
 
 import { DEFAULT_PO_FILTERS, type PoFilters } from '../api';
 import { poApproval } from '../approvals';
@@ -33,8 +33,8 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
   const [filters, setFilters] = useState<PoFilters>(DEFAULT_PO_FILTERS);
   const [values, setValues] = useState<FilterValues>(() => toValues(DEFAULT_PO_FILTERS()));
   const [defaults] = useState<FilterValues>(() => toValues(DEFAULT_PO_FILTERS()));
-  const [search, setSearch] = useState('');
   const [local, setLocal] = useState<string | null>(null);
+  const search = useScreenSearch('Search PO, supplier or project');
   const query = usePoSearch(filters);
   const parties = usePartyItems();
   const projects = useProjectItems();
@@ -92,12 +92,10 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
               windowSize={7}
               ListHeaderComponent={
                 <View style={styles.head}>
-                  <SearchField value={search} onChangeText={setSearch} placeholder="Search PO, supplier or project" />
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips} {...host.nestedProps}>
-                    {LOCAL.map((c) => (
-                      <Chip key={c.key} label={c.label} active={local === c.key} onPress={() => setLocal((cur) => (cur === c.key ? null : c.key))} />
-                    ))}
-                  </ScrollView>
+                  <MenuButton title="Delivery" icon="cube-outline" options={[{ key: 'any', label: 'Any delivery status' }, ...LOCAL]} value={local ?? 'any'} onChange={(k) => setLocal(k === 'any' ? null : k)} />
+                  <Text variant="caption" color={t.colors.textMuted}>
+                    {visible.length} of {all.length}
+                  </Text>
                 </View>
               }
               ListFooterComponent={
@@ -118,7 +116,6 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
 const useStyles = makeStyles((t) => ({
   pad: { padding: t.space.gutter, paddingBottom: 48 },
   grow: { flexGrow: 1 },
-  head: { gap: 12, marginBottom: 14 },
-  chips: { gap: 8 },
+  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   footer: { textAlign: 'center', marginTop: 8 },
 }));

@@ -13,7 +13,9 @@ type Props = { title: string; data: { label: string; value: number }[]; format?:
 export function PieChartCard({ title, data, format = (n) => formatCompact(n) }: Props) {
   const t = useTheme();
   const styles = useStyles();
-  const slices = data.filter((d) => d.value > 0).map((d, i) => ({ value: d.value, color: t.chart[i % t.chart.length] ?? t.colors.accent, label: d.label }));
+  const slices = data
+    .filter((d) => d.value > 0)
+    .map((d, i) => ({ value: d.value, color: t.chart[i % t.chart.length] ?? t.colors.accent, label: d.label }));
   const total = slices.reduce((s, d) => s + d.value, 0);
   return (
     <Card style={styles.card}>

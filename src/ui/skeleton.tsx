@@ -59,6 +59,12 @@ export function ListSkeleton({ rows = 5 }: { rows?: number }) {
 const useStyles = makeStyles((t) => ({
   bone: { backgroundColor: t.colors.bone, borderRadius: 6, overflow: 'hidden' },
   sweep: { width: 160, height: '100%' },
-  card: { backgroundColor: t.colors.surface, borderRadius: t.radius.lg, padding: 18, marginBottom: 12, ...t.shadow.card },
+  card: {
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.lg,
+    padding: 18,
+    marginBottom: 12,
+    ...t.shadow.card,
+  },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
 }));

@@ -15,9 +15,18 @@ export default function Review() {
       title={title}
       entries={entries}
       loading={feed.loading && feed.entries.length === 0}
-      accessory={options.length > 1 ? <TypeFilterBar options={options} selected={selected} onChange={setSelected} /> : undefined}
+      headerRight={
+        options.length > 1 ? (
+          <TypeFilterBar inHeader options={options} selected={selected} onChange={setSelected} />
+        ) : undefined
+      }
       onRefresh={feed.refetch}
-      onOpen={(e) => router.push({ pathname: '/approvals/detail', params: { start: e.key, ...(selected.length ? { types: serializeTypes(selected) } : {}) } })}
+      onOpen={(e) =>
+        router.push({
+          pathname: '/approvals/detail',
+          params: { start: e.key, ...(selected.length ? { types: serializeTypes(selected) } : {}) },
+        })
+      }
     />
   );
 }

@@ -14,8 +14,26 @@ const config = defineApproval<Item>({
   id: (i) => i.id,
   summary: (i) => ({ code: i.id, party: '', status: { label: String(i.status), tone: 'info' } }),
   actions: [
-    { id: 'approve', label: 'Approve', icon: 'checkmark', tone: 'success', remarks: 'optional', visible: (i) => i.status === 0, run: async () => {}, done: 'Approved' },
-    { id: 'reject', label: 'Reject', icon: 'close', tone: 'danger', remarks: 'required', visible: () => true, run: async () => {}, done: 'Rejected' },
+    {
+      id: 'approve',
+      label: 'Approve',
+      icon: 'checkmark',
+      tone: 'success',
+      remarks: 'optional',
+      visible: (i) => i.status === 0,
+      run: async () => {},
+      done: 'Approved',
+    },
+    {
+      id: 'reject',
+      label: 'Reject',
+      icon: 'close',
+      tone: 'danger',
+      remarks: 'required',
+      visible: () => true,
+      run: async () => {},
+      done: 'Rejected',
+    },
   ],
 });
 

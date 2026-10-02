@@ -16,7 +16,15 @@ import { useApprovalQueue } from './use-queue';
 /** A module's "Pending" tab: searchable, virtualised queue that opens the swipe pager. */
 export type QueueSort<T> = { key: string; label: string; compare: (a: T, b: T) => number };
 
-export function QueueList<T, D>({ config, host, sorts }: { config: ApprovalConfig<T, D>; host: ScrollHost; sorts?: QueueSort<T>[] }) {
+export function QueueList<T, D>({
+  config,
+  host,
+  sorts,
+}: {
+  config: ApprovalConfig<T, D>;
+  host: ScrollHost;
+  sorts?: QueueSort<T>[];
+}) {
   const t = useTheme();
   const styles = useStyles();
   const query = useApprovalQueue(config);
@@ -26,13 +34,30 @@ export function QueueList<T, D>({ config, host, sorts }: { config: ApprovalConfi
   useHostRefresh(host, refetch);
   useFocusRefetch(refetch);
   const items = useMemo(() => {
-    const found = filterItems(query.data ?? [], search, (i) => config.search?.(i) ?? [config.summary(i).code, config.summary(i).party]);
+    const found = filterItems(
+      query.data ?? [],
+      search,
+      (i) => config.search?.(i) ?? [config.summary(i).code, config.summary(i).party],
+    );
     const sort = sorts?.find((x) => x.key === sortKey);
     return sort ? [...found].sort(sort.compare) : found;
   }, [query.data, search, config, sorts, sortKey]);
 
   return (
-    <QueryState query={query} wrap={(n) => pullable(host, n)} skeleton={<View style={styles.pad}><ListSkeleton /></View>} isEmpty={(d) => d.length === 0} empty={{ icon: 'checkmark-done-outline', title: 'All caught up', message: `No ${config.title.toLowerCase()} are waiting for you.` }}>
+    <QueryState
+      query={query}
+      wrap={(n) => pullable(host, n)}
+      skeleton={
+        <View style={styles.pad}>
+          <ListSkeleton />
+        </View>
+      }
+      isEmpty={(d) => d.length === 0}
+      empty={{
+        icon: 'checkmark-done-outline',
+        title: 'All caught up',
+        message: `No ${config.title.toLowerCase()} are waiting for you.`,
+      }}>
       {() =>
         host.attach(
           <Animated.FlatList
@@ -44,17 +69,38 @@ export function QueueList<T, D>({ config, host, sorts }: { config: ApprovalConfi
             windowSize={7}
             ListHeaderComponent={
               <View style={styles.search}>
-                <SearchField value={search} onChangeText={setSearch} placeholder={`Search ${config.title.toLowerCase()}`} />
+                <SearchField
+                  value={search}
+                  onChangeText={setSearch}
+                  placeholder={`Search ${config.title.toLowerCase()}`}
+                />
                 {!!sorts?.length && (
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips} {...host.nestedProps}>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.chips}
+                    {...host.nestedProps}>
                     {sorts.map((s) => (
-                      <Chip key={s.key} label={s.label} icon="swap-vertical-outline" active={sortKey === s.key} onPress={() => setSortKey((k) => (k === s.key ? null : s.key))} />
+                      <Chip
+                        key={s.key}
+                        label={s.label}
+                        icon="swap-vertical-outline"
+                        active={sortKey === s.key}
+                        onPress={() => setSortKey((k) => (k === s.key ? null : s.key))}
+                      />
                     ))}
                   </ScrollView>
                 )}
               </View>
             }
-            renderItem={({ item }) => <ApprovalCard summary={config.summary(item)} tint={t.tints[config.tint]} showStatus={false} onPress={() => openPager(config, items, config.id(item))} />}
+            renderItem={({ item }) => (
+              <ApprovalCard
+                summary={config.summary(item)}
+                tint={t.tints[config.tint]}
+                showStatus={false}
+                onPress={() => openPager(config, items, config.id(item))}
+              />
+            )}
           />,
         )
       }
@@ -62,4 +108,8 @@ export function QueueList<T, D>({ config, host, sorts }: { config: ApprovalConfi
   );
 }
 
-const useStyles = makeStyles((t) => ({ pad: { padding: t.space.gutter, paddingBottom: 48 }, search: { marginBottom: 14, gap: 12 }, chips: { gap: 8 } }));
+const useStyles = makeStyles((t) => ({
+  pad: { padding: t.space.gutter, paddingBottom: 48 },
+  search: { marginBottom: 14, gap: 12 },
+  chips: { gap: 8 },
+}));

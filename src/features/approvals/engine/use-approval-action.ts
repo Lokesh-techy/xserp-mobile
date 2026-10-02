@@ -47,7 +47,12 @@ export function useApprovalActions(onSucceeded?: (config: AnyApproval, id: strin
       toast.show({ message: `${config.noun} ${code} already has an action in progress.`, tone: 'info' });
       return;
     }
-    toast.show({ message: `${action.label} ${config.noun} ${code}…`, tone: 'info', durationMs: UNDO_MS, action: { label: 'Undo', onPress: () => cancelApprovalAction(ref) } });
+    toast.show({
+      message: `${action.label} ${config.noun} ${code}…`,
+      tone: 'info',
+      durationMs: UNDO_MS,
+      action: { label: 'Undo', onPress: () => cancelApprovalAction(ref) },
+    });
   };
 
   const isBusy = (config: AnyApproval, item: unknown) => pending.includes(`${config.type}:${config.id(item)}`);

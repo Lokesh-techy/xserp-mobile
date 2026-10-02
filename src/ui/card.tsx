@@ -27,6 +27,12 @@ export function Card({ children, style, onPress, tint }: Props) {
 }
 
 const useStyles = makeStyles((t) => ({
-  card: { backgroundColor: t.colors.surface, borderRadius: t.radius.lg, padding: t.space.lg, overflow: 'hidden', ...t.shadow.card },
+  card: {
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.lg,
+    padding: t.space.lg,
+    overflow: 'hidden',
+    ...t.shadow.card,
+  },
   bar: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4 },
 }));

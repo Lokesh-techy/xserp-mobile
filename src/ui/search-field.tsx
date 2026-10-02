@@ -37,6 +37,15 @@ export function SearchField({ value, onChangeText, placeholder = 'Search', autoF
 }
 
 const useStyles = makeStyles((t) => ({
-  box: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 50, paddingHorizontal: 16, borderRadius: t.radius.md, backgroundColor: t.colors.surface, ...t.shadow.card },
+  box: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    height: 50,
+    paddingHorizontal: 16,
+    borderRadius: t.radius.md,
+    backgroundColor: t.colors.surface,
+    ...t.shadow.card,
+  },
   input: { flex: 1, fontFamily: t.fonts.medium, fontSize: 14, color: t.colors.text },
 }));

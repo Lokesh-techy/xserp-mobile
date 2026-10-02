@@ -59,9 +59,19 @@ export function GlassIconButton({
   accessibilityLabel,
 }: ButtonProps) {
   const t = useTheme();
-  const shape = { width: size, height: size, borderRadius: size / 2, alignItems: 'center', justifyContent: 'center' } as const;
+  const shape = {
+    width: size,
+    height: size,
+    borderRadius: size / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  } as const;
   return (
-    <PressableScale onPress={onPress} style={{ borderRadius: size / 2 }} accessibilityLabel={accessibilityLabel} accessibilityRole="button">
+    <PressableScale
+      onPress={onPress}
+      style={{ borderRadius: size / 2 }}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button">
       <Glass style={shape} fallbackStyle={{ backgroundColor: fallbackColor }} tint={tint} interactive>
         <Ionicons name={icon} size={Math.round(size * 0.5)} color={active ? t.colors.primary : color} />
       </Glass>

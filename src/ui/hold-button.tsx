@@ -4,7 +4,13 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, {
+  cancelAnimation,
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { makeStyles, useTheme } from '@/core/theme';
 
@@ -13,7 +19,13 @@ import { Text } from './text';
 
 export const HOLD_MS = 600;
 
-type Props = { title: string; onComplete: () => void; icon?: IconName; disabled?: boolean; style?: StyleProp<ViewStyle> };
+type Props = {
+  title: string;
+  onComplete: () => void;
+  icon?: IconName;
+  disabled?: boolean;
+  style?: StyleProp<ViewStyle>;
+};
 
 /**
  * Press-and-hold to confirm: a fill sweeps across while held and the action fires when it completes.
@@ -60,7 +72,12 @@ export function HoldButton({ title, onComplete, icon = 'checkmark-circle-outline
       style={[styles.base, disabled && styles.disabled, style]}>
       <View style={[StyleSheet.absoluteFill, { backgroundColor: t.colors.successSoft }]} />
       <Animated.View style={[styles.fill, fill]}>
-        <LinearGradient colors={t.gradients.success} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
+        <LinearGradient
+          colors={t.gradients.success}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={StyleSheet.absoluteFill}
+        />
       </Animated.View>
       <View style={styles.row}>
         <Ionicons name={icon} size={16} color={t.colors.success} />
@@ -86,5 +103,12 @@ const useStyles = makeStyles((t) => ({
   fill: { position: 'absolute', left: 0, top: 0, bottom: 0 },
   // A clipped white copy of the label rides on top of the fill so text stays readable mid-sweep.
   fillLabel: { position: 'absolute', left: 0, top: 0, bottom: 0, overflow: 'hidden', justifyContent: 'center' },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 14, minWidth: 140 },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 14,
+    minWidth: 140,
+  },
 }));
