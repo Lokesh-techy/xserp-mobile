@@ -2,12 +2,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
-import { ActivityIndicator, View, type StyleProp, type ViewStyle } from 'react-native';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { makeStyles, useTheme } from '@/core/theme';
 
+import { MorphLoaderLabel } from './morph-loader-label';
 import { PressableScale } from './pressable-scale';
-import { Text } from './text';
 
 export type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -41,18 +41,11 @@ export function Button({ title, onPress, variant = 'primary', icon, loading: loa
     }
   };
 
+  // While working, the label's own letters gather into a spinning ring (MorphLoaderLabel).
   const content = (
     <View style={styles.row}>
-      {loading ? (
-        <ActivityIndicator color={fg} />
-      ) : (
-        <>
-          {icon && <Ionicons name={icon} size={size === 'sm' ? 16 : 18} color={fg} />}
-          <Text variant={size === 'sm' ? 'label' : 'heading'} color={fg}>
-            {title}
-          </Text>
-        </>
-      )}
+      {icon && !loading && <Ionicons name={icon} size={size === 'sm' ? 16 : 18} color={fg} />}
+      <MorphLoaderLabel title={title} loading={loading} color={fg} variant={size === 'sm' ? 'label' : 'heading'} />
     </View>
   );
 

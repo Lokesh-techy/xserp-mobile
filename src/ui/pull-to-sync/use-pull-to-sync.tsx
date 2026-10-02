@@ -1,6 +1,6 @@
 /** @author Lokesh */
 import * as Haptics from 'expo-haptics';
-import { useMemo, useState, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -23,11 +23,16 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { makeStyles, useTheme } from '@/core/theme';
 
 import { XMark } from '../brand/xmark';
+import { phraseAt } from './messages';
 import { HOLD, MIN_SYNC_MS, rubberBand, spreadFor, SYNC_LABELS, TRIGGER, type SyncPhase } from './phases';
 
 const ICON = 44;
 
-export function usePullToSync(onRefresh: () => Promise<unknown>, enabled = true) {
+/**
+ * `statusText` (optional) is what the caption says while syncing, e.g. the real sync step; without it the
+ * caption cycles through friendly phrases so it never looks stuck.
+ */
+export function usePullToSync(onRefresh: () => Promise<unknown>, enabled = true, statusText?: string | null) {
   const t = useTheme();
   const styles = useStyles();
   const reduceMotion = useReducedMotion();
@@ -37,8 +42,10 @@ export function usePullToSync(onRefresh: () => Promise<unknown>, enabled = true)
   const base = useSharedValue(0);
   const blocked = useSharedValue(false);
   const spread = useSharedValue(0);
-  const rotation = useSharedValue(0);
+  const wave = useSharedValue(0);
+  const waveAmp = useSharedValue(0);
   const glow = useSharedValue(0.35);
+  const [phrase, setPhrase] = useState(0);
   const [label, setLabel] = useState<SyncPhase>(0);
 
   // Petals follow the finger, but snap together with a spring when the gesture arms.
@@ -63,7 +70,6 @@ export function usePullToSync(onRefresh: () => Promise<unknown>, enabled = true)
         withSpring(0, { dampingRatio: 0.9, duration: 520 }, (done) => {
           if (!done) return;
           phase.set(0);
-          rotation.set(0);
           scheduleOnRN(setLabel, 0);
         }),
       ),
@@ -71,22 +77,35 @@ export function usePullToSync(onRefresh: () => Promise<unknown>, enabled = true)
   };
 
   const startSync = () => {
+    setPhrase(0);
     setLabel(2);
     haptic('release');
-    rotation.set(reduceMotion ? 0 : withRepeat(withTiming(360, { duration: 900, easing: Easing.inOut(Easing.cubic) }), -1, false));
-    glow.set(withRepeat(withSequence(withTiming(1, { duration: 450 }), withTiming(0.35, { duration: 450 })), -1, false));
+    // The mark itself loads: petals pulse outward in a clockwise wave, the centre glows like a heartbeat.
+    wave.set(0);
+    wave.set(reduceMotion ? 0 : withRepeat(withTiming(1, { duration: 1300, easing: Easing.linear }), -1, false));
+    waveAmp.set(withTiming(1, { duration: 260 }));
+    glow.set(
+      withRepeat(withSequence(withTiming(1, { duration: 160 }), withTiming(0.5, { duration: 200 }), withTiming(0.9, { duration: 160 }), withTiming(0.35, { duration: 780 })), -1, false),
+    );
     const minimum = new Promise((resolve) => setTimeout(resolve, MIN_SYNC_MS));
     Promise.all([onRefresh().catch(() => undefined), minimum]).then(() => {
-      cancelAnimation(rotation);
+      cancelAnimation(wave);
       cancelAnimation(glow);
-      rotation.set(withTiming(Math.ceil(rotation.get() / 90) * 90, { duration: 220 }));
-      glow.set(withSequence(withTiming(1, { duration: 140 }), withTiming(0.35, { duration: 520 })));
+      // Petals settle back into a tight X and the glow flashes once: done.
+      waveAmp.set(withTiming(0, { duration: 320, easing: Easing.out(Easing.cubic) }));
+      glow.set(withSequence(withTiming(1, { duration: 140 }), withTiming(0.35, { duration: 620 })));
       phase.set(3);
       setLabel(3);
       haptic('done');
       settle();
     });
   };
+
+  useEffect(() => {
+    if (label !== 2) return;
+    const timer = setInterval(() => setPhrase((p) => p + 1), 1200);
+    return () => clearInterval(timer);
+  }, [label]);
 
   const scrollHandler = useAnimatedScrollHandler((e) => {
     scrollY.set(e.contentOffset.y);
@@ -140,9 +159,9 @@ export function usePullToSync(onRefresh: () => Promise<unknown>, enabled = true)
     <Animated.View style={[styles.spacer, spacerStyle]}>
       <View style={styles.indicator}>
         <Animated.View style={markStyle}>
-          <XMark size={ICON} variant="onDark" spread={spread} rotation={rotation} glow={glow} />
+          <XMark size={ICON} variant="onDark" spread={spread} glow={glow} wave={wave} waveAmp={waveAmp} />
         </Animated.View>
-        <Animated.Text style={[styles.caption, captionStyle, label === 3 && { color: t.alpha.successOnGradient }]}>{SYNC_LABELS[label]}</Animated.Text>
+        <Animated.Text style={[styles.caption, captionStyle, label === 3 && { color: t.alpha.successOnGradient }]}>{label === 2 ? (statusText ? statusText.toUpperCase() : phraseAt(phrase)) : SYNC_LABELS[label]}</Animated.Text>
       </View>
     </Animated.View>
   );

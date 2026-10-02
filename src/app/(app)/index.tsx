@@ -37,11 +37,12 @@ export default function Home() {
   const sync = useCallback(
     () =>
       runSync([
-        refreshSession,
-        () => syncAllMasters({ force: true }),
-        feed.refetch,
-        () => qc.invalidateQueries({ queryKey: ['notifications'] }),
-        ...(claims.enabled ? [claims.refetch] : []),
+        // Labels are shown in order while each step is still running (pull caption + sync line).
+        { label: 'Checking your access…', run: refreshSession },
+        { label: 'Fetching approvals…', run: feed.refetch },
+        { label: 'Checking notifications…', run: () => qc.invalidateQueries({ queryKey: ['notifications'] }) },
+        ...(claims.enabled ? [{ label: 'Fetching expense claims…', run: claims.refetch }] : []),
+        { label: 'Syncing parties, materials & ledgers…', run: () => syncAllMasters({ force: true }) },
       ]),
     [refreshSession, feed.refetch, qc, claims.enabled, claims.refetch],
   );
@@ -67,7 +68,7 @@ export default function Home() {
     <HomeScreen
       modules={modules}
       unread={unread}
-      sync={{ text: syncLabel(last.at, last.syncing, now), syncing: last.syncing }}
+      sync={{ text: syncLabel(last.at, last.syncing, now, last.step), syncing: last.syncing, step: last.step }}
       onRefresh={sync}
       approvals={{
         show: feed.enabled || claims.enabled,

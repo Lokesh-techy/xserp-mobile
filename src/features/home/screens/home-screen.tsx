@@ -16,14 +16,14 @@ type Props = {
   modules: HomeModule[];
   unread: number;
   approvals: { show: boolean; groups: ApprovalGroup[]; loading: boolean; onReview: (types: string[]) => void };
-  sync: { text: string; syncing: boolean };
+  sync: { text: string; syncing: boolean; step: string | null };
   onRefresh: () => Promise<unknown>;
 };
 
 export function HomeScreen({ modules, unread, approvals, sync, onRefresh }: Props) {
   const t = useTheme();
   const styles = useStyles();
-  const pull = usePullToSync(onRefresh);
+  const pull = usePullToSync(onRefresh, true, sync.step);
   return (
     <View style={styles.root}>
       {pull.attach(
