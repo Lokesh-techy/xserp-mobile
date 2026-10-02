@@ -1,5 +1,5 @@
 /** @author Lokesh */
-import { useQueries } from '@tanstack/react-query';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
 
 import { useSessionStore } from '@/core/auth';
@@ -11,13 +11,13 @@ import type { AnyApproval, ApprovalType, ReviewEntry } from '@/features/approval
 
 import { APPROVALS } from './approval-registry';
 
-const time = (e: ReviewEntry) => parseServerDate(e.config.summary(e.item).date)?.getTime() ?? 0;
-
-/** Every pending document across modules, newest first (undated ones last). */
+/** Every pending document across modules, newest first (undated ones last). Each date is parsed once. */
 export function buildFeed(groups: { config: AnyApproval; items: unknown[] }[]): ReviewEntry[] {
-  return groups
-    .flatMap(({ config, items }) => items.map((item) => ({ key: `${config.type}:${config.id(item)}`, config, item })))
-    .sort((a, b) => time(b) - time(a));
+  const keyed = groups.flatMap(({ config, items }) =>
+    items.map((item) => ({ entry: { key: `${config.type}:${config.id(item)}`, config, item }, at: parseServerDate(config.summary(item).date)?.getTime() ?? 0 })),
+  );
+  keyed.sort((a, b) => b.at - a.at);
+  return keyed.map((k) => k.entry);
 }
 
 export type TypeSummary = { type: ApprovalType; label: string; tint: ModuleTint; count: number };
@@ -36,14 +36,20 @@ export function summarizeByType(entries: ReviewEntry[]): TypeSummary[] {
   return [...byType.values()].sort((a, b) => TYPE_ORDER.indexOf(a.type) - TYPE_ORDER.indexOf(b.type));
 }
 
-/** Live, polled feed of everything the signed-in user can approve. */
+/** Live, polled feed of everything the signed-in user can approve (recomputed only when a queue changes). */
 export function useApprovalFeed() {
   const session = useSessionStore((s) => s.session);
   const configs = useMemo(() => Object.values(APPROVALS).filter((c): c is AnyApproval => !!c && can(session, c.permission, 'approve')), [session]);
-  const results = useQueries({ queries: configs.map((c) => ({ queryKey: c.queueKey, queryFn: c.queue, refetchInterval: POLL_MS })) });
-  const data = results.map((r) => r.data);
-  const entries = useMemo(() => buildFeed(configs.map((config, i) => ({ config, items: data[i] ?? [] }))), [configs, data]);
-  const loading = results.some((r) => r.isPending);
-  const refetch = useCallback(() => Promise.all(results.map((r) => r.refetch())), [results]);
-  return { entries, loading, refetch, enabled: configs.length > 0 };
+  // `combine` is memoised by TanStack while its inputs are unchanged, so re-renders don't rebuild the feed.
+  const combine = useCallback(
+    (results: { data?: unknown[]; isPending: boolean }[]) => ({
+      entries: buildFeed(configs.map((config, i) => ({ config, items: results[i]?.data ?? [] }))),
+      loading: results.some((r) => r.isPending),
+    }),
+    [configs],
+  );
+  const feed = useQueries({ queries: configs.map((c) => ({ queryKey: c.queueKey, queryFn: c.queue, refetchInterval: POLL_MS })), combine });
+  const qc = useQueryClient();
+  const refetch = useCallback(() => Promise.all(configs.map((c) => qc.refetchQueries({ queryKey: c.queueKey }))), [configs, qc]);
+  return { entries: feed.entries, loading: feed.loading, refetch, enabled: configs.length > 0 };
 }

@@ -22,7 +22,14 @@ const KEYS = Object.keys(PETALS) as PetalKey[];
 // Clockwise chase order for the loading wave.
 const CHASE: Record<PetalKey, number> = { topLeft: 0, topRight: 1, bottomRight: 2, bottomLeft: 3 };
 
-type PetalProps = { k: PetalKey; size: number; variant: 'color' | 'onDark'; spread?: SharedValue<number>; wave?: SharedValue<number>; waveAmp?: SharedValue<number> };
+type PetalProps = {
+  k: PetalKey;
+  size: number;
+  variant: 'color' | 'onDark';
+  spread?: SharedValue<number>;
+  wave?: SharedValue<number>;
+  waveAmp?: SharedValue<number>;
+};
 
 function Petal({ k, size, variant, spread, wave, waveAmp }: PetalProps) {
   const petal = PETALS[k];
@@ -34,7 +41,7 @@ function Petal({ k, size, variant, spread, wave, waveAmp }: PetalProps) {
     const pulse = wave && amp > 0 ? petalPulse(wave.get(), CHASE[k]) : 1;
     const s = spread ? spread.get() : 0;
     return {
-      opacity: 1 - 0.55 * amp * (1 - pulse),
+      opacity: 1 - 0.75 * amp * (1 - pulse),
       transform: [{ translateX: petal.dir[0] * push * s }, { translateY: petal.dir[1] * push * s }],
     };
   });
@@ -42,7 +49,12 @@ function Petal({ k, size, variant, spread, wave, waveAmp }: PetalProps) {
     <Animated.View style={[{ position: 'absolute', width: size, height: size }, style]}>
       <Svg width={size} height={size} viewBox={XMARK_VIEWBOX}>
         <Defs>
-          <LinearGradient id={`g-${k}`} x1="0" y1={petal.dir[1] < 0 ? '0' : '1'} x2="1" y2={petal.dir[1] < 0 ? '1' : '0'}>
+          <LinearGradient
+            id={`g-${k}`}
+            x1="0"
+            y1={petal.dir[1] < 0 ? '0' : '1'}
+            x2="1"
+            y2={petal.dir[1] < 0 ? '1' : '0'}>
             <Stop offset="0" stopColor={from} />
             <Stop offset="1" stopColor={to} />
           </LinearGradient>
@@ -56,7 +68,10 @@ function Petal({ k, size, variant, spread, wave, waveAmp }: PetalProps) {
 /** The XSERP "X": original petal geometry, enhanced with two-tone gradients and a centre glow. */
 export function XMark({ size, variant = 'color', spread, rotation, glow, wave, waveAmp }: Props) {
   const rotate = useAnimatedStyle(() => ({ transform: [{ rotate: `${rotation ? rotation.get() : 0}deg` }] }));
-  const glowStyle = useAnimatedStyle(() => ({ opacity: glow ? glow.get() : 0.55 }));
+  const glowStyle = useAnimatedStyle(() => {
+    const g = glow ? glow.get() : 0.55;
+    return { opacity: g, transform: [{ scale: 0.85 + g * 0.5 }] };
+  });
   return (
     <Animated.View style={[{ width: size, height: size }, rotate]} accessibilityRole="image" accessibilityLabel="XSERP">
       <Animated.View style={[{ position: 'absolute', width: size, height: size }, glowStyle]}>
@@ -67,7 +82,7 @@ export function XMark({ size, variant = 'color', spread, rotation, glow, wave, w
               <Stop offset="1" stopColor="#5CC3FF" stopOpacity={0} />
             </RadialGradient>
           </Defs>
-          <Circle cx={XMARK_CENTER.x} cy={XMARK_CENTER.y} r={22} fill="url(#xglow)" />
+          <Circle cx={XMARK_CENTER.x} cy={XMARK_CENTER.y} r={30} fill="url(#xglow)" />
         </Svg>
       </Animated.View>
       <View style={{ width: size, height: size }}>

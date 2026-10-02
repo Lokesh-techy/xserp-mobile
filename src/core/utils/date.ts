@@ -8,9 +8,29 @@ const SERVER_FORMATS = ['yyyy-MM-dd HH:mm:ss', "yyyy-MM-dd'T'HH:mm:ss", 'yyyy-MM
 
 export const toApiDate = (d: Date) => format(d, 'yyyy-MM-dd');
 
+// Fast paths for the shapes xserp actually sends; date-fns `parse` is ~100× slower and only a fallback.
+const ISO = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/;
+const DMY = /^(\d{2})[-/](\d{2})[-/](\d{4})$/;
+
+function fast(value: string): Date | null {
+  let m = ISO.exec(value);
+  if (m) {
+    const d = new Date(+m[1]!, +m[2]! - 1, +m[3]!, +(m[4] ?? 0), +(m[5] ?? 0), +(m[6] ?? 0));
+    return d.getMonth() === +m[2]! - 1 ? d : null;
+  }
+  m = DMY.exec(value);
+  if (m) {
+    const d = new Date(+m[3]!, +m[2]! - 1, +m[1]!);
+    return d.getMonth() === +m[2]! - 1 ? d : null;
+  }
+  return null;
+}
+
 export function parseServerDate(s: string | null | undefined): Date | null {
   if (!s) return null;
   const value = s.trim().replace(/\.\d+$/, '');
+  const quick = fast(value);
+  if (quick) return quick;
   for (const f of SERVER_FORMATS) {
     const d = parse(value, f, new Date());
     if (isValid(d)) return d;
