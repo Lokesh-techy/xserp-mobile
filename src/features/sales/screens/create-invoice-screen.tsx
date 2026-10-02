@@ -12,7 +12,8 @@ import { errorMessage } from '@/core/api';
 import { useCan } from '@/core/permissions';
 import { makeStyles, useTheme } from '@/core/theme';
 import { successFeedback } from '@/core/utils';
-import { useProjects } from '@/features/master-data';
+import { useSession } from '@/core/auth';
+import { useProjects, useTaxes } from '@/features/master-data';
 import { Button, ScreenHeader, Text, toast } from '@/ui';
 
 import { saveInvoice } from '../invoice-form/api';
@@ -39,6 +40,8 @@ export function CreateInvoiceScreen() {
   const qc = useQueryClient();
   const navigation = useNavigation();
   const projects = useProjects();
+  const taxes = useTaxes();
+  const session = useSession();
   const canApprove = useCan('SALES', 'approve');
   const [step, setStep] = useState(0);
   const [saved, setSaved] = useState(false);
@@ -61,7 +64,7 @@ export function CreateInvoiceScreen() {
   const save = (withApproval: boolean) =>
     methods.handleSubmit(async (form) => {
       try {
-        await saveInvoice(buildInvoicePayload(form, { projects, withApproval }));
+        await saveInvoice(buildInvoicePayload(form, { projects, taxes, withApproval, enterpriseId: session.enterpriseId }));
         setSaved(true);
         successFeedback();
         toast.show({ message: withApproval ? 'Invoice saved and approved' : 'Invoice saved as draft', tone: 'success' });
