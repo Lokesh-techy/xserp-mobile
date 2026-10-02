@@ -6,9 +6,10 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { cancelAnimation, Easing, FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 
 import { makeStyles, useTheme } from '@/core/theme';
-import { Bone, Button, CountUp, PressableScale, Text, withPressFeel } from '@/ui';
+import { Bone, CountUp, PressableScale, Text } from '@/ui';
 
 import { selectionTotal, toggleType } from '../selection';
+import { ReviewButton } from './review-button';
 
 /** `direct` groups (e.g. expense claims) open their own screen instead of joining a review. */
 export type ApprovalGroup = { key: string; label: string; tint: string; count: number; direct?: () => void };
@@ -92,13 +93,7 @@ export function ApprovalsCard({ groups, loading, syncing, onReview }: Props) {
             </Text>
           </View>
         </View>
-        <Button
-          title={live.length ? `Review ${compact(reviewCount)}` : 'Review all'}
-          icon="arrow-forward"
-          size="sm"
-          onPress={withPressFeel(() => onReview(live))}
-          style={styles.reviewButton}
-        />
+        <ReviewButton label={live.length ? `Review ${compact(reviewCount)}` : 'Review all'} onPress={() => onReview(live)} />
       </View>
 
       <View style={styles.bar}>
@@ -141,7 +136,6 @@ const useStyles = makeStyles((t) => ({
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   totalRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 2 },
   total: { fontSize: 32, lineHeight: 38 },
-  reviewButton: { borderRadius: t.radius.pill, minWidth: 132 },
   bar: { flexDirection: 'row', height: 8, borderRadius: t.radius.pill, overflow: 'hidden', gap: 2, marginTop: 12, backgroundColor: t.colors.fill },
   segment: { height: 8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 10, marginHorizontal: -4 },
