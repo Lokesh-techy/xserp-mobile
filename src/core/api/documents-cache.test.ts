@@ -1,4 +1,7 @@
 /** @author Lokesh */
+import * as client from './client';
+import { clearDocumentCache, openDocument } from './documents';
+
 const mockFiles = new Map<string, Uint8Array>();
 jest.mock('expo-file-system', () => {
   class File {
@@ -38,8 +41,6 @@ jest.mock('expo-file-system', () => {
   return { File, Directory, Paths: { cache: 'cache' } };
 });
 
-import * as client from './client';
-import { clearDocumentCache, openDocument } from './documents';
 
 beforeEach(() => {
   mockFiles.clear();

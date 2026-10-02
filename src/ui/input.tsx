@@ -4,6 +4,7 @@ import { forwardRef, useState } from 'react';
 import { Pressable, TextInput, View, type TextInputProps } from 'react-native';
 import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
+import { markActive } from '@/core/auth/idle-timeout';
 import { makeStyles, useTheme } from '@/core/theme';
 import { tapFeedback } from '@/core/utils';
 
@@ -12,7 +13,7 @@ import { Text } from './text';
 
 type Props = TextInputProps & { label: string; icon: IconName; secure?: boolean; error?: string | null };
 
-export const Input = forwardRef<TextInput, Props>(function Input({ label, icon, secure, error, onFocus, onBlur, ...rest }, ref) {
+export const Input = forwardRef<TextInput, Props>(function Input({ label, icon, secure, error, onFocus, onBlur, onChangeText, ...rest }, ref) {
   const t = useTheme();
   const styles = useStyles();
   const focus = useSharedValue(0);
@@ -38,6 +39,11 @@ export const Input = forwardRef<TextInput, Props>(function Input({ label, icon, 
           ref={ref}
           {...rest}
           accessibilityLabel={label}
+          onChangeText={(text) => {
+            // Typing is activity too (the root touch handler never sees the keyboard).
+            markActive();
+            onChangeText?.(text);
+          }}
           secureTextEntry={secure && hidden}
           placeholderTextColor={t.colors.textFaint}
           style={styles.input}

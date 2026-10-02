@@ -6,6 +6,7 @@ import Animated, { Easing, useAnimatedStyle, useSharedValue, withSpring, withTim
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { markActive } from '@/core/auth/idle-timeout';
 import { makeStyles, springs } from '@/core/theme';
 
 import { Text } from './text';
@@ -60,7 +61,8 @@ export function BottomSheet({ visible, onClose, title, children, maxHeightRatio 
 
   return (
     <Modal transparent visible statusBarTranslucent navigationBarTranslucent animationType="none" onRequestClose={onClose}>
-      <GestureHandlerRootView style={styles.flex}>
+      {/* Sheets render in their own window, outside the root activity tracker. */}
+      <GestureHandlerRootView style={styles.flex} onTouchStart={markActive}>
         <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, backdropStyle]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
         </Animated.View>

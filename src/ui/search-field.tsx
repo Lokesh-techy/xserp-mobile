@@ -2,6 +2,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, TextInput, View } from 'react-native';
 
+import { markActive } from '@/core/auth/idle-timeout';
 import { makeStyles, useTheme } from '@/core/theme';
 
 type Props = { value: string; onChangeText: (s: string) => void; placeholder?: string; autoFocus?: boolean };
@@ -14,7 +15,10 @@ export function SearchField({ value, onChangeText, placeholder = 'Search', autoF
       <Ionicons name="search-outline" size={18} color={t.colors.textFaint} />
       <TextInput
         value={value}
-        onChangeText={onChangeText}
+        onChangeText={(text) => {
+          markActive();
+          onChangeText(text);
+        }}
         placeholder={placeholder}
         placeholderTextColor={t.colors.textFaint}
         autoFocus={autoFocus}
