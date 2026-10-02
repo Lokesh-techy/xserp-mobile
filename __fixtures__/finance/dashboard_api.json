@@ -1,0 +1,1 @@
+{"response_code":200,"bank":"1250000","bank_balance":1250000,"cash":45000,"cash_in_hand":45000,"receivable":980000,"receivables":[{"id":5,"name":"Acme Ltd","closing_balance":"300000"},{"id":6,"name":"Globex","value":120000}],"payable":410000,"payables":[{"id":9,"name":"Initech","amount":90000}],"sales_revenue":2200000,"tax_liability":"65000","sync_datetime":"2026-10-02 09:30:00"}

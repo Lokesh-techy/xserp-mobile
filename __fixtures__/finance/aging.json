@@ -1,0 +1,1 @@
+{"response_code":200,"receivable_aging":{"age1":100,"age2":200,"age3":300,"age4":400,"overdue":900,"total":1500,"advance":50,"billable":0,"excess":0},"payable_aging":{"age1":10,"age2":20,"age3":30,"age4":40,"overdue":90,"total":150,"advance":5,"billable":0}}
