@@ -1,0 +1,26 @@
+{
+  "response_code": 200,
+  "response_message": "Success",
+  "custom_message": "Login Success",
+  "id": 7,
+  "username": "tester",
+  "user_email": "tester@example.com",
+  "first_name": "Test",
+  "last_name": "User",
+  "is_active": true,
+  "is_super": false,
+  "is_enterprise_active": true,
+  "enterprise_id": 102,
+  "enterprise_name": "Schnell Energy Equipments",
+  "permissions": {
+    "PURCHASE": { "module_code": "PURCHASE", "view": true, "edit": true, "delete": false, "approve": true, "alert": true, "permission_value": 23, "enterprise_id": 102 },
+    "SALES": { "module_code": "SALES", "view": true, "edit": false, "delete": false, "approve": false, "alert": false, "permission_value": 1, "enterprise_id": 102 },
+    "ACCOUNTS": { "module_code": "ACCOUNTS", "view": 1, "edit": 0, "delete": 0, "approve": 0, "alert": 0, "permission_value": 1, "enterprise_id": 102 }
+  },
+  "fy_start_day": "01/04",
+  "token": "FIXTURE_TOKEN",
+  "pending_po_count_notification": 3,
+  "invoice_pending_count": "2",
+  "receipt_save_count": 0,
+  "master_material_price": 1
+}
