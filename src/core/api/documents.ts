@@ -38,12 +38,13 @@ export function safeFilename(name: string): string {
 
 const DOCS_DIR = 'xserp-docs';
 
+export type FetchedDocument = { title: string; base64: string; uri: string; mimeType: string };
+
 /**
- * Downloads an xserp `*_doc` PDF (base64 mode) and opens the system viewer/share sheet.
- * Always fetched fresh (documents change after approval) and stored per company, so one
- * company's PDF can never be shown to another.
+ * Downloads an xserp `*_doc` PDF (base64 mode) and saves it per company (so one company's PDF can never
+ * be shown to another). Always fetched fresh — documents change after approval.
  */
-export async function openDocument(req: DocumentRequest, { regenerate = false } = {}): Promise<void> {
+export async function fetchDocument(req: DocumentRequest, { regenerate = false } = {}): Promise<FetchedDocument> {
   const company = String(currentEnterpriseId() ?? 'none');
   const res = await post(
     req.path,
@@ -51,14 +52,25 @@ export async function openDocument(req: DocumentRequest, { regenerate = false } 
     { schema: docSchema, timeoutMs: 120_000 },
   );
   if (!res.data) throw new ApiError('server', 'The document is not available yet.');
+  const base64 = res.data.replace(/^data:[^,]*,/, '');
   const dir = new Directory(Paths.cache, DOCS_DIR, company);
   if (!dir.exists) dir.create({ intermediates: true, idempotent: true });
   const file = new File(Paths.cache, DOCS_DIR, company, safeFilename(req.filename));
   if (file.exists) file.delete();
   file.create();
-  file.write(base64ToBytes(res.data));
-  if (!(await Sharing.isAvailableAsync())) throw new ApiError('config', 'No app available to open this document.');
-  await Sharing.shareAsync(file.uri, { mimeType: req.mimeType ?? 'application/pdf', UTI: 'com.adobe.pdf', dialogTitle: req.filename });
+  file.write(base64ToBytes(base64));
+  return { title: req.filename, base64, uri: file.uri, mimeType: req.mimeType ?? 'application/pdf' };
+}
+
+/** Hands a downloaded document to the system share sheet / other apps. */
+export async function shareDocument(doc: Pick<FetchedDocument, 'uri' | 'mimeType' | 'title'>) {
+  if (!(await Sharing.isAvailableAsync())) throw new ApiError('config', 'No app available to share this document.');
+  await Sharing.shareAsync(doc.uri, { mimeType: doc.mimeType, UTI: 'com.adobe.pdf', dialogTitle: doc.title });
+}
+
+/** Download + share in one step (kept for flows without an in-app preview). */
+export async function openDocument(req: DocumentRequest, opts: { regenerate?: boolean } = {}): Promise<void> {
+  await shareDocument(await fetchDocument(req, opts));
 }
 
 /** Removes every downloaded document (called on sign-out). */

@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import { errorMessage } from '@/core/api';
 import { forgotPassword } from '@/core/auth';
-import { Button, Input } from '@/ui';
+import { Button, Input, withPressFeel } from '@/ui';
 
 import { AuthFrame, NoticeBox } from '../components/auth-frame';
 
@@ -28,7 +28,7 @@ export function ForgotPasswordScreen() {
       {sent ? (
         <>
           <NoticeBox tone="success" message={sent} />
-          <Button title="Back to sign in" variant="ghost" onPress={() => router.back()} />
+          <Button title="Back to sign in" variant="ghost" onPress={withPressFeel(() => router.back())} />
         </>
       ) : (
         <>

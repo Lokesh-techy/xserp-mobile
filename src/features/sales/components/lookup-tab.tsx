@@ -10,7 +10,7 @@ import { makeStyles, useTheme } from '@/core/theme';
 import { filterItems, type DateRange } from '@/core/utils';
 import { ApprovalCard, openPager } from '@/features/approvals/engine';
 import { useMaterialItems, usePartyItems, useProjectItems, useProjects } from '@/features/master-data';
-import { Button, Chip, countActiveFilters, FilterSheet, QueryState, SearchField, Text, useHostRefresh, type FilterField, type FilterValues, type ScrollHost } from '@/ui';
+import { Button, Chip, countActiveFilters, type FilterField, FilterSheet, type FilterValues, QueryState, type ScrollHost, SearchField, Text, useHostRefresh, withPressFeel } from '@/ui';
 
 import { DEFAULT_SALES_FILTERS, type SalesFilters } from '../api';
 import { invoiceApproval, oaApproval } from '../approvals';
@@ -84,7 +84,7 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
 
   const header = (
     <View style={styles.head}>
-      {canCreate && <Button title="Create invoice" icon="add-circle-outline" onPress={() => router.push('/sales/invoice/new')} />}
+      {canCreate && <Button title="Create invoice" icon="add-circle-outline" onPress={withPressFeel(() => router.push('/sales/invoice/new'))} />}
       <View style={styles.chips}>
         <Chip label="Invoices" icon="receipt-outline" active={isInvoice} onPress={() => switchKind('invoice')} />
         <Chip label="Order acks" icon="document-text-outline" active={!isInvoice} onPress={() => switchKind('oa')} />

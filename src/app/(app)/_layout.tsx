@@ -18,6 +18,7 @@ export default function AppLayout() {
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.colors.bg }, animation: 'slide_from_right' }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="profile" options={{ animation: 'fade_from_bottom' }} />
+        <Stack.Screen name="document" options={{ animation: 'slide_from_bottom' }} />
       </Stack>
       <SubscriptionSheet />
     </>

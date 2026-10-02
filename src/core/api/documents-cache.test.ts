@@ -1,6 +1,6 @@
 /** @author Lokesh */
 import * as client from './client';
-import { clearDocumentCache, openDocument } from './documents';
+import { clearDocumentCache, fetchDocument, openDocument } from './documents';
 
 const mockFiles = new Map<string, Uint8Array>();
 jest.mock('expo-file-system', () => {
@@ -60,4 +60,12 @@ test('clearDocumentCache removes every downloaded document', async () => {
   await openDocument({ path: 'x/', params: {}, filename: 'a.pdf' });
   clearDocumentCache();
   expect(mockFiles.size).toBe(0);
+});
+
+test('fetchDocument returns clean base64 and the saved file for preview and sharing', async () => {
+  jest.spyOn(client, 'post').mockResolvedValue({ data: 'data:application/pdf;base64,SGk=', filename: 'srv.pdf' } as never);
+  const doc = await fetchDocument({ path: 'x/', params: {}, filename: 'INV-1.pdf' });
+  expect(doc.base64).toBe('SGk=');
+  expect(doc.uri).toBe('cache/xserp-docs/102/INV-1.pdf');
+  expect(doc.title).toBe('INV-1.pdf');
 });

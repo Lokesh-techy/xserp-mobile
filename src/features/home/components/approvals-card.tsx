@@ -6,7 +6,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { cancelAnimation, Easing, FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 
 import { enter, makeStyles, useTheme } from '@/core/theme';
-import { Bone, CountUp, PressableScale, Text } from '@/ui';
+import { Bone, Button, CountUp, PressableScale, Text, withPressFeel } from '@/ui';
 
 import { selectionTotal, toggleType } from '../selection';
 
@@ -80,7 +80,7 @@ export function ApprovalsCard({ groups, loading, syncing, onReview }: Props) {
 
   return (
     <Animated.View entering={enter(40)} style={styles.card}>
-      <PressableScale onPress={() => onReview(live)} style={styles.head} scaleTo={0.98} accessibilityLabel={`Review ${reviewCount} approvals`}>
+      <View style={styles.head}>
         <View>
           <Text variant="overline" color={t.colors.textMuted}>
             {syncing ? 'Approvals · updating…' : 'Approvals'}
@@ -92,13 +92,14 @@ export function ApprovalsCard({ groups, loading, syncing, onReview }: Props) {
             </Text>
           </View>
         </View>
-        <View style={styles.reviewPill}>
-          <Text variant="label" weight="bold" color={t.colors.white}>
-            {live.length ? `Review ${compact(reviewCount)}` : 'Review all'}
-          </Text>
-          <Ionicons name="arrow-forward" size={14} color={t.colors.white} />
-        </View>
-      </PressableScale>
+        <Button
+          title={live.length ? `Review ${compact(reviewCount)}` : 'Review all'}
+          icon="arrow-forward"
+          size="sm"
+          onPress={withPressFeel(() => onReview(live))}
+          style={styles.reviewButton}
+        />
+      </View>
 
       <View style={styles.bar}>
         {groups.map((g) => (
@@ -140,7 +141,7 @@ const useStyles = makeStyles((t) => ({
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   totalRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 2 },
   total: { fontSize: 32, lineHeight: 38 },
-  reviewPill: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 36, paddingHorizontal: 16, borderRadius: t.radius.pill, backgroundColor: t.colors.primary },
+  reviewButton: { borderRadius: t.radius.pill, minWidth: 132 },
   bar: { flexDirection: 'row', height: 8, borderRadius: t.radius.pill, overflow: 'hidden', gap: 2, marginTop: 12, backgroundColor: t.colors.fill },
   segment: { height: 8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 10, marginHorizontal: -4 },

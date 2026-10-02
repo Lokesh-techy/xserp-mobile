@@ -1,50 +1,53 @@
 /** @author Lokesh */
 import { useEffect, useState } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
-import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withRepeat, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
+import Animated, {
+  cancelAnimation,
+  Easing,
+  interpolate,
+  useAnimatedProps,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withTiming,
+  type SharedValue,
+} from 'react-native-reanimated';
+import Svg, { Circle } from 'react-native-svg';
 
 import { makeStyles, type Fonts } from '@/core/theme';
 
-import { humanSpin, ringPoint, ringRadius } from './morph-loader-math';
+import { humanSpin } from './morph-loader-math';
 import { Text, type TextVariant } from './text';
 
 type Props = { title: string; loading: boolean; color: string; variant?: TextVariant; weight?: keyof Fonts };
-
 type Box = { x: number; w: number };
 
+const ARC = 22; // spinner size
+const R = 8.5;
+const CIRC = 2 * Math.PI * R;
 const TURN_MS = 1150;
-const TRAIL = 0.035; // each letter lags the one before it slightly, so the ring has a tail
+const COLLAPSE_MS = 260;
+const ease = Easing.bezier(0.4, 0, 0.2, 1);
 
-function Letter({ ch, index, ringIndex, ringCount, box, rowWidth, morph, spin, color, variant, weight, onBox }: {
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+function Letter({ ch, index, box, rowWidth, line, color, variant, weight, onBox }: {
   ch: string;
   index: number;
-  ringIndex: number;
-  ringCount: number;
   box: Box | undefined;
   rowWidth: number;
-  morph: SharedValue<number>;
-  spin: SharedValue<number>;
+  line: SharedValue<number>;
   color: string;
   variant: TextVariant;
   weight?: keyof Fonts;
   onBox: (i: number, b: Box) => void;
 }) {
+  // Letters slide toward the centre and flatten, becoming the line.
   const style = useAnimatedStyle(() => {
-    const m = morph.get();
-    if (!box || ringIndex < 0) return { opacity: 1 - m };
-    const r = ringRadius(ringCount);
-    const lag = Math.min(1, Math.max(0, spin.get() - ringIndex * TRAIL));
-    const turn = (humanSpin(lag) * Math.PI) / 180;
-    const p = ringPoint(ringIndex, ringCount, r);
-    const cos = Math.cos(turn);
-    const sin = Math.sin(turn);
-    const tx = p.x * cos - p.y * sin;
-    const ty = p.x * sin + p.y * cos;
-    const fromX = box.x + box.w / 2 - rowWidth / 2;
-    return {
-      transform: [{ translateX: (tx - fromX) * m }, { translateY: ty * m }, { scale: 1 - 0.45 * m }],
-      opacity: 1 - 0.15 * m,
-    };
+    const m = line.get();
+    const toCentre = box ? rowWidth / 2 - (box.x + box.w / 2) : 0;
+    return { opacity: interpolate(m, [0, 0.7], [1, 0], 'clamp'), transform: [{ translateX: toCentre * m }, { scaleX: 1 - 0.85 * m }, { scaleY: 1 - 0.6 * m }] };
   });
   return (
     <Animated.View style={style} onLayout={(e: LayoutChangeEvent) => onBox(index, { x: e.nativeEvent.layout.x, w: e.nativeEvent.layout.width })}>
@@ -56,39 +59,42 @@ function Letter({ ch, index, ringIndex, ringCount, box, rowWidth, morph, spin, c
 }
 
 /**
- * A button label whose letters gather into a ring and spin while work is in progress, then fly back
- * into the word. Each revolution eases in and out and the letters trail one another, so the spin feels
- * hand-made rather than mechanical.
+ * A button label that turns into its own loader: the letters glide together into a thin line, the line
+ * curls into a spinning arc (each turn eases in and out, like a hand-spun dial), and on completion it all
+ * unwinds back into the word.
  */
 export function MorphLoaderLabel({ title, loading, color, variant = 'heading', weight }: Props) {
   const styles = useStyles();
   const chars = [...title];
-  const ringOf = (() => {
-    let n = 0;
-    return chars.map((c) => (c.trim() ? n++ : -1));
-  })();
-  const ringCount = ringOf.filter((i) => i >= 0).length;
   const [boxes, setBoxes] = useState<(Box | undefined)[]>([]);
   const [rowWidth, setRowWidth] = useState(0);
-  const morph = useSharedValue(0);
+  const line = useSharedValue(0); // 0 word → 1 line
+  const arc = useSharedValue(0); // 0 line → 1 spinner
   const spin = useSharedValue(0);
-  const breathe = useSharedValue(0);
 
   useEffect(() => {
     if (loading) {
-      morph.set(withSpring(1, { dampingRatio: 0.72, duration: 520 }));
+      line.set(withTiming(1, { duration: COLLAPSE_MS, easing: ease }));
+      arc.set(withDelay(COLLAPSE_MS - 40, withTiming(1, { duration: 240, easing: ease })));
       spin.set(0);
-      spin.set(withRepeat(withTiming(1 + ringCount * TRAIL, { duration: TURN_MS, easing: Easing.linear }), -1, false));
-      breathe.set(withRepeat(withTiming(1, { duration: TURN_MS / 2, easing: Easing.inOut(Easing.sin) }), -1, true));
+      spin.set(withDelay(COLLAPSE_MS, withRepeat(withTiming(1, { duration: TURN_MS, easing: Easing.linear }), -1, false)));
     } else {
       cancelAnimation(spin);
-      cancelAnimation(breathe);
-      breathe.set(withTiming(0, { duration: 200 }));
-      morph.set(withSpring(0, { dampingRatio: 0.8, duration: 480 }));
+      arc.set(withTiming(0, { duration: 180, easing: ease }));
+      line.set(withDelay(120, withTiming(0, { duration: 300, easing: ease })));
     }
-  }, [loading, morph, spin, breathe, ringCount]);
+  }, [loading, line, arc, spin]);
 
-  const row = useAnimatedStyle(() => ({ transform: [{ scale: 1 + 0.06 * breathe.get() * morph.get() }] }));
+  // The line: full-word width while forming, then shortens and fades as the arc takes over.
+  const lineStyle = useAnimatedStyle(() => {
+    const m = line.get();
+    const a = arc.get();
+    return { opacity: interpolate(m, [0.2, 0.6], [0, 1], 'clamp') * (1 - a), width: interpolate(a, [0, 1], [Math.max(ARC, rowWidth * 0.7), ARC * 0.9]) };
+  });
+  const arcStyle = useAnimatedStyle(() => ({ opacity: arc.get(), transform: [{ rotate: `${humanSpin(spin.get())}deg` }, { scale: 0.7 + 0.3 * arc.get() }] }));
+  // The arc "draws itself" from a straight stroke into a three-quarter circle.
+  const arcProps = useAnimatedProps(() => ({ strokeDashoffset: CIRC * (1 - 0.72 * arc.get()) }));
+
   const onBox = (i: number, b: Box) =>
     setBoxes((prev) => {
       if (prev[i]?.x === b.x && prev[i]?.w === b.w) return prev;
@@ -98,17 +104,27 @@ export function MorphLoaderLabel({ title, loading, color, variant = 'heading', w
     });
 
   return (
-    <Animated.View style={[styles.row, row]} onLayout={(e) => setRowWidth(e.nativeEvent.layout.width)}>
+    <View style={styles.row} onLayout={(e) => setRowWidth(e.nativeEvent.layout.width)}>
       {/* The whole word for screen readers (and text queries); the animated letters are decorative. */}
       <Text variant={variant} weight={weight} style={styles.ghost} accessibilityLabel={loading ? `${title}, working` : title}>
         {title}
       </Text>
       <View style={styles.letters} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
         {chars.map((ch, i) => (
-          <Letter key={`${i}-${ch}`} ch={ch} index={i} ringIndex={ringOf[i] ?? -1} ringCount={ringCount} box={boxes[i]} rowWidth={rowWidth} morph={morph} spin={spin} color={color} variant={variant} weight={weight} onBox={onBox} />
+          <Letter key={`${i}-${ch}`} ch={ch} index={i} box={boxes[i]} rowWidth={rowWidth} line={line} color={color} variant={variant} weight={weight} onBox={onBox} />
         ))}
       </View>
-    </Animated.View>
+      <View pointerEvents="none" style={styles.centre}>
+        <Animated.View style={[styles.line, { backgroundColor: color }, lineStyle]} />
+      </View>
+      <View pointerEvents="none" style={styles.centre}>
+        <Animated.View style={arcStyle}>
+          <Svg width={ARC} height={ARC}>
+            <AnimatedCircle cx={ARC / 2} cy={ARC / 2} r={R} stroke={color} strokeWidth={2.4} strokeLinecap="round" fill="none" strokeDasharray={`${CIRC} ${CIRC}`} animatedProps={arcProps} />
+          </Svg>
+        </Animated.View>
+      </View>
+    </View>
   );
 }
 
@@ -116,4 +132,6 @@ const useStyles = makeStyles(() => ({
   row: { alignItems: 'center', justifyContent: 'center' },
   letters: { flexDirection: 'row' },
   ghost: { position: 'absolute', opacity: 0 },
+  centre: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, alignItems: 'center', justifyContent: 'center' },
+  line: { height: 2.5, borderRadius: 2 },
 }));

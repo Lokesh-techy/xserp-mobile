@@ -10,7 +10,7 @@ import { useCan } from '@/core/permissions';
 import { useFocusRefetch } from '@/core/query';
 import { makeStyles, useTheme } from '@/core/theme';
 import { formatDate, formatMoney, lastDays, type DateRange } from '@/core/utils';
-import { Button, Card, ModuleScreen, QueryState, RangeChips, SegmentedTabs, StatusPill, Text, useHostRefresh, useTabParam, type ScrollHost } from '@/ui';
+import { Button, Card, ModuleScreen, QueryState, RangeChips, type ScrollHost, SegmentedTabs, StatusPill, Text, useHostRefresh, useTabParam, withPressFeel } from '@/ui';
 
 import { fetchExpenseGroups, fetchExpenses } from '../api';
 import { expenseKeys } from '../keys';
@@ -55,7 +55,7 @@ function ExpenseList({ host, status, onRefreshGroups }: { host: ScrollHost; stat
       contentContainerStyle={styles.pad}
       ListHeaderComponent={
         <View style={styles.head}>
-          {canCreate && status === STATUS.DRAFT && <Button title="New expense" icon="add-circle-outline" onPress={() => router.push({ pathname: '/expenses/[id]', params: { id: 'new' } })} />}
+          {canCreate && status === STATUS.DRAFT && <Button title="New expense" icon="add-circle-outline" onPress={withPressFeel(() => router.push({ pathname: '/expenses/[id]', params: { id: 'new' } }))} />}
           <RangeChips value={range} onChange={setRange} fyStartDay={fy} nested={host.nestedProps} />
         </View>
       }

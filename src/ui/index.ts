@@ -32,3 +32,5 @@ export * from './hold-button';
 export * from './go-back';
 export * from './count-up';
 export * from './type-filter-bar';
+export * from './press-feel';
+export * from './pdf';

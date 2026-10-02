@@ -65,3 +65,7 @@ jest.mock('expo-glass-effect', () => {
 jest.mock('expo-file-system', () => ({ File: jest.fn(), Paths: { cache: 'cache' } }));
 jest.mock('expo-sharing', () => ({ isAvailableAsync: jest.fn(async () => true), shareAsync: jest.fn(async () => {}) }));
 jest.mock('expo-updates', () => ({ updateId: null }));
+jest.mock('react-native-webview', () => {
+  const { View } = require('react-native');
+  return { WebView: View };
+});

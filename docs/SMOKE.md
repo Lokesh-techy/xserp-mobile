@@ -24,8 +24,9 @@ Run against **dev.xserp.in** on an Android phone, once in **light** and once in 
 - [ ] Opening an item shows the pager "1 of N"; swiping changes documents; line items and sections load.
 - [ ] Approve is press-and-hold (releasing early cancels), then the undo toast; Undo cancels; letting it run sends one request, shows a success toast, removes the item and lowers the badge.
 - [ ] Reject without remarks is blocked; a server precheck failure (PO with receipts, OA with invoices) shows the server message.
-- [ ] View PDF opens the system viewer/share sheet; long-press offers Regenerate.
-- [ ] The Home focus review moves across modules (PO → Invoice → GRN …) in one flow.
+- [ ] View PDF: the label morphs into a line → spinner while loading, then the in-app preview opens (pinch zoom, page count, Share in the header); long-press offers Regenerate.
+- [ ] Home "Review" opens a list first (type chips + search); tapping an item opens its detail; swiping moves through the same selection.
+- [ ] Buttons that navigate (Review, Create invoice, New expense) morph into a line, buzz, then open the page.
 
 ## Modules
 - [ ] **Finance**: dashboard stats and chart for the selected range; Ageing buckets drill into ledgers → ledger vouchers and open bills.
