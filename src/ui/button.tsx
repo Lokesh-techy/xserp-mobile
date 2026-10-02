@@ -21,9 +21,10 @@ type Props = {
   disabled?: boolean;
   size?: 'md' | 'sm';
   style?: StyleProp<ViewStyle>;
+  onLongPress?: () => void;
 };
 
-export function Button({ title, onPress, variant = 'primary', icon, loading: loadingProp, disabled, size = 'md', style }: Props) {
+export function Button({ title, onPress, variant = 'primary', icon, loading: loadingProp, disabled, size = 'md', style, onLongPress }: Props) {
   const t = useTheme();
   const styles = useStyles();
   const [running, setRunning] = useState(false);
@@ -58,6 +59,7 @@ export function Button({ title, onPress, variant = 'primary', icon, loading: loa
   return (
     <PressableScale
       onPress={handlePress}
+      onLongPress={onLongPress}
       disabled={inactive}
       scaleTo={0.98}
       style={[styles.base, size === 'sm' && styles.sm, !filled && styles[variant === 'danger' ? 'danger' : 'ghost'], inactive && styles.inactive, style]}>

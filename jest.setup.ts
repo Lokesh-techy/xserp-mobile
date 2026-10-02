@@ -53,3 +53,5 @@ jest.mock('expo-glass-effect', () => {
   const { View } = require('react-native');
   return { GlassView: View, isLiquidGlassAvailable: () => false, isGlassEffectAPIAvailable: () => false };
 });
+jest.mock('expo-file-system', () => ({ File: jest.fn(), Paths: { cache: 'cache' } }));
+jest.mock('expo-sharing', () => ({ isAvailableAsync: jest.fn(async () => true), shareAsync: jest.fn(async () => {}) }));
