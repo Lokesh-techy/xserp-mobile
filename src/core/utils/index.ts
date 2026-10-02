@@ -2,3 +2,4 @@
 export * from './date';
 export * from './money';
 export * from './feedback';
+export * from './search';
