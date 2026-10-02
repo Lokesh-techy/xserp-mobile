@@ -95,7 +95,7 @@ export function ApprovalPagerScreen<T, D>({ config }: { config: ApprovalConfig<T
         }}
         renderItem={({ item: page, index: i }) => <ApprovalPage config={config} item={page} active={Math.abs(i - current.index) <= 1} width={width} />}
       />
-      <ActionBar actions={actions} canAct={canAct} busy={isBusy(item)} onPick={setPicked} />
+      <ActionBar actions={actions} canAct={canAct} busy={isBusy(item)} onPick={setPicked} onHold={(a) => start(item, a, '')} />
       <RemarksSheet action={picked} onClose={() => setPicked(null)} onConfirm={(remarks) => picked && start(item, picked, remarks)} />
     </View>
   );
