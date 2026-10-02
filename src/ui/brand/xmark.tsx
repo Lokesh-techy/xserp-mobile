@@ -29,11 +29,13 @@ function Petal({ k, size, variant, spread, wave, waveAmp }: PetalProps) {
   const [from, to] = PETAL_GRADIENTS[variant][petal.tone];
   const push = size * 0.14;
   const style = useAnimatedStyle(() => {
-    const pulse = wave && waveAmp ? petalPulse(wave.get(), CHASE[k]) * waveAmp.get() : 0;
-    const s = Math.max(spread ? spread.get() : 0, pulse * 0.42);
+    // The loading wave is light only: petals brighten in turn; position and size never change.
+    const amp = waveAmp ? waveAmp.get() : 0;
+    const pulse = wave && amp > 0 ? petalPulse(wave.get(), CHASE[k]) : 1;
+    const s = spread ? spread.get() : 0;
     return {
-      opacity: 1 - 0.35 * (waveAmp ? waveAmp.get() : 0) * (1 - pulse),
-      transform: [{ translateX: petal.dir[0] * push * s }, { translateY: petal.dir[1] * push * s }, { scale: 1 + pulse * 0.06 }],
+      opacity: 1 - 0.55 * amp * (1 - pulse),
+      transform: [{ translateX: petal.dir[0] * push * s }, { translateY: petal.dir[1] * push * s }],
     };
   });
   return (

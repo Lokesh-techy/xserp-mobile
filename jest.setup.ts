@@ -44,7 +44,16 @@ beforeEach(() => {
 });
 
 jest.mock('react-native-worklets', () => require('react-native-worklets/lib/module/mock'));
-jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
+jest.mock('react-native-reanimated', () => {
+  const mock = require('react-native-reanimated/mock');
+  const { useState } = require('react');
+  return {
+    ...mock,
+    useReducedMotion: () => false,
+    // The stock mock returns a new shared value every render; the real one is stable (and code relies on it).
+    useSharedValue: (init: unknown) => useState(() => mock.useSharedValue(init))[0],
+  };
+});
 jest.mock('expo-linear-gradient', () => {
   const { View } = require('react-native');
   return { LinearGradient: View };

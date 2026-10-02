@@ -1,36 +1,40 @@
 /** @author Lokesh */
 import { router, type Href } from 'expo-router';
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { makeStyles, useTheme, type ModuleTint } from '@/core/theme';
 import { Text, usePullToSync, type IconName } from '@/ui';
 
-import { ApprovalsCard, type ApprovalGroup } from '../components/approvals-card';
 import { HomeActions, HomeHeader, MiniHomeHeader } from '../components/home-header';
 import { ModuleTile } from '../components/module-tile';
+import { useSyncStep } from '../use-sync-status';
 
 export type HomeModule = { id: string; title: string; subtitle: string; icon: IconName; tint: ModuleTint; href: Href; access: 'open' | 'locked' | 'soon'; badge: number };
 
 type Props = {
   modules: HomeModule[];
-  unread: number;
-  approvals: { show: boolean; groups: ApprovalGroup[]; loading: boolean; onReview: (types: string[]) => void };
-  sync: { text: string; syncing: boolean; step: string | null };
+  /** Self-updating approvals section (it subscribes to its own data). */
+  approvals: ReactNode;
   onRefresh: () => Promise<unknown>;
 };
 
-export function HomeScreen({ modules, unread, approvals, sync, onRefresh }: Props) {
+/**
+ * Home layout only. Live values (sync status, unread count, approvals) are read by the small components
+ * that show them, so a sync or a new notification never re-renders this screen.
+ */
+export function HomeScreen({ modules, approvals, onRefresh }: Props) {
   const t = useTheme();
   const styles = useStyles();
-  const pull = usePullToSync(onRefresh, true, sync.step);
+  const pull = usePullToSync(onRefresh, true, useSyncStep);
   return (
     <View style={styles.root}>
       {pull.attach(
         <Animated.ScrollView {...pull.scrollProps} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <HomeHeader pull={pull.indicator} scrollY={pull.scrollY} syncText={sync.text} syncing={sync.syncing} />
+          <HomeHeader pull={pull.indicator} scrollY={pull.scrollY} />
           <View style={styles.body}>
-            {approvals.show && <ApprovalsCard groups={approvals.groups} loading={approvals.loading} syncing={sync.syncing} onReview={approvals.onReview} />}
+            {approvals}
             <Text variant="overline" color={t.colors.textMuted} style={styles.label}>
               Modules
             </Text>
@@ -42,8 +46,8 @@ export function HomeScreen({ modules, unread, approvals, sync, onRefresh }: Prop
           </View>
         </Animated.ScrollView>,
       )}
-      <MiniHomeHeader scrollY={pull.scrollY} syncText={sync.text} />
-      <HomeActions unread={unread} scrollY={pull.scrollY} pull={pull.pull} />
+      <MiniHomeHeader scrollY={pull.scrollY} />
+      <HomeActions scrollY={pull.scrollY} pull={pull.pull} />
     </View>
   );
 }

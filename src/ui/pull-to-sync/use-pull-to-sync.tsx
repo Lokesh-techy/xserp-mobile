@@ -1,6 +1,6 @@
 /** @author Lokesh */
 import * as Haptics from 'expo-haptics';
-import { useEffect, useMemo, useState, type ReactElement } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -17,6 +17,7 @@ import Animated, {
   withSequence,
   withSpring,
   withTiming,
+  type SharedValue,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
@@ -27,13 +28,78 @@ import { phraseAt } from './messages';
 import { HOLD, MIN_SYNC_MS, rubberBand, spreadFor, SYNC_LABELS, TRIGGER, type SyncPhase } from './phases';
 
 const ICON = 44;
+const PULL_SPREAD = 0.35; // petals only part slightly while pulling — restrained, not playful
+const CALM = { dampingRatio: 1, duration: 420 }; // critically damped: settles without overshoot
+
+function haptic(kind: 'arm' | 'release' | 'done') {
+  if (kind === 'arm') Haptics.selectionAsync().catch(() => {});
+  else if (kind === 'release') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+  else Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+}
+
+type IndicatorProps = {
+  pull: SharedValue<number>;
+  phase: SharedValue<SyncPhase>;
+  spread: SharedValue<number>;
+  glow: SharedValue<number>;
+  wave: SharedValue<number>;
+  waveAmp: SharedValue<number>;
+  useStatus?: () => string | null;
+};
+
+const noStatus = () => null;
 
 /**
- * `statusText` (optional) is what the caption says while syncing, e.g. the real sync step; without it the
- * caption cycles through friendly phrases so it never looks stuck.
+ * The X and its caption. Owns its own text state (driven by `phase` on the UI thread), so pulling and
+ * syncing re-render only this component — never the screen around it.
  */
-export function usePullToSync(onRefresh: () => Promise<unknown>, enabled = true, statusText?: string | null) {
+const PullIndicator = memo(function PullIndicator({ pull, phase, spread, glow, wave, waveAmp, useStatus = noStatus }: IndicatorProps) {
   const t = useTheme();
+  const styles = useStyles();
+  const status = useStatus();
+  const [label, setLabel] = useState<SyncPhase>(0);
+  const [phrase, setPhrase] = useState(0);
+
+  useAnimatedReaction(
+    () => phase.get(),
+    (now, prev) => {
+      if (now !== prev) scheduleOnRN(setLabel, now);
+    },
+  );
+  useEffect(() => {
+    if (label !== 2) return;
+    const timer = setInterval(() => setPhrase((p) => p + 1), 1600);
+    return () => clearInterval(timer);
+  }, [label]);
+
+  const spacerStyle = useAnimatedStyle(() => ({ height: pull.get() }));
+  const markStyle = useAnimatedStyle(() => {
+    const p = Math.min(1, pull.get() / TRIGGER);
+    return {
+      opacity: interpolate(p, [0, 0.35, 1], [0, 0.55, 1]),
+      transform: [{ scale: interpolate(p, [0, 1], [0.7, 1]) * (phase.get() === 1 ? 1.03 : 1) }],
+    };
+  });
+  const captionStyle = useAnimatedStyle(() => ({ opacity: interpolate(pull.get(), [TRIGGER * 0.5, TRIGGER * 0.9], [0, 1], 'clamp') }));
+  const text = label === 2 ? (status ? status.toUpperCase() : phraseAt(phrase)) : SYNC_LABELS[label];
+
+  return (
+    <Animated.View style={[styles.spacer, spacerStyle]}>
+      <View style={styles.indicator}>
+        <Animated.View style={markStyle}>
+          <XMark size={ICON} variant="onDark" spread={spread} glow={glow} wave={wave} waveAmp={waveAmp} />
+        </Animated.View>
+        <Animated.Text style={[styles.caption, captionStyle, label === 3 && { color: t.alpha.successOnGradient }]}>{text}</Animated.Text>
+      </View>
+    </Animated.View>
+  );
+});
+
+/**
+ * Branded pull-to-refresh. `useStatus` (optional, a hook) supplies the caption while syncing — e.g. the
+ * real sync step; without it the caption cycles through friendly phrases.
+ */
+export function usePullToSync(onRefresh: () => Promise<unknown>, enabled = true, useStatus?: () => string | null) {
   const styles = useStyles();
   const reduceMotion = useReducedMotion();
   const scrollY = useSharedValue(0);
@@ -44,127 +110,98 @@ export function usePullToSync(onRefresh: () => Promise<unknown>, enabled = true,
   const spread = useSharedValue(0);
   const wave = useSharedValue(0);
   const waveAmp = useSharedValue(0);
-  const glow = useSharedValue(0.35);
-  const [phrase, setPhrase] = useState(0);
-  const [label, setLabel] = useState<SyncPhase>(0);
+  const glow = useSharedValue(0.3);
 
-  // Petals follow the finger, but snap together with a spring when the gesture arms.
+  // Petals open a touch with the finger and close calmly once armed.
   useAnimatedReaction(
     () => ({ s: spreadFor(pull.get(), phase.get()), p: phase.get() }),
     (now, prev) => {
-      if (now.p >= 1 && (prev?.p ?? 0) === 0) spread.set(withSpring(0, { dampingRatio: 0.5, duration: 420 }));
-      else if (now.p === 0) spread.set(now.s);
+      if (now.p >= 1 && (prev?.p ?? 0) === 0) spread.set(withSpring(0, CALM));
+      else if (now.p === 0) spread.set(now.s * PULL_SPREAD);
     },
   );
 
-  const haptic = (kind: 'arm' | 'release' | 'done') => {
-    if (kind === 'arm') Haptics.selectionAsync().catch(() => {});
-    else if (kind === 'release') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    else Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-  };
-
-  const settle = () => {
+  const finish = useCallback(() => {
+    cancelAnimation(wave);
+    cancelAnimation(glow);
+    waveAmp.set(withTiming(0, { duration: 360, easing: Easing.out(Easing.cubic) }));
+    glow.set(withSequence(withTiming(0.85, { duration: 220, easing: Easing.out(Easing.quad) }), withTiming(0.3, { duration: 700, easing: Easing.inOut(Easing.quad) })));
+    phase.set(3);
+    haptic('done');
     pull.set(
       withDelay(
-        480,
-        withSpring(0, { dampingRatio: 0.9, duration: 520 }, (done) => {
-          if (!done) return;
-          phase.set(0);
-          scheduleOnRN(setLabel, 0);
+        520,
+        withSpring(0, CALM, (done) => {
+          if (done) phase.set(0);
         }),
       ),
     );
-  };
+  }, [wave, glow, waveAmp, phase, pull]);
 
-  const startSync = () => {
-    setPhrase(0);
-    setLabel(2);
+  const startSync = useCallback(() => {
     haptic('release');
-    // The mark itself loads: petals pulse outward in a clockwise wave, the centre glows like a heartbeat.
+    // Light, not motion: brightness passes through the petals in turn while the centre breathes.
     wave.set(0);
-    wave.set(reduceMotion ? 0 : withRepeat(withTiming(1, { duration: 1300, easing: Easing.linear }), -1, false));
-    waveAmp.set(withTiming(1, { duration: 260 }));
-    glow.set(
-      withRepeat(withSequence(withTiming(1, { duration: 160 }), withTiming(0.5, { duration: 200 }), withTiming(0.9, { duration: 160 }), withTiming(0.35, { duration: 780 })), -1, false),
-    );
+    wave.set(reduceMotion ? 0.25 : withRepeat(withTiming(1, { duration: 1600, easing: Easing.linear }), -1, false));
+    waveAmp.set(withTiming(1, { duration: 300 }));
+    glow.set(withRepeat(withTiming(0.75, { duration: 1100, easing: Easing.inOut(Easing.sin) }), -1, true));
     const minimum = new Promise((resolve) => setTimeout(resolve, MIN_SYNC_MS));
-    Promise.all([onRefresh().catch(() => undefined), minimum]).then(() => {
-      cancelAnimation(wave);
-      cancelAnimation(glow);
-      // Petals settle back into a tight X and the glow flashes once: done.
-      waveAmp.set(withTiming(0, { duration: 320, easing: Easing.out(Easing.cubic) }));
-      glow.set(withSequence(withTiming(1, { duration: 140 }), withTiming(0.35, { duration: 620 })));
-      phase.set(3);
-      setLabel(3);
-      haptic('done');
-      settle();
-    });
-  };
+    Promise.all([onRefresh().catch(() => undefined), minimum]).then(finish);
+  }, [reduceMotion, wave, waveAmp, glow, onRefresh, finish]);
 
-  useEffect(() => {
-    if (label !== 2) return;
-    const timer = setInterval(() => setPhrase((p) => p + 1), 1200);
-    return () => clearInterval(timer);
-  }, [label]);
+  // The gesture only moves `phase` to 2 on the UI thread; this reaction starts the work. Keeping the
+  // sync out of the gesture lets the gesture be built once (Android cancels a gesture reconfigured mid-pull).
+  useAnimatedReaction(
+    () => phase.get(),
+    (now, prev) => {
+      if (now === 2 && prev !== 2) scheduleOnRN(startSync);
+    },
+    [startSync],
+  );
 
   const scrollHandler = useAnimatedScrollHandler((e) => {
     scrollY.set(e.contentOffset.y);
   });
 
-  const native = Gesture.Native();
-  const pan = Gesture.Pan()
-    .simultaneousWithExternalGesture(native)
-    .enabled(enabled)
-    .activeOffsetY([-12, 12])
-    .onBegin(() => {
-      base.set(0);
-    })
-    .onUpdate((e) => {
-      if (phase.get() >= 2) return;
-      if (blocked.get() || scrollY.get() > 0.5) {
-        base.set(e.translationY);
-        if (phase.get() === 0) pull.set(0);
-        return;
-      }
-      const next = rubberBand(Math.max(0, e.translationY - base.get()));
-      pull.set(next);
-      const armed = next >= TRIGGER;
-      if (armed && phase.get() === 0) {
-        phase.set(1);
-        scheduleOnRN(setLabel, 1);
-        scheduleOnRN(haptic, 'arm');
-      } else if (!armed && phase.get() === 1) {
-        phase.set(0);
-        scheduleOnRN(setLabel, 0);
-      }
-    })
-    .onFinalize(() => {
-      if (phase.get() === 1) {
-        phase.set(2);
-        pull.set(withSpring(HOLD, { dampingRatio: 0.8, duration: 380 }));
-        scheduleOnRN(startSync);
-      } else if (phase.get() === 0) {
-        pull.set(withSpring(0, { dampingRatio: 0.9, duration: 420 }));
-      }
-    });
-
-  const spacerStyle = useAnimatedStyle(() => ({ height: pull.get() }));
-  const markStyle = useAnimatedStyle(() => {
-    const p = Math.min(1, pull.get() / TRIGGER);
-    return { opacity: interpolate(p, [0, 0.3, 1], [0, 0.6, 1]), transform: [{ scale: interpolate(p, [0, 1], [0.5, 1]) * (phase.get() === 1 ? 1.08 : 1) }] };
-  });
-  const captionStyle = useAnimatedStyle(() => ({ opacity: interpolate(pull.get(), [TRIGGER * 0.45, TRIGGER * 0.85], [0, 1], 'clamp') }));
-
-  const indicator = (
-    <Animated.View style={[styles.spacer, spacerStyle]}>
-      <View style={styles.indicator}>
-        <Animated.View style={markStyle}>
-          <XMark size={ICON} variant="onDark" spread={spread} glow={glow} wave={wave} waveAmp={waveAmp} />
-        </Animated.View>
-        <Animated.Text style={[styles.caption, captionStyle, label === 3 && { color: t.alpha.successOnGradient }]}>{label === 2 ? (statusText ? statusText.toUpperCase() : phraseAt(phrase)) : SYNC_LABELS[label]}</Animated.Text>
-      </View>
-    </Animated.View>
+  const native = useMemo(() => Gesture.Native(), []);
+  const pan = useMemo(
+    () =>
+      Gesture.Pan()
+        .simultaneousWithExternalGesture(native)
+        .enabled(enabled)
+        .activeOffsetY([-12, 12])
+        .onBegin(() => {
+          base.set(0);
+        })
+        .onUpdate((e) => {
+          if (phase.get() >= 2) return;
+          if (blocked.get() || scrollY.get() > 0.5) {
+            base.set(e.translationY);
+            if (phase.get() === 0) pull.set(0);
+            return;
+          }
+          const next = rubberBand(Math.max(0, e.translationY - base.get()));
+          pull.set(next);
+          const armed = next >= TRIGGER;
+          if (armed && phase.get() === 0) {
+            phase.set(1);
+            scheduleOnRN(haptic, 'arm');
+          } else if (!armed && phase.get() === 1) {
+            phase.set(0);
+          }
+        })
+        .onFinalize(() => {
+          if (phase.get() === 1) {
+            pull.set(withSpring(HOLD, CALM));
+            phase.set(2);
+          } else if (phase.get() === 0) {
+            pull.set(withSpring(0, CALM));
+          }
+        }),
+    [native, enabled, base, phase, blocked, scrollY, pull],
   );
+
+  const indicator = <PullIndicator pull={pull} phase={phase} spread={spread} glow={glow} wave={wave} waveAmp={waveAmp} useStatus={useStatus} />;
 
   const attach = (list: ReactElement) => (
     <GestureDetector gesture={pan}>
@@ -187,7 +224,7 @@ export function usePullToSync(onRefresh: () => Promise<unknown>, enabled = true,
 const useStyles = makeStyles((t) => ({
   flex: { flex: 1 },
   spacer: { overflow: 'hidden' },
-  indicator: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, alignItems: 'center', justifyContent: 'center', gap: 6 },
+  indicator: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, alignItems: 'center', justifyContent: 'center', gap: 8 },
   // paddingRight: Android clips the last glyphs of letter-spaced text otherwise.
-  caption: { fontFamily: t.fonts.semibold, fontSize: 11, letterSpacing: 0.6, paddingRight: 3, color: t.alpha.onGradientMuted },
+  caption: { fontFamily: t.fonts.semibold, fontSize: 11, letterSpacing: 0.8, paddingRight: 3, color: t.alpha.onGradientMuted },
 }));

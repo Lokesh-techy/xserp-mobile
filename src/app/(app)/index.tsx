@@ -1,51 +1,39 @@
 /** @author Lokesh */
 import { useQueryClient } from '@tanstack/react-query';
-import { router } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useSessionStore } from '@/core/auth';
-import { approvalTints } from '@/core/theme';
+import { can } from '@/core/permissions';
 import { useSessionRefreshAction } from '@/features/auth';
-import { usePendingClaims } from '@/features/expenses';
-import { AUTO_SYNC_AFTER_MS, HomeScreen, runSync, serializeTypes, syncLabel, useLastSync } from '@/features/home';
+import { expenseKeys } from '@/features/expenses';
+import { AUTO_SYNC_AFTER_MS, HomeScreen, runSync, useLastSync } from '@/features/home';
 import { syncAllMasters } from '@/features/master-data';
-import { useUnreadCount } from '@/features/notifications';
-import { summarizeByType, useApprovalFeed } from '@/modules/approval-feed';
+import { APPROVALS } from '@/modules/approval-registry';
+import { HomeApprovals } from '@/modules/home-approvals';
 import { HOME_MODULES, moduleAccess, moduleBadge } from '@/modules/registry';
 
-/** Re-render once a minute so "Synced 5 minutes ago" stays true. */
-function useMinuteTick() {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 60_000);
-    return () => clearInterval(timer);
-  }, []);
-  return now;
-}
-
+/**
+ * Home route: layout data that rarely changes (modules, permissions) plus the sync action.
+ * Frequently changing data lives in the components that display it.
+ */
 export default function Home() {
   const qc = useQueryClient();
   const session = useSessionStore((s) => s.session);
   const refreshSession = useSessionRefreshAction();
-  const unread = useUnreadCount();
-  const feed = useApprovalFeed();
-  const claims = usePendingClaims();
-  const last = useLastSync();
-  const now = useMinuteTick();
 
-  // One pull syncs everything: permissions/counts, master lists, approval queues and notifications.
-  const sync = useCallback(
-    () =>
-      runSync([
-        // Labels are shown in order while each step is still running (pull caption + sync line).
-        { label: 'Checking your access…', run: refreshSession },
-        { label: 'Fetching approvals…', run: feed.refetch },
-        { label: 'Checking notifications…', run: () => qc.invalidateQueries({ queryKey: ['notifications'] }) },
-        ...(claims.enabled ? [{ label: 'Fetching expense claims…', run: claims.refetch }] : []),
-        { label: 'Syncing parties, materials & ledgers…', run: () => syncAllMasters({ force: true }) },
-      ]),
-    [refreshSession, feed.refetch, qc, claims.enabled, claims.refetch],
-  );
+  // One pull syncs everything. Queries are refetched by key, so this screen holds none of them.
+  const sync = useCallback(() => {
+    const s = useSessionStore.getState().session;
+    const queues = Object.values(APPROVALS).filter((c) => c && can(s, c.permission, 'approve'));
+    return runSync([
+      // Labels are shown in order while each step is still running (pull caption + sync line).
+      { label: 'Checking your access…', run: refreshSession },
+      { label: 'Fetching approvals…', run: () => Promise.all(queues.map((c) => qc.refetchQueries({ queryKey: c!.queueKey }))) },
+      { label: 'Checking notifications…', run: () => qc.refetchQueries({ queryKey: ['notifications'] }) },
+      ...(can(s, 'EXPENSES', 'approve') ? [{ label: 'Fetching expense claims…', run: () => qc.refetchQueries({ queryKey: expenseKeys.groups() }) }] : []),
+      { label: 'Syncing parties, materials & ledgers…', run: () => syncAllMasters({ force: true }) },
+    ]);
+  }, [refreshSession, qc]);
 
   // Sync on arrival when the last full sync is stale.
   const autoSynced = useRef(false);
@@ -57,25 +45,15 @@ export default function Home() {
     if (!at || Date.now() - at > AUTO_SYNC_AFTER_MS) void sync();
   }, [signedIn, sync]);
 
-  if (!session) return null;
-  const modules = HOME_MODULES.map((m) => ({ id: m.id, title: m.title, subtitle: m.subtitle, icon: m.icon, tint: m.tint, href: m.href, access: moduleAccess(m, session), badge: moduleBadge(m, session) }));
-  const groups = [
-    ...summarizeByType(feed.entries).map((g) => ({ key: g.type, label: g.label, tint: approvalTints[g.type], count: g.count })),
-    ...(claims.enabled && claims.count > 0 ? [{ key: 'expenses', label: 'Claims', tint: approvalTints.expenses, count: claims.count, direct: () => router.push('/expenses?tab=confirmed') }] : []),
-  ];
-
-  return (
-    <HomeScreen
-      modules={modules}
-      unread={unread}
-      sync={{ text: syncLabel(last.at, last.syncing, now, last.step), syncing: last.syncing, step: last.step }}
-      onRefresh={sync}
-      approvals={{
-        show: feed.enabled || claims.enabled,
-        groups,
-        loading: feed.loading,
-        onReview: (types) => router.push({ pathname: '/approvals/review', params: types.length ? { types: serializeTypes(types) } : {} }),
-      }}
-    />
+  const modules = useMemo(
+    () =>
+      session
+        ? HOME_MODULES.map((m) => ({ id: m.id, title: m.title, subtitle: m.subtitle, icon: m.icon, tint: m.tint, href: m.href, access: moduleAccess(m, session), badge: moduleBadge(m, session) }))
+        : [],
+    [session],
   );
+  const approvals = useMemo(() => <HomeApprovals />, []);
+
+  if (!session) return null;
+  return <HomeScreen modules={modules} approvals={approvals} onRefresh={sync} />;
 }

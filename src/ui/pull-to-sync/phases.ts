@@ -3,7 +3,7 @@ export type SyncPhase = 0 | 1 | 2 | 3; // 0 idle/pulling · 1 armed · 2 syncing
 
 export const TRIGGER = 92; // pull distance that arms a sync
 export const HOLD = 84; // header stays open this much while syncing
-export const MIN_SYNC_MS = 900; // a sync always shows at least one turn of the mark
+export const MIN_SYNC_MS = 1400; // a sync always shows at least one full wave around the mark
 
 // Upper-cased strings (not textTransform), which Android would clip.
 export const SYNC_LABELS = ['PULL TO REFRESH', 'RELEASE TO SYNC', 'SYNCING…', 'UP TO DATE'] as const;

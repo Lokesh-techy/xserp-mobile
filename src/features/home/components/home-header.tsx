@@ -11,7 +11,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { initials, useSession } from '@/core/auth';
 import { makeStyles, useTheme } from '@/core/theme';
+import { useUnreadCount } from '@/features/notifications';
 import { GlassIconButton, PressableScale, Text } from '@/ui';
+
+import { useSyncStatus } from '../use-sync-status';
 
 const greeting = (h: number) => (h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening');
 
@@ -34,10 +37,10 @@ const progress = (y: number) => {
   return interpolate(y, [COLLAPSE.start, COLLAPSE.end], [0, 1], Extrapolation.CLAMP);
 };
 
-type HeaderProps = { pull: ReactNode; scrollY: SharedValue<number>; syncText: string; syncing: boolean };
+type HeaderProps = { pull: ReactNode; scrollY: SharedValue<number> };
 
 /** Large Home header: date, greeting, name, sync state. Shrinks and fades as the page scrolls. */
-export function HomeHeader({ pull, scrollY, syncText, syncing }: HeaderProps) {
+export function HomeHeader({ pull, scrollY }: HeaderProps) {
   const t = useTheme();
   const styles = useStyles();
   const insets = useSafeAreaInsets();
@@ -69,14 +72,15 @@ export function HomeHeader({ pull, scrollY, syncText, syncing }: HeaderProps) {
         <Text variant="display" color={t.alpha.onGradient} numberOfLines={1}>
           {user.firstName || user.username || 'there'}
         </Text>
-        <SyncLine text={syncText} syncing={syncing} />
+        <SyncLine />
       </Animated.View>
     </LinearGradient>
   );
 }
 
 /** Sync status; pops with a green check the moment a sync finishes. */
-function SyncLine({ text, syncing }: { text: string; syncing: boolean }) {
+function SyncLine() {
+  const { text, syncing } = useSyncStatus();
   const t = useTheme();
   const styles = useStyles();
   const pop = useSharedValue(0);
@@ -98,7 +102,8 @@ function SyncLine({ text, syncing }: { text: string; syncing: boolean }) {
 }
 
 /** The mini header: name, date and sync state condensed into one padded bar (no greeting). */
-export function MiniHomeHeader({ scrollY, syncText }: { scrollY: SharedValue<number>; syncText: string }) {
+export function MiniHomeHeader({ scrollY }: { scrollY: SharedValue<number> }) {
+  const { text: syncText } = useSyncStatus();
   const t = useTheme();
   const styles = useStyles();
   const insets = useSafeAreaInsets();
@@ -133,7 +138,8 @@ export function MiniHomeHeader({ scrollY, syncText }: { scrollY: SharedValue<num
  * Bell + avatar stay on screen the whole time and glide from the large header into the mini bar,
  * so they morph instead of swapping.
  */
-export function HomeActions({ unread, scrollY, pull }: { unread: number; scrollY: SharedValue<number>; pull: SharedValue<number> }) {
+export function HomeActions({ scrollY, pull }: { scrollY: SharedValue<number>; pull: SharedValue<number> }) {
+  const unread = useUnreadCount();
   const t = useTheme();
   const styles = useStyles();
   const insets = useSafeAreaInsets();
