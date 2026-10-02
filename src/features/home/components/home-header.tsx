@@ -1,69 +1,111 @@
 /** @author Lokesh */
+import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
+import Animated, { Extrapolation, interpolate, useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 
 import { initials, useSession } from '@/core/auth';
 import { makeStyles, useTheme } from '@/core/theme';
-import { Glass, GlassIconButton, PressableScale, Text } from '@/ui';
+import { GlassIconButton, PressableScale, Text } from '@/ui';
 
 const greeting = (h: number) => (h < 12 ? 'Good morning,' : h < 17 ? 'Good afternoon,' : 'Good evening,');
+export const COMPACT_AT = 96;
 
-/** Despack home header: date, greeting, enterprise pill, bell and avatar over the brand gradient. */
-export function HomeHeader({ pull, unread }: { pull: ReactNode; unread: number }) {
+type Props = { pull: ReactNode; unread: number; scrollY: SharedValue<number>; syncText: string; syncing: boolean };
+
+function Actions({ unread, size = 44 }: { unread: number; size?: number }) {
+  const t = useTheme();
+  const styles = useStyles();
+  const { user } = useSession();
+  return (
+    <View style={styles.actions}>
+      <GlassIconButton icon="notifications-outline" size={size} badge={unread} onPress={() => router.push('/notifications')} accessibilityLabel="Notifications" />
+      <PressableScale onPress={() => router.push('/profile')} style={[styles.avatar, { width: size, height: size, borderRadius: size / 2 }]} accessibilityLabel="Profile">
+        <Text variant="label" weight="extrabold" color={t.colors.primary}>
+          {initials(user) || 'U'}
+        </Text>
+      </PressableScale>
+    </View>
+  );
+}
+
+/** The large Home header: date, greeting and sync state. It drifts and fades as the page scrolls. */
+export function HomeHeader({ pull, unread, scrollY, syncText, syncing }: Props) {
   const t = useTheme();
   const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { user } = useSession();
   const now = new Date();
+  const drift = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollY.get(), [0, COMPACT_AT], [1, 0], Extrapolation.CLAMP),
+    transform: [{ translateY: interpolate(scrollY.get(), [0, COMPACT_AT], [0, 28], Extrapolation.CLAMP) }, { scale: interpolate(scrollY.get(), [0, COMPACT_AT], [1, 0.96], Extrapolation.CLAMP) }],
+  }));
+  const orb = useAnimatedStyle(() => ({ transform: [{ translateY: scrollY.get() * 0.5 }] }));
   return (
     <LinearGradient colors={t.gradients.header} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.root, { paddingTop: insets.top + 14 }]}>
       <StatusBar style="light" />
-      <View style={styles.orb} />
+      <Animated.View style={[styles.orb, orb]} />
       {pull}
-      <View style={styles.top}>
-        <Text variant="overline" color={t.alpha.onGradientFaint}>
-          {format(now, 'EEEE, d MMMM')}
-        </Text>
-        <View style={styles.actions}>
-          <GlassIconButton icon="notifications-outline" size={44} badge={unread} onPress={() => router.push('/notifications')} accessibilityLabel="Notifications" />
-          <PressableScale onPress={() => router.push('/profile')} style={styles.avatar} accessibilityLabel="Profile">
-            <Text variant="heading" weight="extrabold" color={t.colors.primary}>
-              {initials(user) || 'U'}
-            </Text>
-          </PressableScale>
-        </View>
-      </View>
-      <Text variant="body" color={t.alpha.onGradientMuted} style={styles.greeting}>
-        {greeting(now.getHours())}
-      </Text>
-      <Text variant="display" color={t.alpha.onGradient} numberOfLines={1}>
-        {user.firstName || user.username || 'there'}
-      </Text>
-      {!!user.enterpriseName && (
-        <Glass style={styles.pill} fallbackStyle={styles.pillFallback}>
-          <Ionicons name="business-outline" size={14} color={t.alpha.onGradient} />
-          <Text variant="label" color={t.alpha.onGradient} numberOfLines={1}>
-            {user.enterpriseName}
+      <Animated.View style={drift}>
+        <View style={styles.top}>
+          <Text variant="overline" color={t.alpha.onGradientFaint}>
+            {format(now, 'EEEE, d MMMM')}
           </Text>
-        </Glass>
-      )}
+          <Actions unread={unread} />
+        </View>
+        <Text variant="body" color={t.alpha.onGradientMuted} style={styles.greeting}>
+          {greeting(now.getHours())}
+        </Text>
+        <Text variant="display" color={t.alpha.onGradient} numberOfLines={1}>
+          {user.firstName || user.username || 'there'}
+        </Text>
+        <View style={styles.sync}>
+          <Ionicons name={syncing ? 'sync-outline' : 'cloud-done-outline'} size={13} color={t.alpha.onGradientFaint} />
+          <Text variant="caption" color={t.alpha.onGradientFaint}>
+            {syncText}
+          </Text>
+        </View>
+      </Animated.View>
     </LinearGradient>
   );
 }
 
+/** Slim bar that takes over once the large header has scrolled away. */
+export function CompactHomeBar({ unread, scrollY }: { unread: number; scrollY: SharedValue<number> }) {
+  const t = useTheme();
+  const styles = useStyles();
+  const insets = useSafeAreaInsets();
+  const { user } = useSession();
+  const show = useAnimatedStyle(() => {
+    const p = interpolate(scrollY.get(), [COMPACT_AT - 30, COMPACT_AT + 10], [0, 1], Extrapolation.CLAMP);
+    return { opacity: p, transform: [{ translateY: (1 - p) * -12 }] };
+  });
+  return (
+    <Animated.View pointerEvents="box-none" style={[styles.compact, show]}>
+      <LinearGradient colors={t.gradients.header} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.compactInner, { paddingTop: insets.top + 6 }]}>
+        <Text variant="heading" color={t.alpha.onGradient} numberOfLines={1} style={styles.compactName}>
+          {user.firstName || user.username}
+        </Text>
+        <Actions unread={unread} size={36} />
+      </LinearGradient>
+    </Animated.View>
+  );
+}
+
 const useStyles = makeStyles((t) => ({
-  root: { paddingHorizontal: 22, paddingBottom: 70, borderBottomLeftRadius: 32, borderBottomRightRadius: 32, overflow: 'hidden' },
+  root: { paddingHorizontal: 22, paddingBottom: 64, borderBottomLeftRadius: 32, borderBottomRightRadius: 32, overflow: 'hidden' },
   orb: { position: 'absolute', width: 260, height: 260, borderRadius: 130, top: -80, right: -90, backgroundColor: t.alpha.orb },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: t.colors.white, borderWidth: 3, borderColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center' },
+  avatar: { backgroundColor: t.colors.white, borderWidth: 3, borderColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center' },
   greeting: { marginTop: 18 },
-  pill: { marginTop: 12, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, height: 32, borderRadius: t.radius.pill, maxWidth: '100%' },
-  pillFallback: { backgroundColor: t.alpha.glassFill, borderWidth: 1, borderColor: t.alpha.glassBorder },
+  sync: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
+  compact: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 },
+  compactInner: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 18, paddingBottom: 10, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, ...t.shadow.lifted },
+  compactName: { flex: 1 },
 }));

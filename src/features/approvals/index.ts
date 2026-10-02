@@ -1,2 +1,3 @@
 /** @author Lokesh */
-export { InboxScreen, type InboxEntry } from './screens/inbox-screen';
+// The Approvals tab lives on Home now ("Waiting for you"); module queues use the engine directly.
+export {};

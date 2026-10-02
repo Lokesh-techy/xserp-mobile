@@ -7,14 +7,14 @@ import { errorFeedback, successFeedback } from '@/core/utils';
 import { toast } from '@/ui';
 
 import { cancelApprovalAction, scheduleApprovalAction, UNDO_MS, usePendingDocs } from './action-queue';
-import type { ApprovalAction, ApprovalConfig } from './types';
+import type { AnyApproval, ApprovalAction } from './types';
 
-/** Starts an approve/reject through the app-wide action queue (undo window, one action per document). */
-export function useApprovalAction<T, D>(config: ApprovalConfig<T, D>, onSucceeded: (id: string) => void) {
+/** Starts approve/reject on any approval type through the app-wide action queue (undo window, one action per document). */
+export function useApprovalActions(onSucceeded?: (config: AnyApproval, id: string) => void) {
   const qc = useQueryClient();
   const pending = usePendingDocs();
 
-  const start = (item: T, action: ApprovalAction<T>, remarks: string) => {
+  const start = (config: AnyApproval, item: unknown, action: ApprovalAction<unknown>, remarks: string) => {
     const session = useSessionStore.getState().session;
     if (!session) return;
     const id = config.id(item);
@@ -26,7 +26,7 @@ export function useApprovalAction<T, D>(config: ApprovalConfig<T, D>, onSucceede
         await action.run(item, remarks.trim(), { session });
         successFeedback();
         toast.show({ message: `${config.noun} ${code} · ${action.done}`, tone: 'success' });
-        onSucceeded(id);
+        onSucceeded?.(config, id);
         await Promise.all([
           qc.invalidateQueries({ queryKey: config.queueKey }),
           ...(config.invalidate ?? []).map((k) => qc.invalidateQueries({ queryKey: k })),
@@ -50,6 +50,6 @@ export function useApprovalAction<T, D>(config: ApprovalConfig<T, D>, onSucceede
     toast.show({ message: `${action.label} ${config.noun} ${code}…`, tone: 'info', durationMs: UNDO_MS, action: { label: 'Undo', onPress: () => cancelApprovalAction(ref) } });
   };
 
-  const isBusy = (item: T) => pending.includes(`${config.type}:${config.id(item)}`);
+  const isBusy = (config: AnyApproval, item: unknown) => pending.includes(`${config.type}:${config.id(item)}`);
   return { start, isBusy };
 }

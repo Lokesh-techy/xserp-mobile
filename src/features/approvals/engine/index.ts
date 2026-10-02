@@ -8,3 +8,5 @@ export { ApprovalCard } from './approval-card';
 export { LineItemsCard } from './line-items-card';
 export { ApprovalPagerScreen } from './approval-pager-screen';
 export { cancelAllApprovalActions, isActionPending } from './action-queue';
+export { ReviewPager, entryKey, type ReviewEntry } from './review-pager';
+export { useApprovalActions } from './use-approval-action';

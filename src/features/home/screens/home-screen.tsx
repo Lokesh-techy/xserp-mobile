@@ -3,29 +3,35 @@ import { router, type Href } from 'expo-router';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { useSession } from '@/core/auth';
 import { makeStyles, useTheme, type ModuleTint } from '@/core/theme';
 import { Text, usePullToSync, type IconName } from '@/ui';
 
-import { HomeHeader } from '../components/home-header';
+import { ApprovalDeck, type DeckCard } from '../components/approval-deck';
+import { CompactHomeBar, HomeHeader } from '../components/home-header';
 import { ModuleTile } from '../components/module-tile';
 
 export type HomeModule = { id: string; title: string; subtitle: string; icon: IconName; tint: ModuleTint; href: Href; access: 'open' | 'locked' | 'soon'; badge: number };
 
-type Props = { modules: HomeModule[]; unread: number; onRefresh: () => Promise<unknown> };
+type Props = {
+  modules: HomeModule[];
+  unread: number;
+  deck: { show: boolean; cards: DeckCard[]; loading: boolean; onOpen: (key: string | null) => void; extra?: { label: string; count: number; onPress: () => void } };
+  sync: { text: string; syncing: boolean };
+  onRefresh: () => Promise<unknown>;
+};
 
-export function HomeScreen({ modules, unread, onRefresh }: Props) {
+export function HomeScreen({ modules, unread, deck, sync, onRefresh }: Props) {
   const t = useTheme();
   const styles = useStyles();
-  useSession();
   const pull = usePullToSync(onRefresh);
   return (
     <View style={styles.root}>
       {pull.attach(
         <Animated.ScrollView {...pull.scrollProps} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <HomeHeader pull={pull.indicator} unread={unread} />
+          <HomeHeader pull={pull.indicator} unread={unread} scrollY={pull.scrollY} syncText={sync.text} syncing={sync.syncing} />
           <View style={styles.body}>
-            <Text variant="overline" color={t.alpha.onGradientMuted} style={styles.label}>
+            {deck.show && <ApprovalDeck cards={deck.cards} loading={deck.loading} onOpen={deck.onOpen} extra={deck.extra} nested={pull.nestedProps} />}
+            <Text variant="overline" color={t.colors.textMuted} style={styles.label}>
               Modules
             </Text>
             <View style={styles.grid}>
@@ -36,6 +42,7 @@ export function HomeScreen({ modules, unread, onRefresh }: Props) {
           </View>
         </Animated.ScrollView>,
       )}
+      <CompactHomeBar unread={unread} scrollY={pull.scrollY} />
     </View>
   );
 }
@@ -43,7 +50,7 @@ export function HomeScreen({ modules, unread, onRefresh }: Props) {
 const useStyles = makeStyles((t) => ({
   root: { flex: 1, backgroundColor: t.colors.bg },
   content: { paddingBottom: 40 },
-  body: { paddingHorizontal: t.space.gutter, marginTop: -44 },
-  label: { marginBottom: 10 },
+  body: { paddingHorizontal: t.space.gutter, marginTop: -40, gap: 4 },
+  label: { marginTop: 22, marginBottom: 10 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 14 },
 }));
