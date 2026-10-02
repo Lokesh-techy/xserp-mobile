@@ -1,0 +1,44 @@
+/** @author Lokesh */
+// In-memory replacements for native storage so core logic is testable in Node.
+const mockKvMemory = new Map<string, string>();
+jest.mock('expo-sqlite/kv-store', () => ({
+  __esModule: true,
+  default: {
+    getItemSync: (k: string) => mockKvMemory.get(k) ?? null,
+    setItemSync: (k: string, v: string) => void mockKvMemory.set(k, v),
+    removeItemSync: (k: string) => void mockKvMemory.delete(k),
+    clearSync: () => mockKvMemory.clear(),
+  },
+}));
+
+const mockSecureMemory = new Map<string, string>();
+jest.mock('expo-secure-store', () => ({
+  getItemAsync: async (k: string) => mockSecureMemory.get(k) ?? null,
+  setItemAsync: async (k: string, v: string) => void mockSecureMemory.set(k, v),
+  deleteItemAsync: async (k: string) => void mockSecureMemory.delete(k),
+}));
+
+jest.mock('expo-haptics', () => ({
+  impactAsync: jest.fn(async () => {}),
+  selectionAsync: jest.fn(async () => {}),
+  notificationAsync: jest.fn(async () => {}),
+  performAndroidHapticsAsync: jest.fn(async () => {}),
+  ImpactFeedbackStyle: { Light: 'light', Medium: 'medium' },
+  NotificationFeedbackType: { Success: 'success', Error: 'error', Warning: 'warning' },
+  AndroidHaptics: { Virtual_Key: 'virtual_key' },
+}));
+
+jest.mock('@react-native-community/netinfo', () => ({
+  addEventListener: jest.fn(() => jest.fn()),
+  fetch: jest.fn(async () => ({ isConnected: true })),
+}));
+
+jest.mock('expo-constants', () => ({
+  __esModule: true,
+  default: { expoConfig: { extra: { appEnv: 'dev', serverUrl: 'https://dev.xserp.in', idleTimeoutMinutes: 30 } } },
+}));
+
+beforeEach(() => {
+  mockKvMemory.clear();
+  mockSecureMemory.clear();
+});
