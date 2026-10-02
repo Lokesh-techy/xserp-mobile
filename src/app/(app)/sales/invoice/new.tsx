@@ -1,6 +1,2 @@
 /** @author Lokesh */
-import { PendingModuleScreen } from '@/features/home';
-
-export default function Screen() {
-  return <PendingModuleScreen title="New invoice" />;
-}
+export { CreateInvoiceScreen as default } from '@/features/sales';
