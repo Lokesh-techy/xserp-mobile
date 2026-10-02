@@ -22,3 +22,6 @@ export const zList = <T extends z.ZodType>(item: T) => z.preprocess((v) => (Arra
 
 export const zRecordOf = <T extends z.ZodType>(item: T) =>
   z.preprocess((v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : {}), z.record(z.string(), item));
+
+/** xserp list searches treat "-1" as "any"; an empty string would filter for empty values instead. */
+export const anyOr = (v: string | null | undefined) => (v === null || v === undefined || v.trim() === '' ? '-1' : v.trim());

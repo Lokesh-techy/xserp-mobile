@@ -56,8 +56,10 @@ function Body({ host, entries, loading, onOpen, onRefresh }: Props & { host: Scr
         </View>
       }
       ListEmptyComponent={loading ? <ListSkeleton rows={4} /> : <StateView icon="checkmark-done-outline" title={query ? 'No matches' : 'All clear'} message={query ? 'Try a different search.' : 'Nothing left in this selection.'} />}
-      // Everything here is pending, and the stripe colour says the document type — no labels needed.
-      renderItem={({ item }) => <ApprovalCard summary={item.config.summary(item.item)} tint={approvalTints[item.config.type]} showStatus={false} onPress={() => onOpen(item)} />}
+      // Everything here is pending (no status pill); the chip and stripe colour say the document type.
+      renderItem={({ item }) => (
+        <ApprovalCard summary={item.config.summary(item.item)} tint={approvalTints[item.config.type]} kind={item.config.short ?? item.config.noun} showStatus={false} onPress={() => onOpen(item)} />
+      )}
     />,
   );
 }

@@ -14,12 +14,12 @@ import { Button, Chip, countActiveFilters, type FilterField, FilterSheet, type F
 
 import { DEFAULT_SALES_FILTERS, type SalesFilters } from '../api';
 import { invoiceApproval, oaApproval } from '../approvals';
-import { useInvoiceSearch, useOaSearch, useSalesFinanceYears } from '../hooks';
+import { useInvoiceSearch, useOaSearch } from '../hooks';
 import { INVOICE_STATUS_OPTIONS, OA_STATUS_OPTIONS } from '../status';
 
 type Props = { host: ScrollHost; filterOpen: boolean; onFilterClose: () => void; onFilterCount: (n: number) => void };
 
-const toValues = (f: SalesFilters): FilterValues => ({ range: f.range, status: f.status, financeYear: f.financeYear, partyId: f.partyId, projectId: null, itemKey: f.itemId });
+const toValues = (f: SalesFilters): FilterValues => ({ range: f.range, status: f.status, partyId: f.partyId, projectId: null, itemKey: f.itemId });
 
 export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Props) {
   const t = useTheme();
@@ -31,7 +31,6 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
   const [search, setSearch] = useState('');
   const invoices = useInvoiceSearch(filters);
   const oas = useOaSearch(filters);
-  const fy = useSalesFinanceYears(filters.kind);
   const parties = usePartyItems();
   const projects = useProjectItems();
   const projectRows = useProjects();
@@ -46,12 +45,11 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
     () => [
       { kind: 'dateRange', key: 'range', label: isInvoice ? 'Invoice date' : 'OA date' },
       { kind: 'select', key: 'status', label: 'Status', options: isInvoice ? INVOICE_STATUS_OPTIONS : OA_STATUS_OPTIONS },
-      { kind: 'select', key: 'financeYear', label: 'Financial year', options: [{ value: '-1', label: 'Current' }, ...(fy.data ?? []).map((y) => ({ value: y, label: y }))] },
       { kind: 'picker', key: 'partyId', label: 'Customer', items: parties },
       { kind: 'picker', key: 'projectId', label: 'Project', items: projects },
       { kind: 'picker', key: 'itemKey', label: 'Material', items: materials },
     ],
-    [isInvoice, fy.data, parties, projects, materials],
+    [isInvoice, parties, projects, materials],
   );
 
   useEffect(() => onFilterCount(countActiveFilters(fields, values, defaults)), [fields, values, defaults, onFilterCount]);
@@ -64,7 +62,6 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
       ...f,
       range: (v.range as DateRange | undefined) ?? f.range,
       status: str('status') ?? '100',
-      financeYear: str('financeYear') ?? '-1',
       partyId: str('partyId'),
       projectCode: projectId ? (projectRows.find((p) => p.id === projectId)?.code ?? null) : null,
       itemId: str('itemKey')?.split(':')[0] ?? null,
@@ -106,7 +103,7 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
             {...host.scrollProps}
             data={invoiceRows}
             keyExtractor={(i) => i.id}
-            contentContainerStyle={styles.pad}
+            contentContainerStyle={[styles.pad, styles.grow]}
             ListHeaderComponent={header}
             ListFooterComponent={footer}
             ListEmptyComponent={<QueryState query={invoices} isEmpty={() => true} empty={{ icon: 'search-outline', title: 'No invoices', message: 'No invoices match these filters.' }}>{() => null}</QueryState>}
@@ -117,7 +114,7 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
             {...host.scrollProps}
             data={oaRows}
             keyExtractor={(o) => o.id}
-            contentContainerStyle={styles.pad}
+            contentContainerStyle={[styles.pad, styles.grow]}
             ListHeaderComponent={header}
             ListFooterComponent={footer}
             ListEmptyComponent={<QueryState query={oas} isEmpty={() => true} empty={{ icon: 'search-outline', title: 'No order acknowledgements', message: 'Nothing matches these filters.' }}>{() => null}</QueryState>}
@@ -132,6 +129,7 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
 
 const useStyles = makeStyles((t) => ({
   pad: { padding: t.space.gutter, paddingBottom: 48 },
+  grow: { flexGrow: 1 },
   head: { gap: 12, marginBottom: 14 },
   chips: { flexDirection: 'row', gap: 8 },
   footer: { textAlign: 'center', marginTop: 8 },

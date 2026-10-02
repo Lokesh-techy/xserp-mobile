@@ -1,5 +1,5 @@
 /** @author Lokesh */
-import { post, postOk } from '@/core/api';
+import { anyOr, post, postOk } from '@/core/api';
 import { agingSchema, financeYearsSchema, outstandingSchema } from '@/core/erp';
 import { lastDays, rangeParams, type DateRange } from '@/core/utils';
 import { z } from 'zod';
@@ -98,7 +98,7 @@ export const fetchReceivableAging = async () => (await post('accounts/json/aging
 export async function searchInvoices(f: SalesFilters): Promise<Invoice[]> {
   const res = await post(
     'sales/json/invoiceSearch/',
-    { ...rangeParams(f.range), invoiceNo: f.number, customerId: f.partyId ?? '', project_code: f.projectCode ?? '', item_id: f.itemId ?? '-1', status: f.status, finance_year: f.financeYear },
+    { ...rangeParams(f.range), invoiceNo: anyOr(f.number), customerId: anyOr(f.partyId), project_code: anyOr(f.projectCode), item_id: anyOr(f.itemId), status: f.status, finance_year: f.financeYear === '-1' ? 'All' : f.financeYear },
     { schema: invoiceListSchema, timeoutMs: 90_000 },
   );
   return res.invoice_list.map(toInvoice);
@@ -107,7 +107,7 @@ export async function searchInvoices(f: SalesFilters): Promise<Invoice[]> {
 export async function searchOAs(f: SalesFilters): Promise<OA[]> {
   const res = await post(
     'sales/json/oa_search/',
-    { ...rangeParams(f.range), oa_no: f.number, supplier_id: f.partyId ?? '', project_code: f.projectCode ?? '', item_id: f.itemId ?? '-1', status: f.status, finance_year: f.financeYear },
+    { ...rangeParams(f.range), oa_no: anyOr(f.number), supplier_id: anyOr(f.partyId), project_code: anyOr(f.projectCode), item_id: anyOr(f.itemId), status: f.status, finance_year: f.financeYear === '-1' ? 'All' : f.financeYear },
     { schema: oaListSchema, timeoutMs: 90_000 },
   );
   return res.oa_list.map(toOA);

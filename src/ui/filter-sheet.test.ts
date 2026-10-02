@@ -1,5 +1,5 @@
 /** @author Lokesh */
-import { countActiveFilters, type FilterField } from './filter-sheet';
+import { countActiveFilters, rangePresets, type FilterField } from './filter-sheet';
 
 const fields: FilterField[] = [
   { kind: 'dateRange', key: 'range', label: 'Date' },
@@ -13,4 +13,13 @@ test('counts only values that differ from defaults', () => {
   expect(countActiveFilters(fields, defaults, defaults)).toBe(0);
   expect(countActiveFilters(fields, { ...defaults, status: '2', party: '9' }, defaults)).toBe(2);
   expect(countActiveFilters(fields, { ...defaults, range: { since: new Date(2026, 0, 2), till: range.till } }, defaults)).toBe(1);
+});
+
+test('date presets include last financial year', () => {
+  const presets = rangePresets('01/04');
+  const last = presets.find((p) => p.key === 'lastFy');
+  const fy = presets.find((p) => p.key === 'fy');
+  expect(last).toBeDefined();
+  expect(last!.range.till.getTime()).toBeLessThan(fy!.range.since.getTime());
+  expect(last!.range.since.getMonth()).toBe(3);
 });

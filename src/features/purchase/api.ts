@@ -1,5 +1,5 @@
 /** @author Lokesh */
-import { post, postOk } from '@/core/api';
+import { anyOr, post, postOk } from '@/core/api';
 import { lastDays, rangeParams, type DateRange } from '@/core/utils';
 
 import { financeYearsSchema, materialStockSchema, outstandingSchema, poDashboardSchema, poDetailSchema, poListSchema, supplierProfileSchema, type PurchaseOrderRow } from './schemas';
@@ -58,12 +58,13 @@ export async function searchPurchaseOrders(f: PoFilters): Promise<PurchaseOrder[
     'purchase/json/poSearch/',
     {
       ...rangeParams(f.range),
-      po_no: f.poNo,
+      po_no: anyOr(f.poNo),
       status: f.status,
-      supplierId: f.supplierId ?? '',
-      project_code: f.projectCode ?? '',
-      item_id: f.itemId ?? '',
-      finance_year: f.financeYear,
+      supplierId: anyOr(f.supplierId),
+      project_code: anyOr(f.projectCode),
+      item_id: anyOr(f.itemId),
+      // Only consulted by xserp when searching by PO number; "All" = any year.
+      finance_year: f.financeYear === '-1' ? 'All' : f.financeYear,
     },
     { schema: poListSchema, timeoutMs: 90_000 },
   );

@@ -12,7 +12,7 @@ import { Chip, countActiveFilters, FilterSheet, QueryState, SearchField, Text, u
 
 import { DEFAULT_PO_FILTERS, type PoFilters } from '../api';
 import { poApproval } from '../approvals';
-import { usePoFinanceYears, usePoSearch } from '../hooks';
+import { usePoSearch } from '../hooks';
 import { PO_STATUS_OPTIONS } from '../status';
 
 const LOCAL = [
@@ -25,7 +25,7 @@ const LOCAL = [
 
 type Props = { host: ScrollHost; filterOpen: boolean; onFilterClose: () => void; onFilterCount: (n: number) => void };
 
-const toValues = (f: PoFilters): FilterValues => ({ range: f.range, status: f.status, financeYear: f.financeYear, supplierId: f.supplierId, projectId: null, itemKey: f.itemId });
+const toValues = (f: PoFilters): FilterValues => ({ range: f.range, status: f.status, supplierId: f.supplierId, projectId: null, itemKey: f.itemId });
 
 export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Props) {
   const t = useTheme();
@@ -36,7 +36,6 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
   const [search, setSearch] = useState('');
   const [local, setLocal] = useState<string | null>(null);
   const query = usePoSearch(filters);
-  const fy = usePoFinanceYears();
   const parties = usePartyItems();
   const projects = useProjectItems();
   const projectRows = useProjects();
@@ -49,12 +48,11 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
     () => [
       { kind: 'dateRange', key: 'range', label: 'PO date' },
       { kind: 'select', key: 'status', label: 'Status', options: PO_STATUS_OPTIONS },
-      { kind: 'select', key: 'financeYear', label: 'Financial year', options: [{ value: '-1', label: 'Current' }, ...(fy.data ?? []).map((y) => ({ value: y, label: y }))] },
       { kind: 'picker', key: 'supplierId', label: 'Supplier', items: parties },
       { kind: 'picker', key: 'projectId', label: 'Project', items: projects },
       { kind: 'picker', key: 'itemKey', label: 'Material', items: materials },
     ],
-    [fy.data, parties, projects, materials],
+    [parties, projects, materials],
   );
 
   useEffect(() => onFilterCount(countActiveFilters(fields, values, defaults)), [fields, values, defaults, onFilterCount]);
@@ -67,7 +65,6 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
       ...DEFAULT_PO_FILTERS(),
       range: (v.range as DateRange | undefined) ?? DEFAULT_PO_FILTERS().range,
       status: str('status') ?? '100',
-      financeYear: str('financeYear') ?? '-1',
       supplierId: str('supplierId'),
       projectCode: projectId ? (projectRows.find((p) => p.id === projectId)?.code ?? null) : null,
       itemId: str('itemKey')?.split(':')[0] ?? null,
@@ -90,7 +87,7 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
               {...host.scrollProps}
               data={visible}
               keyExtractor={(po) => po.id}
-              contentContainerStyle={styles.pad}
+              contentContainerStyle={[styles.pad, styles.grow]}
               initialNumToRender={8}
               windowSize={7}
               ListHeaderComponent={
@@ -120,6 +117,7 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
 
 const useStyles = makeStyles((t) => ({
   pad: { padding: t.space.gutter, paddingBottom: 48 },
+  grow: { flexGrow: 1 },
   head: { gap: 12, marginBottom: 14 },
   chips: { gap: 8 },
   footer: { textAlign: 'center', marginTop: 8 },

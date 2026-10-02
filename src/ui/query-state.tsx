@@ -1,6 +1,7 @@
 /** @author Lokesh */
 import type { UseQueryResult } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
+import { View } from 'react-native';
 
 import { errorMessage, isApiError } from '@/core/api';
 
@@ -22,16 +23,31 @@ export function QueryState<T>({ query, isEmpty, empty, skeleton, children }: Pro
   if (query.status === 'error') {
     const offline = isApiError(query.error) && query.error.kind === 'network';
     return (
-      <StateView
-        icon={offline ? 'cloud-offline-outline' : 'alert-circle-outline'}
-        title={offline ? 'You are offline' : "Couldn't load this"}
-        message={errorMessage(query.error)}
-        action={{ label: 'Try again', onPress: () => void query.refetch() }}
-      />
+      <Centered>
+        <StateView
+          icon={offline ? 'cloud-offline-outline' : 'alert-circle-outline'}
+          title={offline ? 'You are offline' : "Couldn't load this"}
+          message={errorMessage(query.error)}
+          action={{ label: 'Try again', onPress: () => void query.refetch() }}
+        />
+      </Centered>
     );
   }
   if (isEmpty?.(query.data)) {
-    return <StateView icon={empty?.icon ?? 'checkmark-done-outline'} title={empty?.title ?? 'Nothing here yet'} message={empty?.message} />;
+    return (
+      <Centered>
+        <StateView
+          icon={empty?.icon ?? 'checkmark-done-outline'}
+          title={empty?.title ?? 'Nothing here yet'}
+          message={empty?.message}
+        />
+      </Centered>
+    );
   }
   return <>{children(query.data)}</>;
+}
+
+/** Empty and error states sit in the middle of the space they're given, not pinned to the top. */
+function Centered({ children }: { children: ReactNode }) {
+  return <View style={{ flexGrow: 1, justifyContent: 'center', paddingVertical: 24 }}>{children}</View>;
 }

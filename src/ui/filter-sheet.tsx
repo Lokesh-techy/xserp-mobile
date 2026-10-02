@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
 import { makeStyles, useTheme } from '@/core/theme';
+import { subDays } from 'date-fns';
+
 import { financialYear, lastDays, thisMonth, toApiDate, type DateRange } from '@/core/utils';
 
 import { BottomSheet } from './bottom-sheet';
@@ -34,6 +36,7 @@ export function rangePresets(fyStartDay?: string | null) {
     { key: '30d', label: 'Last 30 days', range: lastDays(30) },
     { key: 'month', label: 'This month', range: thisMonth() },
     { key: 'fy', label: 'This FY', range: financialYear(fyStartDay) },
+    { key: 'lastFy', label: 'Last FY', range: financialYear(fyStartDay, subDays(financialYear(fyStartDay).since, 1)) },
   ];
 }
 
