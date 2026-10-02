@@ -28,6 +28,9 @@ const key = (kind: MasterKind) => `xserp.master.${kind}.${scope()}`;
 
 export const useMasterStore = create<State>(() => empty());
 
+// Bumped on every sign-in/sign-out so in-flight syncs from a previous session are ignored.
+let generation = 0;
+
 function load() {
   const next = empty();
   for (const kind of MASTER_KINDS) {
@@ -45,15 +48,19 @@ export async function syncMaster(kind: MasterKind, { force = false } = {}) {
   const at = st.syncedAt[kind];
   if (st.syncing[kind] || (!force && at && Date.now() - at < STALE_AFTER_MS)) return;
   useMasterStore.setState((s) => ({ syncing: { ...s.syncing, [kind]: true } }));
+  // Captured before the (slow) download: if the user switches company meanwhile, the result is dropped.
+  const started = generation;
+  const storageKey = key(kind);
   try {
     const rows = await masterFetchers[kind]();
+    if (started !== generation) return;
     const now = Date.now();
-    kv.setJSON(key(kind), { rows, at: now });
+    kv.setJSON(storageKey, { rows, at: now });
     useMasterStore.setState((s) => ({ data: { ...s.data, [kind]: rows }, syncedAt: { ...s.syncedAt, [kind]: now }, error: { ...s.error, [kind]: null } }));
   } catch (e) {
-    useMasterStore.setState((s) => ({ error: { ...s.error, [kind]: errorMessage(e) } }));
+    if (started === generation) useMasterStore.setState((s) => ({ error: { ...s.error, [kind]: errorMessage(e) } }));
   } finally {
-    useMasterStore.setState((s) => ({ syncing: { ...s.syncing, [kind]: false } }));
+    if (started === generation) useMasterStore.setState((s) => ({ syncing: { ...s.syncing, [kind]: false } }));
   }
 }
 
@@ -61,6 +68,7 @@ export const syncAllMasters = (opts: { force?: boolean } = {}) => Promise.all(MA
 
 // Follow the session: load the right company's cache on sign-in, wipe it on sign-out.
 useSessionStore.subscribe((s, prev) => {
+  if (s.status !== prev.status) generation += 1;
   if (s.status === 'signedIn' && prev.status !== 'signedIn') load();
   if (s.status === 'signedOut' && prev.status === 'signedIn') {
     const enterprise = prev.session?.enterpriseId;

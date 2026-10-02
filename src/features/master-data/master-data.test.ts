@@ -32,3 +32,21 @@ test('a failed sync keeps the old rows and records the error', async () => {
   expect(useMasterStore.getState().data.parties[0]?.name).toBe('Kept');
   expect(useMasterStore.getState().error.parties).toBe('offline');
 });
+
+test('a sync that finishes after switching company is discarded', async () => {
+  const { toSession, userPayloadSchema, useSessionStore } = jest.requireActual('@/core/auth') as typeof import('@/core/auth');
+  const login = jest.requireActual('../../../__fixtures__/login_api.json');
+  const a = toSession(userPayloadSchema.parse(login));
+  const b = { ...a, token: 'B', enterpriseId: 999 };
+  await useSessionStore.getState().signIn(a);
+  let resolve: (v: unknown) => void = () => {};
+  jest.spyOn(client, 'post').mockImplementationOnce(() => new Promise((r) => (resolve = r)) as never);
+  const sync = syncMaster('parties', { force: true });
+  await useSessionStore.getState().signOut();
+  await useSessionStore.getState().signIn(b);
+  resolve({ party_names: [{ id: '1', code: 'A1', name: 'Company A party' }] });
+  await sync;
+  expect(useMasterStore.getState().data.parties).toEqual([]);
+  expect(useMasterStore.getState().syncing.parties).toBe(false);
+  await useSessionStore.getState().signOut();
+});
