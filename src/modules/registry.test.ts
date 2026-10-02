@@ -9,8 +9,8 @@ const none = { view: false, edit: false, delete: false, approve: false, alert: f
 const user = (perms: Session['permissions'], extra: Partial<Session> = {}): Session => ({ ...base, ...extra, user: { ...base.user, isSuper: false }, permissions: perms });
 const byId = (id: string) => MODULES.find((m) => m.id === id)!;
 
-test('home shows only live modules, in order (no settings, approvals or coming-soon tiles)', () => {
-  expect(HOME_MODULES.map((m) => m.id)).toEqual(['finance', 'audit', 'purchase', 'sales', 'stores', 'masters', 'expenses']);
+test('home shows only live modules, in order (no settings, approvals or coming-soon tiles; reports included)', () => {
+  expect(HOME_MODULES.map((m) => m.id)).toEqual(['finance', 'audit', 'purchase', 'sales', 'stores', 'masters', 'expenses', 'reports']);
 });
 
 test('locks tiles without view permission and marks API-less modules soon', () => {

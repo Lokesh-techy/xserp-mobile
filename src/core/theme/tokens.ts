@@ -58,7 +58,7 @@ export const moduleTints = {
   approvals: '#1C75ED',
   production: '#94A3B8',
   hr: '#94A3B8',
-  reports: '#94A3B8',
+  reports: '#4F46E5',
   settings: '#5B6B82',
 } as const;
 export type ModuleTints = typeof moduleTints;

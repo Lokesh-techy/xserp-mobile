@@ -33,7 +33,7 @@ export const MODULES: readonly ModuleDef[] = [
   { id: 'expenses', title: 'Expenses', subtitle: 'Claims · Approvals', icon: 'receipt-outline', tint: 'expenses', permission: ['EXPENSES'], href: '/expenses', status: 'live' },
   { id: 'production', title: 'Production', subtitle: 'Plans · Issues · Shortages', icon: 'construct-outline', tint: 'production', href: '/soon/production', status: 'soon' },
   { id: 'hr', title: 'HR', subtitle: 'Employees · Attendance · Pay', icon: 'people-outline', tint: 'hr', href: '/soon/hr', status: 'soon' },
-  { id: 'reports', title: 'Reports', subtitle: 'GST · P&L · Cash flow', icon: 'bar-chart-outline', tint: 'reports', href: '/soon/reports', status: 'soon' },
+  { id: 'reports', title: 'Reports', subtitle: 'Finance · Sales · Purchase · Stores', icon: 'bar-chart-outline', tint: 'reports', permission: ['ACCOUNTS', 'SALES', 'PURCHASE', 'STORES'], href: '/reports', status: 'live' },
 ];
 
 /** Tiles on Home: live modules only (coming-soon modules stay registered for deep links). */
