@@ -1,10 +1,14 @@
 /** @author Lokesh */
+import { View } from 'react-native';
+
+import { currentEnterpriseId } from '@/core/api';
 import { can } from '@/core/permissions';
-import { formatQty } from '@/core/utils';
+import { formatDate, formatQty, parseServerDate } from '@/core/utils';
 import { defineApproval, type LineItem } from '@/features/approvals/engine';
 import { DocumentButton } from '@/ui';
 
 import { approveInvoice, approveOA, checkCanRejectOA, fetchDraftInvoices, fetchDraftOAs, fetchInvoiceMaterials, fetchOaMaterials, rejectInvoice, rejectOA, type Invoice, type OA, type SalesMaterial } from './api';
+import { parseAttachments } from './attachments';
 import { PartyOutstanding } from './components/party-outstanding';
 import { salesKeys } from './keys';
 import { invoiceStatus, oaStatus } from './status';
@@ -18,6 +22,28 @@ const toLines = (materials: SalesMaterial[] | undefined, currency: string): Line
     amount: m.quantity * m.rate * (1 - m.discount / 100),
     currency,
   }));
+
+/** One button per uploaded file, named as it was uploaded. */
+function OaAttachments({ item }: { item: OA }) {
+  const files = parseAttachments(item.documentUri, currentEnterpriseId());
+  return (
+    <View style={{ gap: 10 }}>
+      {files.map((f, i) => (
+        <DocumentButton
+          key={`${f.key}:${i}`}
+          label={files.length === 1 ? 'Open attachment' : f.name}
+          request={{ path: 'commons/json/document/', params: { document_uri: f.key }, filename: f.name, raw: true }}
+        />
+      ))}
+    </View>
+  );
+}
+
+/** Past its due date and not settled — worth flagging on the list. */
+const isOverdue = (dueOn: string, paymentStatus: string) => {
+  const due = parseServerDate(dueOn);
+  return !!due && due < new Date() && !/^paid$|fully|settled|received/i.test(paymentStatus.trim());
+};
 
 export const invoiceApproval = defineApproval<Invoice, SalesMaterial[]>({
   type: 'invoice',
@@ -37,7 +63,13 @@ export const invoiceApproval = defineApproval<Invoice, SalesMaterial[]>({
     currency: i.currency,
     date: i.date,
     status: invoiceStatus(i.status),
-    meta: [...(i.type ? [{ icon: 'pricetag-outline' as const, text: i.type }] : []), ...(i.projectName ? [{ icon: 'briefcase-outline' as const, text: i.projectName }] : [])],
+    meta: [
+      ...(i.projectName ? [{ icon: 'briefcase-outline' as const, text: i.projectName }] : []),
+      ...(i.dueOn ? [{ icon: 'time-outline' as const, text: `Due ${formatDate(i.dueOn, 'd MMM')}`, tone: isOverdue(i.dueOn, i.paymentStatus) ? ('danger' as const) : undefined }] : []),
+      ...(i.paymentStatus ? [{ icon: 'wallet-outline' as const, text: i.paymentStatus }] : []),
+      ...(i.type ? [{ icon: 'pricetag-outline' as const, text: i.type }] : []),
+      ...(i.poNo ? [{ icon: 'document-outline' as const, text: `PO ${i.poNo}` }] : []),
+    ],
   }),
   detailKey: (i) => salesKeys.invoiceMaterials(i.id),
   detail: fetchInvoiceMaterials,
@@ -69,7 +101,10 @@ export const oaApproval = defineApproval<OA, SalesMaterial[]>({
     currency: o.currency,
     date: o.approvedOn ?? o.preparedOn,
     status: oaStatus(o.status),
-    meta: [...(o.projectName ? [{ icon: 'briefcase-outline' as const, text: o.projectName }] : []), ...(o.deliveryDue ? [{ icon: 'calendar-outline' as const, text: `Due ${o.deliveryDue.slice(0, 10)}` }] : [])],
+    meta: [
+      ...(o.projectName ? [{ icon: 'briefcase-outline' as const, text: o.projectName }] : []),
+      ...(o.deliveryDue ? [{ icon: 'time-outline' as const, text: `Delivery ${formatDate(o.deliveryDue, 'd MMM')}` }] : []),
+    ],
   }),
   detailKey: (o) => salesKeys.oaMaterials(o.id),
   detail: fetchOaMaterials,
@@ -78,8 +113,8 @@ export const oaApproval = defineApproval<OA, SalesMaterial[]>({
     {
       key: 'attachment',
       title: 'Customer PO',
-      visible: (o) => o.attached && !!o.documentUri,
-      Component: ({ item }) => <DocumentButton label="Open attachment" request={{ path: 'commons/json/document/', params: { document_uri: item.documentUri }, filename: `${item.code || item.id}-attachment.pdf` }} />,
+      visible: (o) => o.attached && parseAttachments(o.documentUri, currentEnterpriseId()).length > 0,
+      Component: OaAttachments,
     },
     { key: 'outstanding', title: 'Customer outstanding', Component: ({ item }) => <PartyOutstanding partyId={item.partyId} />, visible: (_o, { session }) => can(session, 'ACCOUNTS', 'view') },
   ],

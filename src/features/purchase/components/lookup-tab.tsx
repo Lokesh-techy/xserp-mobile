@@ -9,17 +9,18 @@ import { ApprovalCard, openPager } from '@/features/approvals/engine';
 import { useMaterialItems, usePartyItems, useProjectItems, useProjects } from '@/features/master-data';
 import {
   countActiveFilters,
+  edgeOf,
   FilterSheet,
+  HeaderRight,
+  MenuButton,
+  pullable,
   QueryState,
   Text,
   useHostRefresh,
+  useScreenSearch,
   type FilterField,
   type FilterValues,
   type ScrollHost,
-  pullable,
-  MenuButton,
-  useScreenSearch,
-  HeaderRight,
 } from '@/ui';
 
 import { DEFAULT_PO_FILTERS, type PoFilters } from '../api';
@@ -133,8 +134,9 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
                   {visible.length} of {all.length} orders
                 </Text>
               }
-              renderItem={({ item }) => (
+              renderItem={({ item, index }) => (
                 <ApprovalCard
+                  edge={edgeOf(index, visible.length)}
                   summary={poApproval.summary(item)}
                   tint={t.tints.purchase}
                   onPress={() => openPager(poApproval, visible, item.id)}

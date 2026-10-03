@@ -66,8 +66,8 @@ export function MaterialSheet({ item, lineKey, detail }: { item: PurchaseOrder; 
       </Section>
       {canSeeAccounts && (
         <Section title="Supplier outstanding">
-          {(overdue.data ?? []).map((l) => (
-            <View key={l.id}>
+          {(overdue.data ?? []).map((l, i) => (
+            <View key={`${l.id}:${i}`}>
               <KeyValue label={l.name} value={formatMoney(l.due || l.total)} />
               <KeyValue label="Overdue" value={formatMoney(l.overdue)} />
             </View>

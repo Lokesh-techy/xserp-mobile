@@ -19,9 +19,16 @@ type Props<T> = {
   wrap?: (node: ReactNode) => ReactElement;
 };
 
-/** Loading → skeleton, error → retry card, empty → friendly state, else children(data). */
+/**
+ * True while results for *new* inputs (filters, range, search) are loading and the previous results are only a placeholder.
+ * Pull-to-refresh refetches the same inputs, so it stays false there and the list doesn't blank out.
+ */
+export const isSwitching = (query: Pick<UseQueryResult<unknown>, 'isPlaceholderData' | 'isFetching'>) =>
+  query.isPlaceholderData && query.isFetching;
+
+/** Loading (or switching filters) → skeleton, error → retry card, empty → friendly state, else children(data). */
 export function QueryState<T>({ query, isEmpty, empty, skeleton, children, wrap = (n) => <>{n}</> }: Props<T>) {
-  if (query.status === 'pending') return wrap(skeleton ?? <ListSkeleton rows={4} />);
+  if (query.status === 'pending' || isSwitching(query)) return wrap(skeleton ?? <ListSkeleton rows={4} />);
   if (query.status === 'error') {
     const offline = isApiError(query.error) && query.error.kind === 'network';
     return wrap(

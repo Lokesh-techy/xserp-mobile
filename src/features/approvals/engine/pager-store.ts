@@ -14,5 +14,11 @@ export function openPager<T, D>(config: ApprovalConfig<T, D>, items: T[], startI
   router.push({ pathname: '/approvals/[type]', params: { type: config.type, id: startId } });
 }
 
-export const removeFromPager = (id: string, idOf: (item: unknown) => string) =>
-  usePagerStore.setState((s) => ({ items: s.items.filter((i) => idOf(i) !== id) }));
+/** Reads the hand-over for a pager of `type` without consuming it (safe in a state initializer). */
+export function peekHandover(type: ApprovalType): { items: unknown[]; startId: string | null } | null {
+  const s = usePagerStore.getState();
+  return s.type === type && s.items.length > 0 ? { items: s.items, startId: s.startId } : null;
+}
+
+/** Drops the hand-over once a pager has copied it, so a later deep link can't reuse stale items. */
+export const clearHandover = () => usePagerStore.setState({ type: null, items: [], startId: null });

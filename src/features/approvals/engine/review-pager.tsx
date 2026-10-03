@@ -17,6 +17,17 @@ import { useApprovalActions } from './use-approval-action';
 export type ReviewEntry = { key: string; config: AnyApproval; item: unknown };
 export const entryKey = (config: AnyApproval, item: unknown) => `${config.type}:${config.id(item)}`;
 
+/** One queue as review entries. Servers sometimes repeat a document (or send a blank id), so repeats get a `#n` suffix — list keys stay unique. */
+export function toEntries(config: AnyApproval, items: unknown[]): ReviewEntry[] {
+  const seen = new Map<string, number>();
+  return items.map((item) => {
+    const base = entryKey(config, item);
+    const n = seen.get(base) ?? 0;
+    seen.set(base, n + 1);
+    return { key: n ? `${base}#${n}` : base, config, item };
+  });
+}
+
 type Props = {
   title: string;
   entries: ReviewEntry[];

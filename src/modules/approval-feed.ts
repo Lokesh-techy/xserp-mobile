@@ -7,14 +7,14 @@ import { can } from '@/core/permissions';
 import { POLL_MS } from '@/core/query';
 import { parseServerDate } from '@/core/utils';
 import type { ModuleTint } from '@/core/theme';
-import type { AnyApproval, ApprovalType, ReviewEntry } from '@/features/approvals/engine';
+import { toEntries, type AnyApproval, type ApprovalType, type ReviewEntry } from '@/features/approvals/engine';
 
 import { APPROVALS } from './approval-registry';
 
 /** Every pending document across modules, newest first (undated ones last). Each date is parsed once. */
 export function buildFeed(groups: { config: AnyApproval; items: unknown[] }[]): ReviewEntry[] {
   const keyed = groups.flatMap(({ config, items }) =>
-    items.map((item) => ({ entry: { key: `${config.type}:${config.id(item)}`, config, item }, at: parseServerDate(config.summary(item).date)?.getTime() ?? 0 })),
+    toEntries(config, items).map((entry) => ({ entry, at: parseServerDate(config.summary(entry.item).date)?.getTime() ?? 0 })),
   );
   keyed.sort((a, b) => b.at - a.at);
   return keyed.map((k) => k.entry);

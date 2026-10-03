@@ -8,15 +8,16 @@ import { makeStyles, useTheme } from '@/core/theme';
 import { filterItems } from '@/core/utils';
 import { syncMaster, useMasterStore, type MasterKind } from '@/features/master-data';
 import {
-  Card,
+  edgeOf,
+  ItemText,
+  ListRow,
   StateView,
   Text,
+  TrailingTag,
   useHostRefresh,
+  useScreenSearch,
   type PickerItem,
   type ScrollHost,
-  useScreenSearch,
-  ItemText,
-  TrailingTag,
 } from '@/ui';
 
 type Props = {
@@ -66,11 +67,11 @@ export function MasterList({ host, kind, items, noun, onOpen }: Props) {
           message={syncing ? undefined : 'Pull down to sync.'}
         />
       }
-      renderItem={({ item }) => (
-        <Card style={styles.card} onPress={() => onOpen(item)}>
+      renderItem={({ item, index }) => (
+        <ListRow edge={edgeOf(index, rows.length)} style={styles.card} onPress={() => onOpen(item)}>
           <ItemText item={item} />
           <TrailingTag value={item.trailing} />
-        </Card>
+        </ListRow>
       )}
     />,
   );
@@ -83,8 +84,5 @@ const useStyles = makeStyles((t) => ({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginBottom: 10,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
   },
 }));

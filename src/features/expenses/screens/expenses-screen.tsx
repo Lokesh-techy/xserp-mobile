@@ -12,18 +12,20 @@ import { makeStyles, useTheme } from '@/core/theme';
 import { formatDate, formatMoney, lastDays, type DateRange } from '@/core/utils';
 import {
   Button,
-  Card,
+  edgeOf,
+  HeaderRight,
+  ListRow,
   ModuleScreen,
+  isSwitching,
   QueryState,
   RangeChips,
-  type ScrollHost,
   SegmentedTabs,
   StatusPill,
   Text,
   useHostRefresh,
   useTabParam,
   withPressFeel,
-  HeaderRight,
+  type ScrollHost,
 } from '@/ui';
 
 import { fetchExpenseGroups, fetchExpenses } from '../api';
@@ -82,7 +84,7 @@ function ExpenseList({
   return host.attach(
     <Animated.FlatList
       {...host.scrollProps}
-      data={query.data ?? []}
+      data={isSwitching(query) ? [] : (query.data ?? [])}
       keyExtractor={(e) => e.id}
       contentContainerStyle={styles.pad}
       ListHeaderComponent={
@@ -111,11 +113,11 @@ function ExpenseList({
           {() => null}
         </QueryState>
       }
-      renderItem={({ item }) => {
+      renderItem={({ item, index }) => {
         const st = expenseStatus(item.status);
         return (
-          <Card
-            tint={t.tints.expenses}
+          <ListRow
+            edge={edgeOf(index, query.data?.length ?? 0)}
             style={styles.card}
             onPress={() => router.push({ pathname: '/expenses/[id]', params: { id: item.id } })}>
             <View style={styles.row}>
@@ -135,7 +137,7 @@ function ExpenseList({
                 {formatMoney(item.approved || item.claimed)}
               </Text>
             </View>
-          </Card>
+          </ListRow>
         );
       }}
     />,
@@ -145,7 +147,7 @@ function ExpenseList({
 const useStyles = makeStyles((t) => ({
   pad: { padding: t.space.gutter, paddingTop: 8, paddingBottom: 48 },
   head: { gap: 12, marginBottom: 12 },
-  card: { marginBottom: 12, paddingLeft: 20, gap: 6 },
+  card: { gap: 5 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   flex: { flex: 1 },
   amount: { fontSize: 17 },

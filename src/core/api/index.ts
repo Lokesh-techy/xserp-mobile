@@ -4,4 +4,5 @@ export { ApiError, isApiError, errorMessage, type ApiErrorKind } from './errors'
 export { encodeForm, type FormParams, type FormValue } from './form';
 export type { Envelope } from './envelope';
 export * from './schema';
-export { openDocument, fetchDocument, shareDocument, clearDocumentCache, base64ToBytes, safeFilename, type DocumentRequest, type FetchedDocument } from './documents';
+export { currentEnterpriseId } from './client';
+export { openDocument, fetchDocument, shareDocument, saveDocument, clearDocumentCache, base64ToBytes, bytesToBase64, attachmentType, safeFilename, type DocumentRequest, type FetchedDocument } from './documents';

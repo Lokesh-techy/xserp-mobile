@@ -14,22 +14,31 @@ export const toNotifications = (r: z.infer<typeof notificationsSchema>): AppNoti
 
 export const countUnread = (list: AppNotification[]) => list.filter((n) => !n.read).length;
 
-export function groupByDay(list: AppNotification[], now = new Date()) {
-  const groups: { title: string; data: AppNotification[] }[] = [];
-  for (const n of list) {
-    const d = parseServerDate(n.createdOn);
-    const title = !d ? 'Earlier' : isSameDay(d, now) ? 'Today' : isSameDay(d, subDays(now, 1)) ? 'Yesterday' : formatDate(d, 'd MMM yyyy');
+/** "Today", "Yesterday" or the date — the heading a notification sits under. */
+export function dayTitle(d: Date | null, now = new Date()): string {
+  if (!d) return 'Earlier';
+  if (isSameDay(d, now)) return 'Today';
+  if (isSameDay(d, subDays(now, 1))) return 'Yesterday';
+  return formatDate(d, 'd MMM yyyy');
+}
+
+/** Consecutive runs of items under the same heading (the list is already newest first). */
+export function groupRuns<T>(list: T[], titleOf: (x: T) => string) {
+  const groups: { title: string; data: T[] }[] = [];
+  for (const x of list) {
+    const title = titleOf(x);
     const last = groups[groups.length - 1];
-    if (last?.title === title) last.data.push(n);
-    else groups.push({ title, data: [n] });
+    if (last?.title === title) last.data.push(x);
+    else groups.push({ title, data: [x] });
   }
   return groups;
 }
 
-export const fetchNotifications = async () => toNotifications(await post('commons/json/nm_list/', {}, { schema: notificationsSchema }));
+export const groupByDay = (list: AppNotification[], now = new Date()) =>
+  groupRuns(list, (n) => dayTitle(parseServerDate(n.createdOn), now));
+
+export const fetchNotifications = async () =>
+  toNotifications(await post('commons/json/nm_list/', {}, { schema: notificationsSchema }));
 export const deleteNotifications = async (ids: string[]) => {
   await postOk('commons/json/del_nm/', { notification_ids: ids.join(',') });
-};
-export const markRead = async (id: string) => {
-  await postOk('commons/json/up_nm_read/', { notification_id: id });
 };

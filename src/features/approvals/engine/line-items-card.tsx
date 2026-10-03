@@ -55,11 +55,11 @@ export function LineItemsCard({ lines, loading, onPress }: Props) {
               </View>
             );
             return onPress ? (
-              <PressableScale key={line.key} onPress={() => onPress(line.key)} scaleTo={0.99}>
+              <PressableScale key={`${line.key}:${i}`} onPress={() => onPress(line.key)} scaleTo={0.99}>
                 {body}
               </PressableScale>
             ) : (
-              <View key={line.key}>{body}</View>
+              <View key={`${line.key}:${i}`}>{body}</View>
             );
           })
         )}

@@ -7,14 +7,15 @@ import { useFocusRefetch } from '@/core/query';
 import { makeStyles, useTheme } from '@/core/theme';
 import { filterItems } from '@/core/utils';
 import {
+  edgeOf,
   HeaderRight,
   ListSkeleton,
   MenuButton,
+  pullable,
   QueryState,
   useHostRefresh,
   useScreenSearch,
   type ScrollHost,
-  pullable,
 } from '@/ui';
 
 import { ApprovalCard } from './approval-card';
@@ -87,12 +88,13 @@ export function QueueList<T, D>({
             <Animated.FlatList
               {...host.scrollProps}
               data={items}
-              keyExtractor={config.id}
+              keyExtractor={(item, i) => `${config.id(item)}:${i}`}
               contentContainerStyle={styles.pad}
               initialNumToRender={8}
               windowSize={7}
-              renderItem={({ item }) => (
+              renderItem={({ item, index }) => (
                 <ApprovalCard
+                  edge={edgeOf(index, items.length)}
                   summary={config.summary(item)}
                   tint={t.tints[config.tint]}
                   showStatus={false}

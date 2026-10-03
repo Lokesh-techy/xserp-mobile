@@ -29,6 +29,8 @@ export const poApproval = defineApproval<PurchaseOrder, PoMaterial[]>({
     status: poStatus(po.status),
     meta: [
       ...(po.projectName ? [{ icon: 'briefcase-outline' as const, text: po.projectName }] : []),
+      ...(po.deliveryStatus ? [{ icon: 'car-outline' as const, text: po.deliveryStatus, tone: /delay|overdue|pending/i.test(po.deliveryStatus) ? ('warning' as const) : undefined }] : []),
+      ...(po.materialStatus ? [{ icon: 'cube-outline' as const, text: po.materialStatus }] : []),
       ...(po.poType === 1 ? [{ icon: 'construct-outline' as const, text: 'Job order' }] : []),
       ...(po.indentCode ? [{ icon: 'document-outline' as const, text: `Indent ${po.indentCode}` }] : []),
     ],

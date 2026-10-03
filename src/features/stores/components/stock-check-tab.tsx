@@ -8,18 +8,22 @@ import { makeStyles, useTheme } from '@/core/theme';
 import { formatDate, formatQty, lastDays } from '@/core/utils';
 import { useMaterialItems, useMaterials } from '@/features/master-data';
 import {
-  Card,
+  Bone,
+  edgeOf,
+  HeaderRight,
+  isSwitching,
+  ListRow,
+  ListSkeleton,
   PickerSheet,
   PressableScale,
   QueryState,
   RangeChips,
   StatCard,
   StateView,
+  SwitchRow,
   Text,
   useHostRefresh,
   type ScrollHost,
-  SwitchRow,
-  HeaderRight,
 } from '@/ui';
 
 import { useStockCheck } from '../hooks';
@@ -46,7 +50,7 @@ export function StockCheckTab({ host }: { host: ScrollHost }) {
       {host.attach(
         <Animated.FlatList
           {...host.scrollProps}
-          data={query.data?.movements ?? []}
+          data={isSwitching(query) ? [] : (query.data?.movements ?? [])}
           keyExtractor={(m, i) => `${m.docNo}-${i}`}
           contentContainerStyle={styles.pad}
           ListHeaderComponent={
@@ -82,7 +86,14 @@ export function StockCheckTab({ host }: { host: ScrollHost }) {
                   message="Pick a material to see its opening, closing and movements."
                 />
               ) : (
-                <QueryState query={query} skeleton={<View />}>
+                <QueryState
+                  query={query}
+                  skeleton={
+                    <View style={styles.grid}>
+                      <Bone style={styles.statBone} />
+                      <Bone style={styles.statBone} />
+                    </View>
+                  }>
                   {(d) => (
                     <View style={styles.grid}>
                       <StatCard
@@ -103,8 +114,15 @@ export function StockCheckTab({ host }: { host: ScrollHost }) {
               )}
             </View>
           }
-          renderItem={({ item }) => (
-            <Card style={styles.move}>
+          ListEmptyComponent={
+            !key || query.isError ? null : query.isPending || isSwitching(query) ? (
+              <ListSkeleton rows={4} />
+            ) : (
+              <StateView icon="swap-vertical-outline" title="No movements" message="Nothing moved in this period." />
+            )
+          }
+          renderItem={({ item, index }) => (
+            <ListRow edge={edgeOf(index, query.data?.movements.length ?? 0)} style={styles.move}>
               <View style={styles.flex}>
                 <Text variant="rowTitle">{item.docNo || '—'}</Text>
                 <Text variant="rowMeta" color={t.colors.textMuted}>
@@ -121,7 +139,7 @@ export function StockCheckTab({ host }: { host: ScrollHost }) {
                   −{formatQty(item.issue)}
                 </Text>
               )}
-            </Card>
+            </ListRow>
           )}
         />,
       )}
@@ -152,6 +170,7 @@ const useStyles = makeStyles((t) => ({
   },
   options: { backgroundColor: t.colors.surface, borderRadius: t.radius.md, paddingHorizontal: 14, paddingVertical: 4 },
   grid: { flexDirection: 'row', gap: 12 },
-  move: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10, paddingVertical: 16, paddingHorizontal: 16 },
+  statBone: { flex: 1, height: 84, borderRadius: t.radius.lg },
+  move: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   flex: { flex: 1, gap: 2 },
 }));

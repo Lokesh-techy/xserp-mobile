@@ -5,7 +5,7 @@ import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { makeStyles, useTheme, type ModuleTint } from '@/core/theme';
-import { Text, usePullToSync, type IconName } from '@/ui';
+import { SatinBackground, Text, usePullToSync, type IconName } from '@/ui';
 
 import { HomeActions, HomeHeader, MiniHomeHeader } from '../components/home-header';
 import { ModuleTile } from '../components/module-tile';
@@ -30,6 +30,7 @@ export function HomeScreen({ modules, approvals, onRefresh }: Props) {
   const pull = usePullToSync(onRefresh, true, useSyncStep);
   return (
     <View style={styles.root}>
+      <SatinBackground />
       {pull.attach(
         <Animated.ScrollView {...pull.scrollProps} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <HomeHeader pull={pull.indicator} scrollY={pull.scrollY} />

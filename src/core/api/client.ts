@@ -22,7 +22,8 @@ const CSRF_TOKEN = Array.from({ length: 32 }, () => Math.floor(Math.random() * 1
 type RequestOptions = { auth?: boolean; timeoutMs?: number; emptyCodes?: readonly number[] };
 export type PostOptions<S extends z.ZodType> = RequestOptions & { schema: S };
 
-async function request(path: string, params: FormParams, { auth = true, timeoutMs = 30_000, emptyCodes = [] }: RequestOptions): Promise<Envelope> {
+/** The raw POST: auth fields, CSRF, timeout. Callers decide how to read the body. */
+async function send(path: string, params: FormParams, { auth = true, timeoutMs = 30_000 }: RequestOptions): Promise<Response> {
   const body: FormParams = { ...params, csrfmiddlewaretoken: CSRF_TOKEN };
   if (auth) {
     const a = hooks.getAuth();
@@ -56,7 +57,12 @@ async function request(path: string, params: FormParams, { auth = true, timeoutM
   } finally {
     clearTimeout(timer);
   }
+  return res;
+}
 
+async function request(path: string, params: FormParams, opts: RequestOptions): Promise<Envelope> {
+  const { auth = true, emptyCodes = [] } = opts;
+  const res = await send(path, params, opts);
   const text = await res.text();
   let data: unknown;
   try {
@@ -90,6 +96,33 @@ export async function post<S extends z.ZodType>(path: string, params: FormParams
 /** For actions (approve/reject/save) where only success matters. */
 export function postOk(path: string, params: FormParams, opts: RequestOptions = {}): Promise<Envelope> {
   return request(path, params, opts);
+}
+
+export type BinaryFile = { bytes: Uint8Array; contentType: string };
+
+/**
+ * For endpoints that answer with the file itself (e.g. `commons/json/document/`) rather than a JSON envelope.
+ * A JSON or HTML answer is an error page; a plain-text 404 carries the server's reason, shown as is.
+ */
+export async function postBinary(path: string, params: FormParams, opts: RequestOptions = {}): Promise<BinaryFile> {
+  const res = await send(path, params, opts);
+  const contentType = res.headers.get('content-type') ?? '';
+  if (!res.ok || /json|text\/html/i.test(contentType)) {
+    const text = await res.text();
+    if (/json/i.test(contentType)) {
+      try {
+        checkEnvelope(JSON.parse(text), path, []);
+      } catch (e) {
+        if (e instanceof ApiError && e.kind === 'session') hooks.onSessionExpired();
+        throw e;
+      }
+    }
+    if (res.status === 404 && text && !/<html/i.test(text)) throw new ApiError('server', text.trim().slice(0, 240), { path, code: 404 });
+    const err = htmlError(text, res.status, path);
+    if (err.kind === 'session') hooks.onSessionExpired();
+    throw err;
+  }
+  return { bytes: new Uint8Array(await res.arrayBuffer()), contentType };
 }
 
 /** Company of the signed-in user, for scoping on-device caches. */

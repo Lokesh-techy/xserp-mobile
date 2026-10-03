@@ -59,8 +59,8 @@ export function ApprovalPage<T, D>({
           <Text variant="caption" color={t.colors.textMuted}>
             {formatDate(s.date)}
           </Text>
-          {s.meta?.map((m) => (
-            <Text key={m.text} variant="caption" color={t.colors.textMuted}>
+          {s.meta?.map((m, i) => (
+            <Text key={i} variant="caption" color={t.colors.textMuted}>
               · {m.text}
             </Text>
           ))}

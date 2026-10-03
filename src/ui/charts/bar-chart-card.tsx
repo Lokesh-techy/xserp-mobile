@@ -43,7 +43,7 @@ export function BarChartCard({ title, subtitle, data, series, format = (n) => fo
       )}
       <View style={styles.legend}>
         {series.map((s, i) => (
-          <View key={s.label} style={styles.legendItem}>
+          <View key={`${s.label}:${i}`} style={styles.legendItem}>
             <View style={[styles.dot, { backgroundColor: colors[i] }]} />
             <Text variant="caption" color={t.colors.textMuted}>
               {s.label}

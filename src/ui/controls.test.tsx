@@ -98,7 +98,8 @@ function SearchingTab() {
 
 test('a tab registers the screen search and receives what is typed', async () => {
   await wrap(<ModuleScreen title="Purchase">{() => <SearchingTab />}</ModuleScreen>);
-  await fireEvent.changeText(screen.getByPlaceholderText('Search orders'), 'acme');
+  // The page's content mounts a frame after its shell.
+  await fireEvent.changeText(await screen.findByPlaceholderText('Search orders'), 'acme');
   expect(screen.getByText('query:acme')).toBeTruthy();
 });
 
@@ -112,7 +113,7 @@ function TabWithControl() {
 
 test('a tab can place its single control in the screen header (compact label)', async () => {
   await wrap(<ModuleScreen title="Audit" tabs={<Text>tabs</Text>}>{() => <TabWithControl />}</ModuleScreen>);
-  expect(screen.getByLabelText('Sort: Sort')).toBeTruthy();
+  expect(await screen.findByLabelText('Sort: Sort')).toBeTruthy();
 });
 
 test('dropdown rows keep the unit in its own column, out of the detail line', async () => {

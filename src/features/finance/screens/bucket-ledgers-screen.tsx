@@ -8,15 +8,16 @@ import Animated from 'react-native-reanimated';
 import { makeStyles, useTheme } from '@/core/theme';
 import { filterItems, formatMoney } from '@/core/utils';
 import {
-  Card,
+  edgeOf,
+  ListRow,
   ModuleScreen,
+  pullable,
   QueryState,
   StateView,
   Text,
   useHostRefresh,
-  type ScrollHost,
-  pullable,
   useScreenSearch,
+  type ScrollHost,
 } from '@/ui';
 
 import { fetchBucketLedgers } from '../api';
@@ -66,8 +67,9 @@ function Body({ host, param }: { host: ScrollHost; param: string }) {
             data={rows}
             keyExtractor={(l) => l.id}
             contentContainerStyle={styles.pad}
-            renderItem={({ item }) => (
-              <Card
+            renderItem={({ item, index }) => (
+              <ListRow
+                edge={edgeOf(index, rows.length)}
                 style={styles.card}
                 onPress={() =>
                   router.push({
@@ -92,7 +94,7 @@ function Body({ host, param }: { host: ScrollHost; param: string }) {
                     </Text>
                   )}
                 </View>
-              </Card>
+              </ListRow>
             )}
           />,
         )
@@ -103,7 +105,7 @@ function Body({ host, param }: { host: ScrollHost; param: string }) {
 
 const useStyles = makeStyles((t) => ({
   pad: { padding: t.space.gutter, paddingBottom: 48 },
-  card: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10, paddingVertical: 16, paddingHorizontal: 16 },
+  card: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   flex: { flex: 1, gap: 2 },
   right: { alignItems: 'flex-end', gap: 2 },
 }));

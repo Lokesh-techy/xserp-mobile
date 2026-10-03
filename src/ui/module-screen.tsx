@@ -16,9 +16,11 @@ import Animated from 'react-native-reanimated';
 import { makeStyles } from '@/core/theme';
 
 import { CollapsingSearch } from './collapsing-search';
+import { useDeferredMount } from './deferred-mount';
 import { createHeaderSlot, HeaderSlotContext } from './header-slot';
 import { usePullToSync } from './pull-to-sync';
 import { ScreenHeader, type HeaderAction } from './screen-header';
+import { ListSkeleton } from './skeleton';
 
 export type ScrollHost = ReturnType<typeof usePullToSync>;
 
@@ -70,6 +72,9 @@ export function ModuleScreen({ title, subtitle, actions, headerRight, tabs, back
   }, []);
   const search = useMemo(() => ({ query, setQuery, register: registerSearch }), [query, registerSearch]);
   const [slot] = useState(createHeaderSlot);
+  // Shell first: the header and a skeleton paint on the first frame, so opening any page feels instant;
+  // the page's content (lists, charts) mounts a frame later instead of holding up the transition.
+  const ready = useDeferredMount();
   return (
     <RefreshContext.Provider value={register}>
       <SearchContext.Provider value={search}>
@@ -93,7 +98,15 @@ export function ModuleScreen({ title, subtitle, actions, headerRight, tabs, back
                 scrollY={pull.scrollY}
               />
             )}
-            <View style={styles.body}>{children(pull)}</View>
+            <View style={styles.body}>
+              {ready ? (
+                children(pull)
+              ) : (
+                <View style={styles.shell}>
+                  <ListSkeleton rows={5} />
+                </View>
+              )}
+            </View>
           </View>
         </HeaderSlotContext.Provider>
       </SearchContext.Provider>
@@ -107,7 +120,11 @@ export function useHostRefresh(_host: ScrollHost, fn: () => Promise<unknown>) {
   useEffect(() => register(fn), [register, fn]);
 }
 
-const useStyles = makeStyles((t) => ({ root: { flex: 1, backgroundColor: t.colors.bg }, body: { flex: 1 } }));
+const useStyles = makeStyles((t) => ({
+  root: { flex: 1, backgroundColor: t.colors.bg },
+  body: { flex: 1 },
+  shell: { padding: t.space.gutter },
+}));
 
 /** Wraps a non-list state (loading, empty, error) so it can still be pulled to refresh. */
 export function pullable(host: ScrollHost, node: ReactNode): ReactElement {

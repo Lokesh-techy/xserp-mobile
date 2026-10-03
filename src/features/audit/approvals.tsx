@@ -39,7 +39,10 @@ export const icdApproval = defineApproval<Receipt, ReceiptMaterial[]>({
     currency: r.currency,
     date: r.receiptDate,
     status: { label: 'Checked', tone: 'info' },
-    meta: r.noteCode ? [{ icon: 'document-attach-outline', text: `${r.noteIsCredit ? 'Credit' : 'Debit'} note ${r.noteCode}` }] : r.projectName ? [{ icon: 'briefcase-outline', text: r.projectName }] : [],
+    meta: [
+      ...(r.noteCode ? [{ icon: 'document-attach-outline' as const, text: `${r.noteIsCredit ? 'Credit' : 'Debit'} note ${r.noteCode}` }] : []),
+      ...(r.projectName ? [{ icon: 'briefcase-outline' as const, text: r.projectName }] : []),
+    ],
   }),
   detailKey: (r) => auditKeys.materials(r.receiptNo),
   detail: fetchGrnMaterials,

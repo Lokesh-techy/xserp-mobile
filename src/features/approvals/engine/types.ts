@@ -15,7 +15,8 @@ export type ApprovalSummary = {
   currency?: string | null;
   date?: string | null;
   status: { label: string; tone: Tone };
-  meta?: { icon: IconName; text: string }[];
+  /** Key facts for list rows, most important first; `tone` colours a fact that needs attention. */
+  meta?: { icon: IconName; text: string; tone?: Tone }[];
 };
 
 export type LineItem = {

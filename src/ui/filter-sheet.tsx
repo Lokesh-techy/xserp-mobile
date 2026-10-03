@@ -10,10 +10,10 @@ import { financialYear, lastDays, thisMonth, toApiDate, type DateRange } from '@
 import { BottomSheet } from './bottom-sheet';
 import { Button } from './button';
 import { Chip } from './chip';
-import { DateField } from './date-field';
 import type { PickerItem } from './item-row';
 import { PickerSheet } from './picker-sheet';
 import { PressableScale } from './pressable-scale';
+import { RangePicker } from './range-picker';
 import { Text } from './text';
 
 export type FilterField =
@@ -138,6 +138,7 @@ export function FilterSheet({ visible, onClose, fields, value, defaults, onApply
   );
 }
 
+/** The same From → To picker as everywhere else, inline in the sheet; it applies with the sheet's Apply. */
 function RangeEditor({
   value,
   onChange,
@@ -147,30 +148,8 @@ function RangeEditor({
   onChange: (r: DateRange) => void;
   fyStartDay?: string | null;
 }) {
-  const styles = useStyles();
-  const range = isRange(value) ? value : lastDays(30);
   return (
-    <View style={styles.rangeRoot}>
-      <View style={styles.wrap}>
-        {rangePresets(fyStartDay).map((p) => (
-          <Chip key={p.key} label={p.label} active={same(range, p.range)} onPress={() => onChange(p.range)} />
-        ))}
-      </View>
-      <View style={styles.dates}>
-        <DateField
-          label="From"
-          value={range.since}
-          maximumDate={range.till}
-          onChange={(d) => onChange({ ...range, since: d })}
-        />
-        <DateField
-          label="To"
-          value={range.till}
-          minimumDate={range.since}
-          onChange={(d) => onChange({ ...range, till: d })}
-        />
-      </View>
-    </View>
+    <RangePicker value={isRange(value) ? value : lastDays(30)} onChange={onChange} presets={rangePresets(fyStartDay)} />
   );
 }
 
@@ -178,8 +157,6 @@ const useStyles = makeStyles((t) => ({
   body: { paddingHorizontal: 20, paddingBottom: 12, gap: 20 },
   group: { gap: 10 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  rangeRoot: { gap: 12 },
-  dates: { flexDirection: 'row', gap: 12 },
   pickerBox: {
     height: 50,
     borderRadius: t.radius.md,

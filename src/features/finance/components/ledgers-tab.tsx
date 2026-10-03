@@ -7,7 +7,7 @@ import Animated from 'react-native-reanimated';
 import { makeStyles, useTheme } from '@/core/theme';
 import { filterItems } from '@/core/utils';
 import { syncMaster, useLedgers, useMasterStore } from '@/features/master-data';
-import { Card, StateView, Text, useHostRefresh, type ScrollHost, useScreenSearch } from '@/ui';
+import { edgeOf, ListRow, StateView, Text, useHostRefresh, useScreenSearch, type ScrollHost } from '@/ui';
 
 export function LedgersTab({ host }: { host: ScrollHost }) {
   const t = useTheme();
@@ -41,8 +41,9 @@ export function LedgersTab({ host }: { host: ScrollHost }) {
           message={syncing ? undefined : 'Pull down to sync the ledger list.'}
         />
       }
-      renderItem={({ item }) => (
-        <Card
+      renderItem={({ item, index }) => (
+        <ListRow
+          edge={edgeOf(index, rows.length)}
           style={styles.card}
           onPress={() =>
             router.push({
@@ -54,7 +55,7 @@ export function LedgersTab({ host }: { host: ScrollHost }) {
           <Text variant="rowMeta" color={t.colors.textMuted}>
             {item.group}
           </Text>
-        </Card>
+        </ListRow>
       )}
     />,
   );
@@ -63,5 +64,5 @@ export function LedgersTab({ host }: { host: ScrollHost }) {
 const useStyles = makeStyles((t) => ({
   pad: { padding: t.space.gutter, paddingTop: 8, paddingBottom: 48 },
   head: { gap: 8, marginBottom: 12 },
-  card: { marginBottom: 10, gap: 4, paddingVertical: 16, paddingHorizontal: 16 },
+  card: { gap: 3 },
 }));

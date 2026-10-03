@@ -8,9 +8,15 @@ import { useSessionStore } from '@/core/auth';
 import { makeStyles, useTheme } from '@/core/theme';
 import { formatDate, formatMoney, thisMonth } from '@/core/utils';
 import {
+  Bone,
   Card,
+  edgeOf,
+  HeaderRight,
   KeyValue,
+  ListRow,
   ModuleScreen,
+  isSwitching,
+  ListSkeleton,
   QueryState,
   RangeChips,
   Section,
@@ -19,7 +25,6 @@ import {
   Text,
   useHostRefresh,
   type ScrollHost,
-  HeaderRight,
 } from '@/ui';
 
 import { fetchLedgerBills, fetchLedgerData } from '../api';
@@ -62,7 +67,7 @@ function Body({ host, id, group }: Props & { host: ScrollHost }) {
   return host.attach(
     <Animated.FlatList
       {...host.scrollProps}
-      data={data.data?.vouchers ?? []}
+      data={isSwitching(data) ? [] : (data.data?.vouchers ?? [])}
       keyExtractor={(v, i) => `${v.code}-${i}`}
       contentContainerStyle={styles.pad}
       ListHeaderComponent={
@@ -70,7 +75,14 @@ function Body({ host, id, group }: Props & { host: ScrollHost }) {
           <HeaderRight>
             <RangeChips value={range} onChange={setRange} fyStartDay={fy} />
           </HeaderRight>
-          <QueryState query={data} skeleton={<View />}>
+          <QueryState
+            query={data}
+            skeleton={
+              <View style={styles.grid}>
+                <Bone style={styles.statBone} />
+                <Bone style={styles.statBone} />
+              </View>
+            }>
             {(d) => (
               <View style={styles.grid}>
                 <StatCard label="Opening" value={formatMoney(d.opening_balance)} icon="log-in-outline" tone="neutral" />
@@ -97,10 +109,14 @@ function Body({ host, id, group }: Props & { host: ScrollHost }) {
         </View>
       }
       ListEmptyComponent={
-        data.isPending ? null : <StateView icon="document-outline" title="No vouchers in this period" />
+        data.isPending || isSwitching(data) ? (
+          <ListSkeleton rows={4} />
+        ) : (
+          <StateView icon="document-outline" title="No vouchers in this period" />
+        )
       }
-      renderItem={({ item }) => (
-        <Card style={styles.voucher}>
+      renderItem={({ item, index }) => (
+        <ListRow edge={edgeOf(index, data.data?.vouchers.length ?? 0)} style={styles.voucher}>
           <View style={styles.flex}>
             <Text variant="rowTitle">{item.code}</Text>
             <Text variant="rowMeta" color={t.colors.textMuted}>
@@ -110,7 +126,7 @@ function Body({ host, id, group }: Props & { host: ScrollHost }) {
           <Text variant="rowTitle" weight="bold" color={item.is_debit ? t.colors.danger : t.colors.success}>
             {formatMoney(item.value)} {item.is_debit ? 'Dr' : 'Cr'}
           </Text>
-        </Card>
+        </ListRow>
       )}
     />,
   );
@@ -120,6 +136,7 @@ const useStyles = makeStyles((t) => ({
   pad: { padding: t.space.gutter, paddingTop: 8, paddingBottom: 48 },
   head: { gap: 12 },
   grid: { flexDirection: 'row', gap: 12 },
-  voucher: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10, paddingVertical: 16, paddingHorizontal: 16 },
+  statBone: { flex: 1, height: 84, borderRadius: t.radius.lg },
+  voucher: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   flex: { flex: 1, gap: 2 },
 }));

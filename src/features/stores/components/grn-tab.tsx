@@ -9,6 +9,7 @@ import { makeStyles, useTheme } from '@/core/theme';
 import { filterItems, lastDays, parseServerDate } from '@/core/utils';
 import { ApprovalCard, openPager, useApprovalQueue } from '@/features/approvals/engine';
 import {
+  edgeOf,
   ListSkeleton,
   MenuButton,
   Section,
@@ -109,7 +110,7 @@ export function GrnTab({ host }: { host: ScrollHost }) {
         <Animated.FlatList
           {...host.scrollProps}
           data={canApprove ? rows : []}
-          keyExtractor={(r) => r.receiptNo}
+          keyExtractor={(r, i) => `${r.receiptNo}:${i}`}
           contentContainerStyle={styles.pad}
           ListHeaderComponent={header}
           ListEmptyComponent={
@@ -123,8 +124,9 @@ export function GrnTab({ host }: { host: ScrollHost }) {
               />
             )
           }
-          renderItem={({ item }) => (
+          renderItem={({ item, index }) => (
             <ApprovalCard
+              edge={edgeOf(index, rows.length)}
               summary={grnApproval.summary(item)}
               tint={t.tints.stores}
               showStatus={false}

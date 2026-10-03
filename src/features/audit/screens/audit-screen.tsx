@@ -8,7 +8,7 @@ import { makeStyles, useTheme } from '@/core/theme';
 import { parseServerDate } from '@/core/utils';
 import { ApprovalCard, QueueList, useApprovalQueue, type QueueSort } from '@/features/approvals/engine';
 import type { Receipt } from '@/features/stores';
-import { ModuleScreen, SegmentedTabs, StateView, useHostRefresh, useTabParam, type ScrollHost } from '@/ui';
+import { edgeOf, ModuleScreen, SegmentedTabs, StateView, useHostRefresh, useTabParam, type ScrollHost } from '@/ui';
 
 import { icdApproval } from '../approvals';
 import { useAuditSession } from '../session-store';
@@ -60,11 +60,11 @@ function SessionList({ host, items, kind }: { host: ScrollHost; items: Receipt[]
     <Animated.FlatList
       {...host.scrollProps}
       data={items}
-      keyExtractor={(r) => r.receiptNo}
+      keyExtractor={(r, i) => `${r.receiptNo}:${i}`}
       contentContainerStyle={styles.pad}
       ListEmptyComponent={<StateView icon={kind === 'verified' ? 'shield-checkmark-outline' : 'arrow-undo-outline'} title={`Nothing ${kind} yet`} message={`GRN notes you ${kind === 'verified' ? 'verify' : 'return'} in this session appear here.`} />}
-      renderItem={({ item }) => (
-        <ApprovalCard summary={{ ...icdApproval.summary(item), status: kind === 'verified' ? { label: 'Verified', tone: 'success' } : { label: 'Returned', tone: 'danger' } }} tint={t.tints.audit} />
+      renderItem={({ item, index }) => (
+        <ApprovalCard edge={edgeOf(index, items.length)} summary={{ ...icdApproval.summary(item), status: kind === 'verified' ? { label: 'Verified', tone: 'success' } : { label: 'Returned', tone: 'danger' } }} tint={t.tints.audit} />
       )}
     />,
   );

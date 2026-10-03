@@ -2,7 +2,7 @@
 import { View } from 'react-native';
 
 import { useTheme } from '@/core/theme';
-import { formatQty } from '@/core/utils';
+import { formatDate, formatQty } from '@/core/utils';
 import { defineApproval } from '@/features/approvals/engine';
 import { Card, Text } from '@/ui';
 
@@ -50,7 +50,11 @@ export const grnApproval = defineApproval<Receipt>({
     currency: r.currency,
     date: r.receiptDate,
     status: { label: 'Awaiting approval', tone: 'warning' },
-    meta: r.projectName ? [{ icon: 'briefcase-outline', text: r.projectName }] : [],
+    meta: [
+      ...(r.projectName ? [{ icon: 'briefcase-outline' as const, text: r.projectName }] : []),
+      ...(r.materials.length ? [{ icon: 'cube-outline' as const, text: `${r.materials.length} ${r.materials.length === 1 ? 'item' : 'items'}` }] : []),
+      ...(r.invoiceDate ? [{ icon: 'receipt-outline' as const, text: `Invoice ${formatDate(r.invoiceDate, 'd MMM')}` }] : []),
+    ],
   }),
   lines: (r) => r.materials.map((m) => ({ key: m.key, title: m.name, subtitle: m.drawingNo, qty: `${formatQty(m.acceptedQty, m.unit)} of ${formatQty(m.receivedQty)}`, amount: m.acceptedQty * m.rate, currency: r.currency })),
   sections: [{ key: 'remarks', title: 'Remarks history', Component: ({ item }) => <RemarksHistory remarks={item.remarks} /> }],

@@ -39,8 +39,8 @@ export function PieChartCard({ title, data, format = (n) => formatCompact(n) }: 
             )}
           />
           <View style={styles.legend}>
-            {slices.map((s) => (
-              <View key={s.label} style={styles.legendItem}>
+            {slices.map((s, i) => (
+              <View key={`${s.label}:${i}`} style={styles.legendItem}>
                 <View style={[styles.dot, { backgroundColor: s.color }]} />
                 <Text variant="caption" style={styles.flex} numberOfLines={1}>
                   {s.label}

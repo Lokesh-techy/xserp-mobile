@@ -14,3 +14,13 @@ export function tapFeedback() {
 
 export const successFeedback = () => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
 export const errorFeedback = () => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+
+/** A firm knock for a committed destructive gesture (e.g. swipe-to-delete released). */
+export function commitFeedback() {
+  if (Platform.OS === 'android') {
+    Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Confirm).catch(() => {});
+    Vibration.vibrate(35);
+  } else {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+  }
+}

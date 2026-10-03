@@ -10,7 +10,7 @@ import { makeStyles, useTheme } from '@/core/theme';
 import { filterItems, type DateRange } from '@/core/utils';
 import { ApprovalCard, openPager } from '@/features/approvals/engine';
 import { useMaterialItems, usePartyItems, useProjectItems, useProjects } from '@/features/master-data';
-import { Button, countActiveFilters, type FilterField, FilterSheet, type FilterValues, QueryState, type ScrollHost, Text, useHostRefresh, withPressFeel, SegmentedControl, useScreenSearch } from '@/ui';
+import { Button, countActiveFilters, edgeOf, type FilterField, FilterSheet, type FilterValues, isSwitching, QueryState, type ScrollHost, Text, useHostRefresh, withPressFeel, SegmentedControl, useScreenSearch } from '@/ui';
 
 import { DEFAULT_SALES_FILTERS, type SalesFilters } from '../api';
 import { invoiceApproval, oaApproval } from '../approvals';
@@ -97,24 +97,24 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
         isInvoice ? (
           <Animated.FlatList
             {...host.scrollProps}
-            data={invoiceRows}
+            data={isSwitching(invoices) ? [] : invoiceRows}
             keyExtractor={(i) => i.id}
             contentContainerStyle={[styles.pad, styles.grow]}
             ListHeaderComponent={header}
             ListFooterComponent={footer}
             ListEmptyComponent={<QueryState query={invoices} isEmpty={() => true} empty={{ icon: 'search-outline', title: 'No invoices', message: 'No invoices match these filters.' }}>{() => null}</QueryState>}
-            renderItem={({ item }) => <ApprovalCard summary={invoiceApproval.summary(item)} tint={t.tints.sales} onPress={() => openPager(invoiceApproval, invoiceRows, item.id)} />}
+            renderItem={({ item, index }) => <ApprovalCard edge={edgeOf(index, invoiceRows.length)} summary={invoiceApproval.summary(item)} tint={t.tints.sales} onPress={() => openPager(invoiceApproval, invoiceRows, item.id)} />}
           />
         ) : (
           <Animated.FlatList
             {...host.scrollProps}
-            data={oaRows}
+            data={isSwitching(oas) ? [] : oaRows}
             keyExtractor={(o) => o.id}
             contentContainerStyle={[styles.pad, styles.grow]}
             ListHeaderComponent={header}
             ListFooterComponent={footer}
             ListEmptyComponent={<QueryState query={oas} isEmpty={() => true} empty={{ icon: 'search-outline', title: 'No order acknowledgements', message: 'Nothing matches these filters.' }}>{() => null}</QueryState>}
-            renderItem={({ item }) => <ApprovalCard summary={oaApproval.summary(item)} tint={t.tints.sales} onPress={() => openPager(oaApproval, oaRows, item.id)} />}
+            renderItem={({ item, index }) => <ApprovalCard edge={edgeOf(index, oaRows.length)} summary={oaApproval.summary(item)} tint={t.tints.sales} onPress={() => openPager(oaApproval, oaRows, item.id)} />}
           />
         ),
       )}

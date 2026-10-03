@@ -6,8 +6,8 @@ import { View } from 'react-native';
 import { makeStyles } from '@/core/theme';
 import { ListSkeleton, QueryState, ScreenHeader, toast } from '@/ui';
 
-import { removeFromPager, usePagerStore } from './pager-store';
-import { ReviewPager, type ReviewEntry } from './review-pager';
+import { clearHandover, peekHandover } from './pager-store';
+import { ReviewPager, toEntries, type ReviewEntry } from './review-pager';
 import { erase, type ApprovalConfig } from './types';
 import { useApprovalQueue } from './use-queue';
 
@@ -15,29 +15,29 @@ import { useApprovalQueue } from './use-queue';
 export function ApprovalPagerScreen<T, D>({ config }: { config: ApprovalConfig<T, D> }) {
   const styles = useStyles();
   const { id } = useLocalSearchParams<{ id?: string }>();
-  const pager = usePagerStore();
   // Decided once: items handed over by a list (queue or lookup), or the live queue for deep links.
-  const [fromStore] = useState(() => pager.type === config.type && pager.items.length > 0);
-  const [initialId] = useState(() => id ?? (fromStore ? pager.startId : null));
+  // The pager keeps its own copy, so nothing outside it (a screen rebuilt after the app was in the
+  // background, another pager closing) can empty it and make it think the work is done.
+  const [handover] = useState(() => peekHandover(config.type));
+  const fromStore = handover !== null;
+  const [own, setOwn] = useState(() => (handover?.items ?? []) as T[]);
+  const [acted, setActed] = useState(false);
+  const [initialId] = useState(() => id ?? handover?.startId ?? null);
   const queue = useApprovalQueue(config, !fromStore);
   const any = useMemo(() => erase(config), [config]);
-  const items = useMemo(
-    () => (fromStore ? (pager.items as T[]) : (queue.data ?? [])),
-    [fromStore, pager.items, queue.data],
-  );
-  const entries = useMemo<ReviewEntry[]>(
-    () => items.map((item) => ({ key: `${config.type}:${config.id(item)}`, config: any, item })),
-    [items, config, any],
-  );
+  const items = useMemo(() => (fromStore ? own : (queue.data ?? [])), [fromStore, own, queue.data]);
+  const entries = useMemo<ReviewEntry[]>(() => toEntries(any, items), [items, any]);
 
-  // Leaving the pager drops the hand-over so a later deep link can't reuse stale items.
-  useEffect(() => () => usePagerStore.setState({ type: null, items: [], startId: null }), []);
   useEffect(() => {
-    if (fromStore && items.length === 0) {
+    if (fromStore) clearHandover();
+  }, [fromStore]);
+  // Only the user's own approvals can finish the batch.
+  useEffect(() => {
+    if (fromStore && acted && items.length === 0) {
       toast.show({ message: `No more ${config.title.toLowerCase()} to review`, tone: 'success' });
       router.back();
     }
-  }, [fromStore, items.length, config.title]);
+  }, [fromStore, acted, items.length, config.title]);
 
   if (!fromStore && queue.status !== 'success') {
     return (
@@ -57,7 +57,11 @@ export function ApprovalPagerScreen<T, D>({ config }: { config: ApprovalConfig<T
       title={config.title}
       entries={entries}
       initialKey={initialId ? `${config.type}:${initialId}` : null}
-      onActed={(e) => removeFromPager(e.key.slice(config.type.length + 1), config.id as (i: unknown) => string)}
+      onActed={(e) => {
+        const actedId = e.key.slice(config.type.length + 1);
+        setActed(true);
+        setOwn((list) => list.filter((i) => config.id(i) !== actedId));
+      }}
       empty={{ title: 'All caught up', message: `No ${config.title.toLowerCase()} are waiting for you.` }}
     />
   );

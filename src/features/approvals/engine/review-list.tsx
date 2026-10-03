@@ -1,13 +1,24 @@
 /** @author Lokesh */
 import { useCallback, useMemo, type ReactNode } from 'react';
+import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { approvalTints, makeStyles } from '@/core/theme';
-import { filterItems } from '@/core/utils';
-import { ListSkeleton, ModuleScreen, StateView, useHostRefresh, useScreenSearch, type ScrollHost } from '@/ui';
+import { approvalTints, makeStyles, useTheme } from '@/core/theme';
+import { filterItems, formatMoney } from '@/core/utils';
+import {
+  ListRow,
+  ListSkeleton,
+  ModuleScreen,
+  StateView,
+  Text,
+  useHostRefresh,
+  useScreenSearch,
+  type ScrollHost,
+} from '@/ui';
 
-import { ApprovalCard } from './approval-card';
+import { Facts } from './approval-card';
 import type { ReviewEntry } from './review-pager';
+import { toReviewRows, type ReviewRow } from './review-sections';
 
 type Props = {
   title: string;
@@ -40,19 +51,21 @@ function Body({ host, entries, loading, onOpen, onRefresh }: Props & { host: Scr
   );
   const rows = useMemo(
     () =>
-      filterItems(entries, query, (e) => {
-        const s = e.config.summary(e.item);
-        return [s.code, s.party, e.config.noun, ...(e.config.search?.(e.item) ?? [])];
-      }),
+      toReviewRows(
+        filterItems(entries, query, (e) => {
+          const s = e.config.summary(e.item);
+          return [s.code, s.party, e.config.noun, ...(e.config.search?.(e.item) ?? [])];
+        }),
+      ),
     [entries, query],
   );
   return host.attach(
     <Animated.FlatList
       {...host.scrollProps}
       data={rows}
-      keyExtractor={(e) => e.key}
+      keyExtractor={(r) => r.key}
       contentContainerStyle={styles.pad}
-      initialNumToRender={10}
+      initialNumToRender={14}
       windowSize={9}
       keyboardShouldPersistTaps="handled"
       ListEmptyComponent={
@@ -66,18 +79,103 @@ function Body({ host, entries, loading, onOpen, onRefresh }: Props & { host: Scr
           />
         )
       }
-      // Everything here is pending (no status pill); the chip and stripe colour say the document type.
-      renderItem={({ item }) => (
-        <ApprovalCard
-          summary={item.config.summary(item.item)}
-          tint={approvalTints[item.config.type]}
-          kind={item.config.short ?? item.config.noun}
-          showStatus={false}
-          onPress={() => onOpen(item)}
-        />
-      )}
+      renderItem={({ item }) =>
+        item.kind === 'header' ? (
+          <GroupHeader label={item.label} count={item.count} />
+        ) : (
+          <ReviewRowItem row={item} onOpen={onOpen} />
+        )
+      }
     />,
   );
 }
 
-const useStyles = makeStyles((t) => ({ pad: { padding: t.space.gutter, paddingBottom: 48 } }));
+function GroupHeader({ label, count }: { label: string; count: number }) {
+  const t = useTheme();
+  const styles = useStyles();
+  return (
+    <View style={styles.header} accessibilityRole="header">
+      <Text variant="label" color={t.colors.text}>
+        {label}
+      </Text>
+      <Text variant="caption" color={t.colors.textFaint} style={styles.num}>
+        {count}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * One document inside its group's panel. A tinted badge says the type, so the eye can scan a column of types;
+ * code and amount carry the first line, party and date the second.
+ */
+function ReviewRowItem({
+  row,
+  onOpen,
+}: {
+  row: Extract<ReviewRow, { kind: 'entry' }>;
+  onOpen: (entry: ReviewEntry) => void;
+}) {
+  const t = useTheme();
+  const styles = useStyles();
+  const { entry, first, last } = row;
+  const s = entry.config.summary(entry.item);
+  const tint = approvalTints[entry.config.type];
+  const kind = entry.config.short ?? entry.config.noun;
+  return (
+    <ListRow
+      edge={{ first, last }}
+      onPress={() => onOpen(entry)}
+      dividerInset={68}
+      accessibilityLabel={`${kind} ${s.code}, ${s.party || 'no party'}`}
+      style={styles.row}>
+      <View style={[styles.badge, { backgroundColor: `${tint}17` }]}>
+        <Text weight="extrabold" color={tint} style={styles.badgeText} numberOfLines={1} adjustsFontSizeToFit>
+          {kind}
+        </Text>
+      </View>
+      <View style={styles.main}>
+        <View style={styles.line}>
+          <Text variant="rowTitle" weight="bold" numberOfLines={1} style={styles.flex}>
+            {s.code}
+          </Text>
+          {typeof s.amount === 'number' && (
+            <Text variant="rowTitle" weight="bold" style={styles.num}>
+              {formatMoney(s.amount, s.currency || '₹')}
+            </Text>
+          )}
+        </View>
+        <Text variant="rowMeta" color={t.colors.textMuted} numberOfLines={1}>
+          {s.party || '—'}
+        </Text>
+        <Facts summary={s} />
+      </View>
+    </ListRow>
+  );
+}
+
+const useStyles = makeStyles((t) => ({
+  pad: { paddingHorizontal: t.space.gutter, paddingTop: 4, paddingBottom: 48 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
+    paddingHorizontal: 4,
+    paddingTop: 18,
+    paddingBottom: 8,
+  },
+  num: { fontVariant: ['tabular-nums'] },
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  badge: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+  badgeText: { fontSize: 11, lineHeight: 14, letterSpacing: 0.2 },
+  main: { flex: 1, gap: 3 },
+  line: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  flex: { flex: 1 },
+}));

@@ -43,3 +43,9 @@ test('summarises the feed by document type in a fixed order (stable across refre
   ]);
   expect(summarizeByType([])).toEqual([]);
 });
+
+test('repeated or blank ids still get unique keys', () => {
+  const po = make('po');
+  const feed = buildFeed([{ config: po, items: [{ id: '7', date: null }, { id: '7', date: null }, { id: '', date: null }, { id: '', date: null }] }]);
+  expect(new Set(feed.map((e) => e.key)).size).toBe(4);
+});
