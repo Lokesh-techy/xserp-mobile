@@ -2,7 +2,7 @@
 import { isSameDay, subDays } from 'date-fns';
 import type { z } from 'zod';
 
-import { post, postOk } from '@/core/api';
+import { post, postOk, ERP } from '@/core/api';
 import { formatDate, parseServerDate } from '@/core/utils';
 
 import { notificationsSchema } from './schemas';
@@ -38,7 +38,7 @@ export const groupByDay = (list: AppNotification[], now = new Date()) =>
   groupRuns(list, (n) => dayTitle(parseServerDate(n.createdOn), now));
 
 export const fetchNotifications = async () =>
-  toNotifications(await post('commons/json/nm_list/', {}, { schema: notificationsSchema }));
+  toNotifications(await post(ERP.commons.notifications, {}, { schema: notificationsSchema }));
 export const deleteNotifications = async (ids: string[]) => {
-  await postOk('commons/json/del_nm/', { notification_ids: ids.join(',') });
+  await postOk(ERP.commons.deleteNotifications, { notification_ids: ids.join(',') });
 };

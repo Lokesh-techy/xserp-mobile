@@ -1,8 +1,17 @@
 /** @author Lokesh */
-import { anyOr, post, postOk } from '@/core/api';
+import { anyOr, post, postOk, ERP } from '@/core/api';
 import { lastDays, rangeParams, type DateRange } from '@/core/utils';
 
-import { financeYearsSchema, materialStockSchema, outstandingSchema, poDashboardSchema, poDetailSchema, poListSchema, supplierProfileSchema, type PurchaseOrderRow } from './schemas';
+import {
+  financeYearsSchema,
+  materialStockSchema,
+  outstandingSchema,
+  poDashboardSchema,
+  poDetailSchema,
+  poListSchema,
+  supplierProfileSchema,
+  type PurchaseOrderRow,
+} from './schemas';
 
 export type PurchaseOrder = {
   id: string;
@@ -25,10 +34,37 @@ export type PurchaseOrder = {
   indentCode: string;
 };
 
-export type PoMaterial = { itemId: string; makeId: string; drawingNo: string; name: string; makeName: string; quantity: number; price: number; discount: number; unit: string; storePrice: number };
+export type PoMaterial = {
+  itemId: string;
+  makeId: string;
+  drawingNo: string;
+  name: string;
+  makeName: string;
+  quantity: number;
+  price: number;
+  discount: number;
+  unit: string;
+  storePrice: number;
+};
 
-export type PoFilters = { range: DateRange; status: string; supplierId: string | null; projectCode: string | null; itemId: string | null; financeYear: string; poNo: string };
-export const DEFAULT_PO_FILTERS = (): PoFilters => ({ range: lastDays(30), status: '100', supplierId: null, projectCode: null, itemId: null, financeYear: '-1', poNo: '' });
+export type PoFilters = {
+  range: DateRange;
+  status: string;
+  supplierId: string | null;
+  projectCode: string | null;
+  itemId: string | null;
+  financeYear: string;
+  poNo: string;
+};
+export const DEFAULT_PO_FILTERS = (): PoFilters => ({
+  range: lastDays(30),
+  status: '100',
+  supplierId: null,
+  projectCode: null,
+  itemId: null,
+  financeYear: '-1',
+  poNo: '',
+});
 
 export const toPurchaseOrder = (r: PurchaseOrderRow): PurchaseOrder => ({
   id: r.po_id,
@@ -51,11 +87,11 @@ export const toPurchaseOrder = (r: PurchaseOrderRow): PurchaseOrder => ({
   indentCode: r.indent?.code ?? '',
 });
 
-export const fetchPurchaseDashboard = () => post('purchase/json/dashboard/', {}, { schema: poDashboardSchema });
+export const fetchPurchaseDashboard = () => post(ERP.purchase.dashboard, {}, { schema: poDashboardSchema });
 
 export async function searchPurchaseOrders(f: PoFilters): Promise<PurchaseOrder[]> {
   const res = await post(
-    'purchase/json/poSearch/',
+    ERP.purchase.poSearch,
     {
       ...rangeParams(f.range),
       po_no: anyOr(f.poNo),
@@ -71,36 +107,65 @@ export async function searchPurchaseOrders(f: PoFilters): Promise<PurchaseOrder[
   return res.po_list.map(toPurchaseOrder);
 }
 
-export const fetchDraftPOs = async () => (await post('purchase/json/po_draft/', {}, { schema: poListSchema })).po_list.map(toPurchaseOrder);
+export const fetchDraftPOs = async () =>
+  (await post(ERP.purchase.draftPOs, {}, { schema: poListSchema })).po_list.map(toPurchaseOrder);
 
 export async function fetchPoMaterials(po: PurchaseOrder): Promise<PoMaterial[]> {
-  const res = await post('purchase/json/poDraftDetails/', { po_id: po.id }, { schema: poDetailSchema });
-  return res.materials.map((m) => ({ itemId: m.item_id, makeId: m.make_id, drawingNo: m.drawing_no, name: m.name, makeName: m.make_name, quantity: m.quantity, price: m.price, discount: m.discount, unit: m.unit, storePrice: m.store_price }));
+  const res = await post(ERP.purchase.poDraftDetails, { po_id: po.id }, { schema: poDetailSchema });
+  return res.materials.map((m) => ({
+    itemId: m.item_id,
+    makeId: m.make_id,
+    drawingNo: m.drawing_no,
+    name: m.name,
+    makeName: m.make_name,
+    quantity: m.quantity,
+    price: m.price,
+    discount: m.discount,
+    unit: m.unit,
+    storePrice: m.store_price,
+  }));
 }
 
-export const fetchPoFinanceYears = async () => (await post('purchase/json/finance_year/', {}, { schema: financeYearsSchema })).financial_years;
+export const fetchPoFinanceYears = async () =>
+  (await post(ERP.purchase.financeYears, {}, { schema: financeYearsSchema })).financial_years;
 
 const poDate = (po: PurchaseOrder) => (po.draftedOn ?? '').slice(0, 10);
 const isJob = (po: PurchaseOrder) => (po.poType === 1 ? 'true' : 'false');
 
 export const fetchSupplierProfile = (po: PurchaseOrder, m: PoMaterial) =>
-  post('purchase/json/poMaterialDetail/', { item_id: m.itemId, party_id: po.supplierId, po_date: poDate(po), po_type: isJob(po) }, { schema: supplierProfileSchema });
+  post(
+    ERP.purchase.materialDetail,
+    { item_id: m.itemId, party_id: po.supplierId, po_date: poDate(po), po_type: isJob(po) },
+    { schema: supplierProfileSchema },
+  );
 
 export const fetchMaterialOverdue = async (po: PurchaseOrder, m: PoMaterial) =>
-  (await post('purchase/json/poMaterial_overDue/', { item_id: m.itemId, po_party_id: po.supplierId, po_date: poDate(po), po_type: isJob(po) }, { schema: outstandingSchema })).outstanding;
+  (
+    await post(
+      ERP.purchase.materialOverdue,
+      { item_id: m.itemId, po_party_id: po.supplierId, po_date: poDate(po), po_type: isJob(po) },
+      { schema: outstandingSchema },
+    )
+  ).outstanding;
 
-export const fetchMaterialStock = (itemId: string) => post('stores/json/material_stock/', { item_id: itemId }, { schema: materialStockSchema });
+export const fetchMaterialStock = (itemId: string) =>
+  post(ERP.stores.materialStock, { item_id: itemId }, { schema: materialStockSchema });
 
 export async function approvePO(po: PurchaseOrder, remarks: string) {
-  await postOk('purchase/json/po/approve/', { po_id: po.id, project_code: po.projectCode, remarks, approve_po_type: po.poType });
+  await postOk(ERP.purchase.approve, {
+    po_id: po.id,
+    project_code: po.projectCode,
+    remarks,
+    approve_po_type: po.poType,
+  });
 }
 export async function reviewPO(po: PurchaseOrder, remarks: string) {
-  await postOk('purchase/json/po/review/', { po_id: po.id, remarks });
+  await postOk(ERP.purchase.review, { po_id: po.id, remarks });
 }
 /** Server refuses to reject a PO that already has received material. */
 export async function checkCanRejectPO(po: PurchaseOrder) {
-  await postOk('purchase/json/po/checkpogrn/', { po_id: po.id });
+  await postOk(ERP.purchase.checkPoGrn, { po_id: po.id });
 }
 export async function rejectPO(po: PurchaseOrder, remarks: string) {
-  await postOk('purchase/json/po/reject/', { po_id: po.id, remarks });
+  await postOk(ERP.purchase.reject, { po_id: po.id, remarks });
 }

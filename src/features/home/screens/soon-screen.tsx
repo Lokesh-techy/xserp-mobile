@@ -2,6 +2,7 @@
 import * as WebBrowser from 'expo-web-browser';
 import { View } from 'react-native';
 
+import { ERP_WEB } from '@/core/api';
 import { env } from '@/core/config/env';
 import { makeStyles } from '@/core/theme';
 import { ScreenHeader, StateView, type IconName } from '@/ui';
@@ -16,11 +17,17 @@ export function SoonScreen({ title, icon }: { title: string; icon: IconName }) {
           icon={icon}
           title={`${title} is coming to mobile`}
           message="It's available today on XSERP web."
-          action={{ label: 'Open XSERP web', onPress: () => void WebBrowser.openBrowserAsync(`${env.serverUrl}/erp/`) }}
+          action={{
+            label: 'Open XSERP web',
+            onPress: () => void WebBrowser.openBrowserAsync(`${env.serverUrl}${ERP_WEB.home}`),
+          }}
         />
       </View>
     </View>
   );
 }
 
-const useStyles = makeStyles((t) => ({ root: { flex: 1, backgroundColor: t.colors.bg }, body: { padding: t.space.gutter } }));
+const useStyles = makeStyles((t) => ({
+  root: { flex: 1, backgroundColor: t.colors.bg },
+  body: { padding: t.space.gutter },
+}));

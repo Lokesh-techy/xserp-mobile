@@ -1,9 +1,19 @@
 /** @author Lokesh */
+import { ERP } from '@/core/api';
 import { can } from '@/core/permissions';
 import { defineApproval } from '@/features/approvals/engine';
 import { formatQty } from '@/core/utils';
 
-import { approvePO, checkCanRejectPO, fetchDraftPOs, fetchPoMaterials, rejectPO, reviewPO, type PoMaterial, type PurchaseOrder } from './api';
+import {
+  approvePO,
+  checkCanRejectPO,
+  fetchDraftPOs,
+  fetchPoMaterials,
+  rejectPO,
+  reviewPO,
+  type PoMaterial,
+  type PurchaseOrder,
+} from './api';
 import { MaterialSheet } from './components/material-sheet';
 import { OutstandingSection } from './components/outstanding-section';
 import { purchaseKeys } from './keys';
@@ -29,7 +39,15 @@ export const poApproval = defineApproval<PurchaseOrder, PoMaterial[]>({
     status: poStatus(po.status),
     meta: [
       ...(po.projectName ? [{ icon: 'briefcase-outline' as const, text: po.projectName }] : []),
-      ...(po.deliveryStatus ? [{ icon: 'car-outline' as const, text: po.deliveryStatus, tone: /delay|overdue|pending/i.test(po.deliveryStatus) ? ('warning' as const) : undefined }] : []),
+      ...(po.deliveryStatus
+        ? [
+            {
+              icon: 'car-outline' as const,
+              text: po.deliveryStatus,
+              tone: /delay|overdue|pending/i.test(po.deliveryStatus) ? ('warning' as const) : undefined,
+            },
+          ]
+        : []),
       ...(po.materialStatus ? [{ icon: 'cube-outline' as const, text: po.materialStatus }] : []),
       ...(po.poType === 1 ? [{ icon: 'construct-outline' as const, text: 'Job order' }] : []),
       ...(po.indentCode ? [{ icon: 'document-outline' as const, text: `Indent ${po.indentCode}` }] : []),
@@ -46,12 +64,50 @@ export const poApproval = defineApproval<PurchaseOrder, PoMaterial[]>({
       amount: m.quantity * m.price * (1 - m.discount / 100),
     })),
   lineSheet: MaterialSheet,
-  sections: [{ key: 'outstanding', title: 'Supplier outstanding', Component: OutstandingSection, visible: (_po, { session }) => can(session, 'ACCOUNTS', 'view') }],
-  document: (po) => ({ path: 'purchase/json/po_doc/', params: { po_id: po.id, po_type: po.poType }, filename: `${po.code || `PO-${po.id}`}.pdf` }),
+  sections: [
+    {
+      key: 'outstanding',
+      title: 'Supplier outstanding',
+      Component: OutstandingSection,
+      visible: (_po, { session }) => can(session, 'ACCOUNTS', 'view'),
+    },
+  ],
+  document: (po) => ({
+    path: ERP.purchase.poDoc,
+    params: { po_id: po.id, po_type: po.poType },
+    filename: `${po.code || `PO-${po.id}`}.pdf`,
+  }),
   actions: [
-    { id: 'approve', label: 'Approve', icon: 'checkmark-circle-outline', tone: 'success', remarks: 'optional', visible: (po) => po.status === 0 || po.status === 1, run: (po, r) => approvePO(po, r), done: 'approved' },
-    { id: 'review', label: 'Review', icon: 'eye-outline', tone: 'ghost', remarks: 'optional', visible: (po) => po.status === 0, run: (po, r) => reviewPO(po, r), done: 'marked reviewed' },
-    { id: 'update', label: 'Update', icon: 'refresh-outline', tone: 'primary', remarks: 'optional', visible: (po) => po.status === 2, run: (po, r) => approvePO(po, r), done: 'updated' },
+    {
+      id: 'approve',
+      label: 'Approve',
+      icon: 'checkmark-circle-outline',
+      tone: 'success',
+      remarks: 'optional',
+      visible: (po) => po.status === 0 || po.status === 1,
+      run: (po, r) => approvePO(po, r),
+      done: 'approved',
+    },
+    {
+      id: 'review',
+      label: 'Review',
+      icon: 'eye-outline',
+      tone: 'ghost',
+      remarks: 'optional',
+      visible: (po) => po.status === 0,
+      run: (po, r) => reviewPO(po, r),
+      done: 'marked reviewed',
+    },
+    {
+      id: 'update',
+      label: 'Update',
+      icon: 'refresh-outline',
+      tone: 'primary',
+      remarks: 'optional',
+      visible: (po) => po.status === 2,
+      run: (po, r) => approvePO(po, r),
+      done: 'updated',
+    },
     {
       id: 'reject',
       label: 'Reject',

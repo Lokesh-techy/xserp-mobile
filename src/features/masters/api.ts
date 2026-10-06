@@ -1,5 +1,5 @@
 /** @author Lokesh */
-import { post, postOk } from '@/core/api';
+import { post, postOk, ERP } from '@/core/api';
 import { materialStockSchema } from '@/core/erp';
 
 import { materialDetailSchema, partyDetailSchema, ratesSchema, type RateRow } from './schemas';
@@ -38,10 +38,14 @@ export const toRateRequest = (r: RateRow): RateRequest => ({
   remarks: r.remarks,
 });
 
-export const fetchPartyDetail = (id: string) => post('masters/json/party/detail/', { party_id: id }, { schema: partyDetailSchema });
-export const fetchMaterialDetail = (itemId: string, makeId: string) => post('masters/json/material/detail/', { item_id: itemId, make_id: makeId }, { schema: materialDetailSchema });
-export const fetchMaterialStock = (itemId: string) => post('stores/json/material_stock/', { item_id: itemId }, { schema: materialStockSchema });
-export const fetchPendingRates = async () => (await post('masters/json/material/supplierPrices/', {}, { schema: ratesSchema })).supplier_prices.map(toRateRequest);
+export const fetchPartyDetail = (id: string) =>
+  post(ERP.masters.partyDetail, { party_id: id }, { schema: partyDetailSchema });
+export const fetchMaterialDetail = (itemId: string, makeId: string) =>
+  post(ERP.masters.materialDetail, { item_id: itemId, make_id: makeId }, { schema: materialDetailSchema });
+export const fetchMaterialStock = (itemId: string) =>
+  post(ERP.stores.materialStock, { item_id: itemId }, { schema: materialStockSchema });
+export const fetchPendingRates = async () =>
+  (await post(ERP.masters.supplierPrices, {}, { schema: ratesSchema })).supplier_prices.map(toRateRequest);
 
 const rateParams = (r: RateRequest, remarks: string) => ({
   item_id: r.itemId,
@@ -57,8 +61,8 @@ const rateParams = (r: RateRequest, remarks: string) => ({
 });
 
 export async function approveRate(r: RateRequest, remarks: string) {
-  await postOk('masters/json/material/approveRate/', rateParams(r, remarks));
+  await postOk(ERP.masters.approveRate, rateParams(r, remarks));
 }
 export async function rejectRate(r: RateRequest, remarks: string) {
-  await postOk('masters/json/material/rejectRate/', { ...rateParams(r, r.remarks), is_approved: false, reject_remarks: remarks });
+  await postOk(ERP.masters.rejectRate, { ...rateParams(r, r.remarks), is_approved: false, reject_remarks: remarks });
 }

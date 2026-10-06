@@ -5,6 +5,7 @@ type AppEnv = 'dev' | 'qa' | 'prod';
 
 const APP_ENV = (process.env.APP_ENV ?? 'dev') as AppEnv;
 
+// Hosts must match src/core/config/servers.ts (Expo can't import TS from here). Used for deep links.
 const environments: Record<AppEnv, { name: string; suffix: string; serverUrl: string }> = {
   dev: { name: 'XSERP Dev', suffix: '.dev', serverUrl: 'https://dev.xserp.in' },
   qa: { name: 'XSERP QA', suffix: '.qa', serverUrl: 'https://qa.xserp.in' },

@@ -1,10 +1,18 @@
 /** @author Lokesh */
-import { anyOr, post, postOk } from '@/core/api';
+import { anyOr, post, postOk, ERP } from '@/core/api';
 import { agingSchema, financeYearsSchema, outstandingSchema } from '@/core/erp';
 import { lastDays, rangeParams, type DateRange } from '@/core/utils';
 import { z } from 'zod';
 
-import { invoiceListSchema, oaListSchema, salesDashboardSchema, salesDetailSchema, salesMaterialsSchema, type InvoiceRow, type OaRow } from './schemas';
+import {
+  invoiceListSchema,
+  oaListSchema,
+  salesDashboardSchema,
+  salesDetailSchema,
+  salesMaterialsSchema,
+  type InvoiceRow,
+  type OaRow,
+} from './schemas';
 
 export type Invoice = {
   id: string;
@@ -44,10 +52,39 @@ export type OA = {
   attached: boolean;
 };
 
-export type SalesMaterial = { key: string; itemId: string; makeId: string; name: string; drawingNo: string; makeName: string; quantity: number; rate: number; discount: number; unit: string };
+export type SalesMaterial = {
+  key: string;
+  itemId: string;
+  makeId: string;
+  name: string;
+  drawingNo: string;
+  makeName: string;
+  quantity: number;
+  rate: number;
+  discount: number;
+  unit: string;
+};
 
-export type SalesFilters = { kind: 'invoice' | 'oa'; range: DateRange; status: string; partyId: string | null; projectCode: string | null; itemId: string | null; financeYear: string; number: string };
-export const DEFAULT_SALES_FILTERS = (kind: SalesFilters['kind'] = 'invoice'): SalesFilters => ({ kind, range: lastDays(30), status: '100', partyId: null, projectCode: null, itemId: null, financeYear: '-1', number: '' });
+export type SalesFilters = {
+  kind: 'invoice' | 'oa';
+  range: DateRange;
+  status: string;
+  partyId: string | null;
+  projectCode: string | null;
+  itemId: string | null;
+  financeYear: string;
+  number: string;
+};
+export const DEFAULT_SALES_FILTERS = (kind: SalesFilters['kind'] = 'invoice'): SalesFilters => ({
+  kind,
+  range: lastDays(30),
+  status: '100',
+  partyId: null,
+  projectCode: null,
+  itemId: null,
+  financeYear: '-1',
+  number: '',
+});
 
 export const toInvoice = (r: InvoiceRow): Invoice => ({
   id: r.id,
@@ -88,17 +125,38 @@ export const toOA = (r: OaRow): OA => ({
 });
 
 const toMaterials = (res: z.infer<typeof salesMaterialsSchema>): SalesMaterial[] =>
-  res.materials.map((m) => ({ key: `${m.item_id}:${m.make_id}`, itemId: m.item_id, makeId: m.make_id, name: m.name, drawingNo: m.drawing_no, makeName: m.make_name, quantity: m.quantity, rate: m.rate || m.price, discount: m.discount, unit: m.unit }));
+  res.materials.map((m) => ({
+    key: `${m.item_id}:${m.make_id}`,
+    itemId: m.item_id,
+    makeId: m.make_id,
+    name: m.name,
+    drawingNo: m.drawing_no,
+    makeName: m.make_name,
+    quantity: m.quantity,
+    rate: m.rate || m.price,
+    discount: m.discount,
+    unit: m.unit,
+  }));
 
-export const fetchSalesDashboard = () => post('sales/json/dashboard/', {}, { schema: salesDashboardSchema });
-export const fetchSalesDetail = (range: DateRange) => post('sales/json/salesDetail/', rangeParams(range, ['from_date', 'to_date']), { schema: salesDetailSchema });
+export const fetchSalesDashboard = () => post(ERP.sales.dashboard, {}, { schema: salesDashboardSchema });
+export const fetchSalesDetail = (range: DateRange) =>
+  post(ERP.sales.salesDetail, rangeParams(range, ['from_date', 'to_date']), { schema: salesDetailSchema });
 const receivableSchema = z.looseObject({ receivable_aging: agingSchema.nullish() });
-export const fetchReceivableAging = async () => (await post('accounts/json/aging/', {}, { schema: receivableSchema })).receivable_aging ?? null;
+export const fetchReceivableAging = async () =>
+  (await post(ERP.accounts.aging, {}, { schema: receivableSchema })).receivable_aging ?? null;
 
 export async function searchInvoices(f: SalesFilters): Promise<Invoice[]> {
   const res = await post(
-    'sales/json/invoiceSearch/',
-    { ...rangeParams(f.range), invoiceNo: anyOr(f.number), customerId: anyOr(f.partyId), project_code: anyOr(f.projectCode), item_id: anyOr(f.itemId), status: f.status, finance_year: f.financeYear === '-1' ? 'All' : f.financeYear },
+    ERP.sales.invoiceSearch,
+    {
+      ...rangeParams(f.range),
+      invoiceNo: anyOr(f.number),
+      customerId: anyOr(f.partyId),
+      project_code: anyOr(f.projectCode),
+      item_id: anyOr(f.itemId),
+      status: f.status,
+      finance_year: f.financeYear === '-1' ? 'All' : f.financeYear,
+    },
     { schema: invoiceListSchema, timeoutMs: 90_000 },
   );
   return res.invoice_list.map(toInvoice);
@@ -106,21 +164,36 @@ export async function searchInvoices(f: SalesFilters): Promise<Invoice[]> {
 
 export async function searchOAs(f: SalesFilters): Promise<OA[]> {
   const res = await post(
-    'sales/json/oa_search/',
-    { ...rangeParams(f.range), oa_no: anyOr(f.number), supplier_id: anyOr(f.partyId), project_code: anyOr(f.projectCode), item_id: anyOr(f.itemId), status: f.status, finance_year: f.financeYear === '-1' ? 'All' : f.financeYear },
+    ERP.sales.oaSearch,
+    {
+      ...rangeParams(f.range),
+      oa_no: anyOr(f.number),
+      supplier_id: anyOr(f.partyId),
+      project_code: anyOr(f.projectCode),
+      item_id: anyOr(f.itemId),
+      status: f.status,
+      finance_year: f.financeYear === '-1' ? 'All' : f.financeYear,
+    },
     { schema: oaListSchema, timeoutMs: 90_000 },
   );
   return res.oa_list.map(toOA);
 }
 
-export const fetchInvoiceFinanceYears = async () => (await post('sales/json/finance_year/', {}, { schema: financeYearsSchema })).financial_years;
-export const fetchOaFinanceYears = async () => (await post('sales/json/oa_finance_year/', {}, { schema: financeYearsSchema })).financial_years;
+export const fetchInvoiceFinanceYears = async () =>
+  (await post(ERP.sales.invoiceFinanceYears, {}, { schema: financeYearsSchema })).financial_years;
+export const fetchOaFinanceYears = async () =>
+  (await post(ERP.sales.oaFinanceYears, {}, { schema: financeYearsSchema })).financial_years;
 
-export const fetchDraftInvoices = async () => (await post('sales/json/draft_invoice_fetch/', {}, { schema: invoiceListSchema })).invoice_list.map(toInvoice);
-export const fetchDraftOAs = async () => (await post('sales/json/draft_oa/', {}, { schema: oaListSchema })).oa_list.map(toOA);
-export const fetchInvoiceMaterials = async (inv: Invoice) => toMaterials(await post('sales/json/invoice_material/', { invoice_id: inv.id }, { schema: salesMaterialsSchema }));
-export const fetchOaMaterials = async (oa: OA) => toMaterials(await post('sales/json/oa_material/', { oa_id: oa.id }, { schema: salesMaterialsSchema }));
-export const fetchPartyOverdue = async (partyId: string) => (await post('sales/json/invoice_material_overdue/', { party_id: partyId }, { schema: outstandingSchema })).outstanding;
+export const fetchDraftInvoices = async () =>
+  (await post(ERP.sales.draftInvoices, {}, { schema: invoiceListSchema })).invoice_list.map(toInvoice);
+export const fetchDraftOAs = async () =>
+  (await post(ERP.sales.draftOAs, {}, { schema: oaListSchema })).oa_list.map(toOA);
+export const fetchInvoiceMaterials = async (inv: Invoice) =>
+  toMaterials(await post(ERP.sales.invoiceMaterials, { invoice_id: inv.id }, { schema: salesMaterialsSchema }));
+export const fetchOaMaterials = async (oa: OA) =>
+  toMaterials(await post(ERP.sales.oaMaterials, { oa_id: oa.id }, { schema: salesMaterialsSchema }));
+export const fetchPartyOverdue = async (partyId: string) =>
+  (await post(ERP.sales.partyOverdue, { party_id: partyId }, { schema: outstandingSchema })).outstanding;
 
 export async function approveInvoice(inv: Invoice, remarks: string) {
   await postOk('sales/invoice/approve/', { invoice_id: inv.id, remarks });
@@ -133,7 +206,7 @@ export async function approveOA(oa: OA, remarks: string) {
 }
 /** Server refuses to reject an OA that has invoiced quantity. */
 export async function checkCanRejectOA(oa: OA) {
-  await postOk('sales/json/oa/checkoainvoice_qty/', { oa_id: oa.id });
+  await postOk(ERP.sales.checkOaInvoiceQty, { oa_id: oa.id });
 }
 export async function rejectOA(oa: OA, remarks: string) {
   await postOk('sales/oa/reject/', { oa_id: oa.id, remarks });

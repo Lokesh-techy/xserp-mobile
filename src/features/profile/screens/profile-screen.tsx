@@ -10,6 +10,7 @@ import { Alert, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { displayName, initials, logout, useSession, useSessionStore } from '@/core/auth';
+import { ERP_WEB } from '@/core/api';
 import { env, serverHost } from '@/core/config/env';
 import { makeStyles, useTheme, type Theme } from '@/core/theme';
 import { formatDate } from '@/core/utils';
@@ -18,13 +19,26 @@ import { GlassIconButton, goBack, PressableScale, Section, Text, type IconName }
 import { AppearanceControl } from '../components/appearance-control';
 import { ChangePasswordSheet } from '../components/change-password-sheet';
 
-function Row({ icon, label, value, onPress, tone }: { icon: IconName; label: string; value?: string; onPress?: () => void; tone?: 'danger' }) {
+function Row({
+  icon,
+  label,
+  value,
+  onPress,
+  tone,
+}: {
+  icon: IconName;
+  label: string;
+  value?: string;
+  onPress?: () => void;
+  tone?: 'danger';
+}) {
   const t = useTheme();
   const styles = useStyles();
   const fg = tone === 'danger' ? t.colors.danger : t.colors.onPrimarySoft;
   return (
     <PressableScale onPress={onPress} disabled={!onPress} style={styles.row} scaleTo={0.99}>
-      <View style={[styles.rowIcon, { backgroundColor: tone === 'danger' ? t.colors.dangerSoft : t.colors.primarySoft }]}>
+      <View
+        style={[styles.rowIcon, { backgroundColor: tone === 'danger' ? t.colors.dangerSoft : t.colors.primarySoft }]}>
         <Ionicons name={icon} size={18} color={fg} />
       </View>
       <View style={styles.flex}>
@@ -67,7 +81,11 @@ export function ProfileScreen() {
     <View style={styles.root}>
       <StatusBar style="light" />
       <ScrollView contentContainerStyle={styles.scroll}>
-        <LinearGradient colors={t.gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.hero, { paddingTop: insets.top + 8 }]}>
+        <LinearGradient
+          colors={t.gradients.brand}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.hero, { paddingTop: insets.top + 8 }]}>
           <View style={styles.top}>
             <GlassIconButton icon="chevron-down" onPress={goBack} accessibilityLabel="Close" />
           </View>
@@ -92,20 +110,36 @@ export function ProfileScreen() {
           <Section title="Account">
             <View style={styles.group}>
               {user.isSuper && <Row icon="star-outline" label="Administrator" value="Full access to every module" />}
-              {(sub.plan || sub.expiredOn) && <Row icon="ribbon-outline" label={sub.plan ? `${sub.plan} plan` : 'Subscription'} value={sub.expiredOn ? `${sub.isExpired ? 'Expired' : 'Renews'} ${formatDate(sub.expiredOn)}` : undefined} />}
+              {(sub.plan || sub.expiredOn) && (
+                <Row
+                  icon="ribbon-outline"
+                  label={sub.plan ? `${sub.plan} plan` : 'Subscription'}
+                  value={
+                    sub.expiredOn ? `${sub.isExpired ? 'Expired' : 'Renews'} ${formatDate(sub.expiredOn)}` : undefined
+                  }
+                />
+              )}
               <Row icon="key-outline" label="Change password" onPress={() => setPwOpen(true)} />
             </View>
           </Section>
           <Section title="About">
             <View style={styles.group}>
-              <Row icon="server-outline" label="Server" value={`${serverHost} · ${env.appEnv.toUpperCase()}`} />
+              <Row icon="server-outline" label="Server" value={`${serverHost} · ${env.serverLabel}`} />
               <Row
                 icon="information-circle-outline"
                 label="Version"
                 value={`${Application.nativeApplicationVersion ?? '3.0.0'} (${Application.nativeBuildVersion ?? '66'}) · ${Updates.updateId ? Updates.updateId.slice(0, 8) : 'embedded'}`}
               />
-              <Row icon="document-text-outline" label="Terms of service" onPress={() => void WebBrowser.openBrowserAsync(`${env.serverUrl}/erp/public/terms/`)} />
-              <Row icon="lock-closed-outline" label="Privacy policy" onPress={() => void WebBrowser.openBrowserAsync(`${env.serverUrl}/erp/public/privacy/`)} />
+              <Row
+                icon="document-text-outline"
+                label="Terms of service"
+                onPress={() => void WebBrowser.openBrowserAsync(`${env.serverUrl}${ERP_WEB.terms}`)}
+              />
+              <Row
+                icon="lock-closed-outline"
+                label="Privacy policy"
+                onPress={() => void WebBrowser.openBrowserAsync(`${env.serverUrl}${ERP_WEB.privacy}`)}
+              />
             </View>
           </Section>
           <Section title="Session">
@@ -123,13 +157,34 @@ export function ProfileScreen() {
 const useStyles = makeStyles((t: Theme) => ({
   root: { flex: 1, backgroundColor: t.colors.bg },
   scroll: { paddingBottom: 48 },
-  hero: { alignItems: 'center', paddingHorizontal: 22, paddingBottom: 30, borderBottomLeftRadius: 32, borderBottomRightRadius: 32, gap: 4 },
+  hero: {
+    alignItems: 'center',
+    paddingHorizontal: 22,
+    paddingBottom: 30,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    gap: 4,
+  },
   top: { alignSelf: 'stretch', flexDirection: 'row', justifyContent: 'flex-end' },
   ring: { width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  avatar: { width: 86, height: 86, borderRadius: 43, backgroundColor: t.colors.white, alignItems: 'center', justifyContent: 'center' },
+  avatar: {
+    width: 86,
+    height: 86,
+    borderRadius: 43,
+    backgroundColor: t.colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   body: { paddingHorizontal: t.space.gutter },
   group: { backgroundColor: t.colors.surface, borderRadius: t.radius.lg, paddingHorizontal: 14, ...t.shadow.card },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: t.colors.divider },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: t.colors.divider,
+  },
   rowIcon: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   flex: { flex: 1, gap: 2 },
 }));
