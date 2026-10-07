@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { errorMessage } from '@/core/api';
 import { login, useSessionStore } from '@/core/auth';
-import { serverHost } from '@/core/config/env';
+import { env } from '@/core/config/env';
 import { enter, makeStyles, useTheme } from '@/core/theme';
 import { errorFeedback } from '@/core/utils';
 import { AmbientBackground, Button, Input, Text, XMark } from '@/ui';
@@ -97,7 +97,7 @@ export function LoginScreen() {
           <View style={styles.footer}>
             <View style={[styles.dot, { backgroundColor: t.alpha.liveDot }]} />
             <Text variant="caption" color={t.alpha.onGradientFaint}>
-              {serverHost} · v{Application.nativeApplicationVersion ?? '3.0.0'}
+              {env.serverLabel} · v{Application.nativeApplicationVersion ?? '3.0.0'}
             </Text>
           </View>
         </ScrollView>

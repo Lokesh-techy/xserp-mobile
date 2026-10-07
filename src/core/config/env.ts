@@ -37,5 +37,3 @@ export const erpUrl = (path: string) => `${env.serverUrl}/erp/${path.replace(/^\
 
 /** `mobileApiUrl('auth/login')` → `https://dev.xserp.in/api/v1/auth/login` */
 export const mobileApiUrl = (path: string) => `${env.mobileApiUrl}/${path.replace(/^\/+/, '')}`;
-
-export const serverHost = erpBase.replace(/^https?:\/\//, '');

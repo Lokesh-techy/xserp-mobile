@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { displayName, initials, logout, useSession, useSessionStore } from '@/core/auth';
 import { ERP_WEB } from '@/core/api';
-import { env, serverHost } from '@/core/config/env';
+import { env } from '@/core/config/env';
 import { makeStyles, useTheme, type Theme } from '@/core/theme';
 import { formatDate } from '@/core/utils';
 import { GlassIconButton, goBack, PressableScale, Section, Text, type IconName } from '@/ui';
@@ -124,7 +124,7 @@ export function ProfileScreen() {
           </Section>
           <Section title="About">
             <View style={styles.group}>
-              <Row icon="server-outline" label="Server" value={`${serverHost} · ${env.serverLabel}`} />
+              <Row icon="server-outline" label="Server" value={env.serverLabel} />
               <Row
                 icon="information-circle-outline"
                 label="Version"
