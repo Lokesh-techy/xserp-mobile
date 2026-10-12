@@ -1,8 +1,9 @@
 /** @author Lokesh */
-import { View } from 'react-native';
+import SegmentedControl from '@react-native-segmented-control/segmented-control';
+import * as Haptics from 'expo-haptics';
+import { Platform } from 'react-native';
 
 import { makeStyles, useTheme, useThemePreference, type ThemePreference } from '@/core/theme';
-import { PressableScale, Text } from '@/ui';
 
 const OPTIONS: { value: ThemePreference; label: string }[] = [
   { value: 'system', label: 'System' },
@@ -10,29 +11,45 @@ const OPTIONS: { value: ThemePreference; label: string }[] = [
   { value: 'dark', label: 'Dark' },
 ];
 
-/** Segmented System / Light / Dark switch — applies instantly, no restart. */
+/**
+ * System / Light / Dark on the platform's own segmented control: on iOS it is UIKit's, so it takes the
+ * system look (Liquid Glass on iOS 26) untouched; Android gets the brand colours. Applies instantly.
+ */
 export function AppearanceControl() {
   const t = useTheme();
   const styles = useStyles();
   const { preference, setPreference } = useThemePreference();
+  const index = Math.max(
+    0,
+    OPTIONS.findIndex((o) => o.value === preference),
+  );
+  const ios = Platform.OS === 'ios';
   return (
-    <View style={styles.track} accessibilityRole="radiogroup">
-      {OPTIONS.map((o) => {
-        const active = o.value === preference;
-        return (
-          <PressableScale key={o.value} onPress={() => setPreference(o.value)} style={[styles.segment, active && styles.active]} accessibilityRole="radio" accessibilityState={{ selected: active }}>
-            <Text variant="label" color={active ? t.colors.white : t.colors.textMuted}>
-              {o.label}
-            </Text>
-          </PressableScale>
-        );
-      })}
-    </View>
+    <SegmentedControl
+      values={OPTIONS.map((o) => o.label)}
+      selectedIndex={index}
+      onChange={(e) => {
+        const o = OPTIONS[e.nativeEvent.selectedSegmentIndex];
+        if (!o || o.value === preference) return;
+        void Haptics.selectionAsync().catch(() => {});
+        setPreference(o.value);
+      }}
+      appearance={t.dark ? 'dark' : 'light'}
+      style={styles.control}
+      // iOS: leave the system styling alone. Android: brand-tinted to match the rest of the app.
+      {...(ios
+        ? {}
+        : {
+            tintColor: t.colors.primary,
+            backgroundColor: t.colors.fill,
+            fontStyle: { color: t.colors.textMuted, fontFamily: t.fonts.semibold },
+            activeFontStyle: { color: t.colors.white, fontFamily: t.fonts.bold },
+          })}
+      accessibilityLabel="Appearance"
+    />
   );
 }
 
-const useStyles = makeStyles((t) => ({
-  track: { flexDirection: 'row', backgroundColor: t.colors.fill, borderRadius: t.radius.sm, padding: 3, gap: 3 },
-  segment: { flex: 1, height: 36, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  active: { backgroundColor: t.colors.primary },
+const useStyles = makeStyles(() => ({
+  control: { height: 36 },
 }));

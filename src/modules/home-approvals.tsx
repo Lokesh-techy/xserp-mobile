@@ -14,7 +14,7 @@ export function HomeApprovals() {
   const syncing = useLastSync((s) => s.syncing);
   if (!feed.enabled && !claims.enabled) return null;
   const groups = [
-    ...summarizeByType(feed.entries).map((g) => ({ key: g.type, label: g.label, tint: approvalTints[g.type], count: g.count })),
+    ...summarizeByType(feed.entries).map((g) => ({ key: g.type, label: g.label, tint: approvalTints[g.type], count: g.count, value: g.value, foreign: g.foreign })),
     ...(claims.enabled && claims.count > 0 ? [{ key: 'expenses', label: 'Claims', tint: approvalTints.expenses, count: claims.count, direct: () => router.push('/expenses?tab=confirmed') }] : []),
   ];
   return (

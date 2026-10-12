@@ -7,20 +7,50 @@ import { makeStyles, useTheme } from '@/core/theme';
 import { formatDate, formatMoney, formatQty } from '@/core/utils';
 import { KeyValue, ListSkeleton, Section, StatusPill, Text } from '@/ui';
 
-import { fetchMaterialOverdue, fetchMaterialStock, fetchSupplierProfile, type PoMaterial, type PurchaseOrder } from '../api';
+import {
+  fetchMaterialOverdue,
+  fetchMaterialStock,
+  fetchSupplierProfile,
+  type PoMaterial,
+  type PurchaseOrder,
+} from '../api';
 import { purchaseKeys } from '../keys';
 
-const RATE_STATUS = { 1: { label: 'Approved', tone: 'success' }, 0: { label: 'Pending', tone: 'warning' }, [-1]: { label: 'Rejected', tone: 'danger' } } as const;
+const RATE_STATUS = {
+  1: { label: 'Approved', tone: 'success' },
+  0: { label: 'Pending', tone: 'warning' },
+  [-1]: { label: 'Rejected', tone: 'danger' },
+} as const;
 
 /** XSManager's PO material dialog: rate, supplier price history, stock and supplier outstanding. */
-export function MaterialSheet({ item, lineKey, detail }: { item: PurchaseOrder; lineKey: string; detail: PoMaterial[] | undefined }) {
+export function MaterialSheet({
+  item,
+  lineKey,
+  detail,
+}: {
+  item: PurchaseOrder;
+  lineKey: string;
+  detail: PoMaterial[] | undefined;
+}) {
   const t = useTheme();
   const styles = useStyles();
   const canSeeAccounts = useCan('ACCOUNTS', 'view');
   const m = detail?.find((x) => `${x.itemId}:${x.makeId}` === lineKey);
-  const profile = useQuery({ queryKey: purchaseKeys.profile(item.id, m?.itemId ?? ''), queryFn: () => fetchSupplierProfile(item, m!), enabled: !!m });
-  const stock = useQuery({ queryKey: purchaseKeys.stock(m?.itemId ?? ''), queryFn: () => fetchMaterialStock(m!.itemId), enabled: !!m });
-  const overdue = useQuery({ queryKey: purchaseKeys.overdue(item.id, m?.itemId ?? ''), queryFn: () => fetchMaterialOverdue(item, m!), enabled: !!m && canSeeAccounts });
+  const profile = useQuery({
+    queryKey: purchaseKeys.profile(item.id, m?.itemId ?? ''),
+    queryFn: () => fetchSupplierProfile(item, m!),
+    enabled: !!m,
+  });
+  const stock = useQuery({
+    queryKey: purchaseKeys.stock(m?.itemId ?? ''),
+    queryFn: () => fetchMaterialStock(m!.itemId),
+    enabled: !!m,
+  });
+  const overdue = useQuery({
+    queryKey: purchaseKeys.overdue(item.id, m?.itemId ?? ''),
+    queryFn: () => fetchMaterialOverdue(item, m!),
+    enabled: !!m && canSeeAccounts,
+  });
   if (!m) return null;
   const closing = stock.data?.closing_stock ?? stock.data?.material_stock.reduce((s, r) => s + r.closing_stock, 0) ?? 0;
 
@@ -85,6 +115,13 @@ export function MaterialSheet({ item, lineKey, detail }: { item: PurchaseOrder; 
 
 const useStyles = makeStyles((t) => ({
   body: { paddingHorizontal: 20, paddingBottom: 24, gap: 6 },
-  price: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: t.colors.divider },
+  price: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: t.colors.divider,
+  },
   flex: { flex: 1, gap: 2 },
 }));

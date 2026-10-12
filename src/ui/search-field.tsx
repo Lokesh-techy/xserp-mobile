@@ -1,10 +1,11 @@
 /** @author Lokesh */
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Pressable, TextInput, View } from 'react-native';
+import { TextInput, View } from 'react-native';
 
 import { markActive } from '@/core/auth/idle-timeout';
 import { makeStyles, useTheme } from '@/core/theme';
+import { PressableScale } from './pressable-scale';
 
 type Props = {
   value: string;
@@ -40,9 +41,9 @@ export function SearchField({ value, onChangeText, placeholder = 'Search', autoF
         style={[styles.input, filled && styles.inputFilled]}
       />
       {!!value && (
-        <Pressable hitSlop={10} onPress={() => onChangeText('')} accessibilityLabel="Clear search">
+        <PressableScale hitSlop={10} onPress={() => onChangeText('')} accessibilityLabel="Clear search">
           <Ionicons name="close-circle" size={18} color={t.colors.textFaint} />
-        </Pressable>
+        </PressableScale>
       )}
     </View>
   );

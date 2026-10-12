@@ -44,3 +44,13 @@ export function toReviewRows(entries: ReviewEntry[], now = new Date()): ReviewRo
   }
   return rows;
 }
+
+/**
+ * `DRAFT#PO/53831` → `{ tag: 'DRAFT', number: 'PO/53831' }`. xserp prefixes unnumbered documents
+ * (DRAFT#, TMP#, PF#…); the list shows that as a small tag so the number itself reads first.
+ */
+export function splitCode(code: string): { tag: string | null; number: string } {
+  const m = /^([A-Za-z]+)#(.+)$/.exec(code.trim());
+  if (!m) return { tag: null, number: code.trim() };
+  return { tag: m[1]!.toUpperCase(), number: m[2]! };
+}

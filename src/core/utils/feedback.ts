@@ -2,11 +2,10 @@
 import * as Haptics from 'expo-haptics';
 import { Platform, Vibration } from 'react-native';
 
-/** Android haptics are silent when touch vibration is off, so a short vibration is sent alongside. */
+/** A crisp system tick, not a motor buzz; it follows the phone's touch-feedback setting. */
 export function tapFeedback() {
   if (Platform.OS === 'android') {
     Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Virtual_Key).catch(() => {});
-    Vibration.vibrate(20);
   } else {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
   }

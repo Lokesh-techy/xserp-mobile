@@ -1,6 +1,6 @@
 /** @author Lokesh */
 import { Ionicons } from '@expo/vector-icons';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -83,10 +83,10 @@ const useStyles = makeStyles((t) => ({
     right: t.space.gutter,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: t.colors.surface,
+    backgroundColor: t.colors.surfaceRaised,
     borderRadius: t.radius.lg,
-    borderWidth: 1,
-    borderColor: t.colors.border,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: t.colors.edgeLight,
     paddingVertical: 8,
     paddingHorizontal: 6,
     ...t.shadow.lifted,

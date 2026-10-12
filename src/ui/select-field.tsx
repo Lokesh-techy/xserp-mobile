@@ -1,7 +1,7 @@
 /** @author Lokesh */
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { makeStyles, useTheme } from '@/core/theme';
 
@@ -68,9 +68,9 @@ export function SelectField({
           )}
         </View>
         {picked ? (
-          <Pressable hitSlop={12} onPress={() => onChange('')} accessibilityLabel={`Clear ${label}`}>
+          <PressableScale hitSlop={12} onPress={() => onChange('')} accessibilityLabel={`Clear ${label}`}>
             <Ionicons name="close-circle" size={20} color={t.colors.textFaint} />
-          </Pressable>
+          </PressableScale>
         ) : (
           <Ionicons name={icon} size={18} color={t.colors.textFaint} />
         )}

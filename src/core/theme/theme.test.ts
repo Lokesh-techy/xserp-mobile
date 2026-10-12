@@ -20,12 +20,12 @@ describe('themes', () => {
     expect(themes.light.gradients.header).toEqual(themes.dark.gradients.header);
   });
   it('switches neutrals per scheme', () => {
-    expect(themes.light.colors.bg).toBe('#F4F7FB');
-    expect(themes.dark.colors.bg).toBe('#0A111D');
+    expect(themes.light.colors.bg).toBe('#F2F4F8');
+    expect(themes.dark.colors.bg).toBe('#070B12');
     expect(themes.dark.dark).toBe(true);
   });
   it('maps tones to palette colours', () => {
-    expect(toneColors(themes.light, 'success')).toEqual({ bg: '#E4F5EF', fg: '#1D9D74' });
-    expect(toneColors(themes.dark, 'warning')).toEqual({ bg: '#33270F', fg: '#F2B84B' });
+    expect(toneColors(themes.light, 'success')).toEqual({ bg: '#E8F5EF', fg: '#12775A' });
+    expect(toneColors(themes.dark, 'warning')).toEqual({ bg: '#2A2010', fg: '#F2B84B' });
   });
 });

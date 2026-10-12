@@ -1,10 +1,11 @@
 /** @author Lokesh */
 import type { ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { makeStyles, useTheme } from '@/core/theme';
 
 import { Text } from './text';
+import { PressableScale } from './pressable-scale';
 
 export function Section({
   title,
@@ -24,11 +25,11 @@ export function Section({
           {title}
         </Text>
         {action && (
-          <Pressable hitSlop={10} onPress={action.onPress}>
+          <PressableScale hitSlop={10} onPress={action.onPress}>
             <Text variant="label" color={t.colors.accent}>
               {action.label}
             </Text>
-          </Pressable>
+          </PressableScale>
         )}
       </View>
       {children}

@@ -10,7 +10,7 @@ const wrapper = ({ children }: { children: ReactNode }) => <ThemeProvider initia
 
 test('builds styles from the active theme and memoises them', async () => {
   const { result, rerender } = await renderHook(() => useStyles(), { wrapper });
-  expect(result.current.root.backgroundColor).toBe('#0A111D');
+  expect(result.current.root.backgroundColor).toBe('#070B12');
   const first = result.current;
   await rerender({});
   expect(result.current).toBe(first);

@@ -16,6 +16,32 @@ export const salesDashboardSchema = z.looseObject({
   payment_collection: zList(monthly),
 });
 
+/**
+ * One stage of open OAs or unpaid invoices: how many, the money still outstanding (`value`), the documents' full
+ * amount (`total`) and what has been invoiced / received against it (`done`), and how many are late.
+ */
+const stageSchema = z.looseObject({ count: zNum, value: zNum, total: zNum.optional(), done: zNum.optional(), on_track: zNum, late: zNum, late_value: zNum });
+
+/** oa_status: approved OAs not yet fully invoiced, by delivery date; newer servers also split by invoicing stage. */
+export const oaStatusSchema = z.looseObject({
+  oa_pending: zNum,
+  oa_on_track: zNum,
+  oa_overdue: zNum,
+  not_invoiced: stageSchema.optional(),
+  part_invoiced: stageSchema.optional(),
+});
+
+/** invoice_status: approved invoices still awaiting payment, on track vs past their due date. */
+export const invoiceStatusSchema = z.looseObject({
+  invoice_open: zNum,
+  invoice_on_track: zNum,
+  invoice_overdue: zNum,
+  open_value: zNum,
+  overdue_value: zNum,
+  unpaid: stageSchema.optional(),
+  part_paid: stageSchema.optional(),
+});
+
 export const salesDetailSchema = z.looseObject({ oa_on_track: zNum, oa_delayed: zNum, collection_on_time: zNum, collection_delayed: zNum });
 
 export const invoiceSchema = z.looseObject({

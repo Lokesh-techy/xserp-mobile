@@ -69,3 +69,10 @@ export const rateRowSchema = z.looseObject({
 });
 export type RateRow = z.infer<typeof rateRowSchema>;
 export const ratesSchema = z.looseObject({ supplier_prices: zList(rateRowSchema) });
+
+/** dashboard: parties by role and status, materials by kind and gaps, material categories (in-use count). */
+export const mastersDashboardSchema = z.looseObject({
+  parties: z.looseObject({ total: zNum, active: zNum, inactive: zNum, customers: zNum, suppliers: zNum, both: zNum, other: zNum }),
+  materials: z.looseObject({ total: zNum, in_use: zNum, not_in_use: zNum, stocked: zNum, non_stock: zNum, services: zNum, no_price: zNum, added_this_month: zNum }),
+  categories: zList(z.looseObject({ name: zStr, count: zNum })),
+});

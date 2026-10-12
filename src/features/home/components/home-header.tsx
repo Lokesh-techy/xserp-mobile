@@ -159,7 +159,7 @@ export function HomeActions({ scrollY, pull }: { scrollY: SharedValue<number>; p
   });
   return (
     <Animated.View style={[styles.actions, { top: insets.top + BIG_TOP, width }, morph]}>
-      <GlassIconButton icon="notifications-outline" size={BIG} badge={unread} onPress={() => router.push('/notifications')} accessibilityLabel="Notifications" />
+      <GlassIconButton icon="notifications-outline" size={BIG} badge={unread} ringing={unread > 0} onPress={() => router.push('/notifications')} accessibilityLabel={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'} />
       <PressableScale onPress={() => router.push('/profile')} style={styles.avatar} accessibilityLabel="Profile">
         <Text variant="label" weight="extrabold" color={t.colors.primary}>
           {initials(user) || 'U'}

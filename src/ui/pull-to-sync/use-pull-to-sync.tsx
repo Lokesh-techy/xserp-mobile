@@ -61,6 +61,32 @@ type IndicatorProps = {
 
 const noStatus = () => null;
 
+type NativeGesture = ReturnType<typeof Gesture.Native>;
+
+/**
+ * One list's pull: its own native (scroll) gesture and the pan that runs alongside it, made once for the life
+ * of that list. Sharing one native gesture across lists breaks on a tab switch — the new list attaches it
+ * before the old one detaches it, the scroll view then wins every drag, and the pull never activates again.
+ */
+function PullSurface({ buildPan, children }: { buildPan: (native: NativeGesture) => ReturnType<typeof Gesture.Pan>; children: ReactElement }) {
+  const styles = useStyles();
+  const native = useMemo(() => Gesture.Native(), []);
+  const pan = useMemo(() => buildPan(native), [buildPan, native]);
+  return (
+    <GestureDetector gesture={pan}>
+      <View style={styles.flex}>
+        <GestureDetector gesture={native}>{children}</GestureDetector>
+      </View>
+    </GestureDetector>
+  );
+}
+
+// TEMP diagnostics (EXPO_PUBLIC_DEBUG_PULL=1): why a pull isn't picked up on a screen.
+const DEBUG_PULL = __DEV__ && process.env.EXPO_PUBLIC_DEBUG_PULL === '1';
+function debugPull(event: string, scrollY: number, blocked: boolean, phase: number) {
+  console.log(`[pull] ${event} scrollY=${scrollY.toFixed(1)} blocked=${blocked} phase=${phase}`);
+}
+
 /**
  * The X and its caption. Owns its own text state (driven by `phase` on the UI thread), so pulling and
  * syncing re-render only this component — never the screen around it.
@@ -144,7 +170,6 @@ const PullIndicator = memo(function PullIndicator({
  * real sync step; without it the caption cycles through friendly phrases.
  */
 export function usePullToSync(onRefresh: () => Promise<unknown>, enabled = true, useStatus?: () => string | null) {
-  const styles = useStyles();
   const reduceMotion = useReducedMotion();
   const scrollY = useSharedValue(0);
   const pull = useSharedValue(0);
@@ -208,9 +233,10 @@ export function usePullToSync(onRefresh: () => Promise<unknown>, enabled = true,
     scrollY.set(e.contentOffset.y);
   });
 
-  const native = useMemo(() => Gesture.Native(), []);
-  const pan = useMemo(
-    () =>
+  // Builds the pull for one list. Each attached list gets its own native + pan pair (see PullSurface); the
+  // builder itself is stable, so a re-render never rebuilds a gesture.
+  const buildPan = useCallback(
+    (native: NativeGesture) =>
       Gesture.Pan()
         .simultaneousWithExternalGesture(native)
         .enabled(enabled)
@@ -218,8 +244,12 @@ export function usePullToSync(onRefresh: () => Promise<unknown>, enabled = true,
         .onBegin(() => {
           base.set(0);
           tick.set(0);
+          if (DEBUG_PULL) scheduleOnRN(debugPull, 'begin', scrollY.get(), blocked.get(), phase.get());
         })
         .onUpdate((e) => {
+          if (DEBUG_PULL && Math.abs(e.translationY) > 20 && Math.abs(e.translationY) < 26) {
+            scheduleOnRN(debugPull, `update dy=${Math.round(e.translationY)}`, scrollY.get(), blocked.get(), phase.get());
+          }
           if (phase.get() >= 2) return;
           if (blocked.get() || scrollY.get() > 0.5) {
             base.set(e.translationY);
@@ -263,7 +293,7 @@ export function usePullToSync(onRefresh: () => Promise<unknown>, enabled = true,
             pull.set(withSpring(0, CALM));
           }
         }),
-    [native, enabled, base, phase, blocked, scrollY, pull, wave, waveAmp, glow, reduceMotion, tick, pop],
+    [enabled, base, phase, blocked, scrollY, pull, wave, waveAmp, glow, reduceMotion, tick, pop],
   );
 
   const indicator = (
@@ -279,13 +309,7 @@ export function usePullToSync(onRefresh: () => Promise<unknown>, enabled = true,
     />
   );
 
-  const attach = (list: ReactElement) => (
-    <GestureDetector gesture={pan}>
-      <View style={styles.flex}>
-        <GestureDetector gesture={native}>{list}</GestureDetector>
-      </View>
-    </GestureDetector>
-  );
+  const attach = (list: ReactElement) => <PullSurface buildPan={buildPan}>{list}</PullSurface>;
 
   const scrollProps = {
     onScroll: scrollHandler,

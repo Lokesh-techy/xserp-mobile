@@ -22,6 +22,12 @@ test('user_settings payload without token keeps the previous token', () => {
   expect(next.counts.oa).toBe(4);
 });
 
+test('a login session is stale so the first sync fetches ICD flags; a refreshed one is fresh', () => {
+  const login = toSession(userPayloadSchema.parse(fixture));
+  expect(login.refreshedAt).toBe(0);
+  expect(toSession(userPayloadSchema.parse(fixture), login).refreshedAt).toBeGreaterThan(0);
+});
+
 test('display helpers', () => {
   const user = { id: 1, username: 'u', email: 'e', firstName: 'Asha', lastName: 'Rao', isSuper: false, enterpriseName: 'X' };
   expect(displayName(user)).toBe('Asha Rao');

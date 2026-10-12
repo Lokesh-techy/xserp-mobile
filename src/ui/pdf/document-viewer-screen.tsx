@@ -28,7 +28,7 @@ const previewable = (mime: string) => mime === 'application/pdf' || isImage(mime
 /** An image attachment, centred and pinch-zoomable; tells the screen it's ready once it has painted. */
 const imageViewerHtml = (doc: { base64: string; mimeType: string }, dark: boolean) => `<!doctype html><html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
-<style>html,body{margin:0;height:100%;background:${dark ? '#0A111D' : '#F4F7FB'}}body{display:flex;align-items:center;justify-content:center}
+<style>html,body{margin:0;height:100%;background:${dark ? '#070B12' : '#F2F4F8'}}body{display:flex;align-items:center;justify-content:center}
 img{max-width:100%;max-height:100%;box-shadow:0 10px 30px rgba(0,26,61,.18)}</style></head><body>
 <img src="data:${doc.mimeType};base64,${doc.base64}"
  onload="window.ReactNativeWebView.postMessage(JSON.stringify({type:'pages',count:1}))"

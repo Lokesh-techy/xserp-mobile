@@ -7,6 +7,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type ReactElement,
   type ReactNode,
 } from 'react';
@@ -24,8 +25,29 @@ import { ListSkeleton } from './skeleton';
 
 export type ScrollHost = ReturnType<typeof usePullToSync>;
 
-type Register = (fn: () => Promise<unknown>) => void;
+type Register = (fn: () => Promise<unknown>, status: string | null) => void;
 const RefreshContext = createContext<Register>(() => undefined);
+
+/** The pull caption a tab asked for while its refresh runs (e.g. "Computing ageing…"); null = the generic phrases. */
+function createPullStatus() {
+  let value: string | null = null;
+  const subs = new Set<() => void>();
+  const subscribe = (fn: () => void) => {
+    subs.add(fn);
+    return () => void subs.delete(fn);
+  };
+  const get = () => value;
+  function usePullStatus() {
+    return useSyncExternalStore(subscribe, get, get);
+  }
+  return {
+    set: (next: string | null) => {
+      value = next;
+      subs.forEach((fn) => fn());
+    },
+    usePullStatus,
+  };
+}
 
 type SearchApi = { query: string; setQuery: (q: string) => void; register: (placeholder: string | null) => void };
 const SearchContext = createContext<SearchApi>({ query: '', setQuery: () => undefined, register: () => undefined });
@@ -60,10 +82,15 @@ export function ModuleScreen({ title, subtitle, actions, headerRight, tabs, back
   const styles = useStyles();
   const refresh = useRef<() => Promise<unknown>>(() => Promise.resolve());
   const runRefresh = useCallback(() => refresh.current(), []);
-  const register = useCallback<Register>((fn) => {
-    refresh.current = fn;
-  }, []);
-  const pull = usePullToSync(runRefresh);
+  const [pullStatus] = useState(createPullStatus);
+  const register = useCallback<Register>(
+    (fn, status) => {
+      refresh.current = fn;
+      pullStatus.set(status);
+    },
+    [pullStatus],
+  );
+  const pull = usePullToSync(runRefresh, true, pullStatus.usePullStatus);
   const [placeholder, setPlaceholder] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const registerSearch = useCallback((p: string | null) => {
@@ -114,10 +141,21 @@ export function ModuleScreen({ title, subtitle, actions, headerRight, tabs, back
   );
 }
 
-/** Tabs call this so the header's pull-to-refresh syncs what is on screen. */
-export function useHostRefresh(_host: ScrollHost, fn: () => Promise<unknown>) {
+/**
+ * Tabs call this so the header's pull-to-refresh syncs what is on screen. `status`: what the pull caption says
+ * while it runs, when the refresh does something more specific than fetching.
+ */
+export function useHostRefresh(host: ScrollHost, fn: () => Promise<unknown>, status: string | null = null) {
   const register = useContext(RefreshContext);
-  useEffect(() => register(fn), [register, fn]);
+  useEffect(() => register(fn, status), [register, fn, status]);
+  // The scroll offset is shared by every tab and only updates on scroll events. A tab that mounts (or one
+  // that leaves) must reset it, or a short tab that never scrolls inherits the last tab's offset and the
+  // pull, which only arms at the top, never arms again.
+  const scrollY = host.scrollY;
+  useEffect(() => {
+    scrollY.set(0);
+    return () => scrollY.set(0);
+  }, [scrollY]);
 }
 
 const useStyles = makeStyles((t) => ({

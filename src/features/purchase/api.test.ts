@@ -8,7 +8,14 @@ import profile from '../../../__fixtures__/purchase/poMaterialDetail.json';
 import search from '../../../__fixtures__/purchase/poSearch.json';
 
 import { toPurchaseOrder } from './api';
-import { financeYearsSchema, outstandingSchema, poDashboardSchema, poDetailSchema, poListSchema, supplierProfileSchema } from './schemas';
+import {
+  financeYearsSchema,
+  outstandingSchema,
+  poDashboardSchema,
+  poDetailSchema,
+  poListSchema,
+  supplierProfileSchema,
+} from './schemas';
 import { poStatus } from './status';
 
 test('fixtures parse', () => {
@@ -22,9 +29,27 @@ test('fixtures parse', () => {
 });
 
 test('maps a PO row', () => {
-  const row = poListSchema.parse({ po_list: [{ po_id: 31, po_code: 'PO/25-26/0012', po_value: '12,500.00', status: '0', supplier_name: 'Acme', currency_symbol: '' }] }).po_list[0]!;
+  const row = poListSchema.parse({
+    po_list: [
+      {
+        po_id: 31,
+        po_code: 'PO/25-26/0012',
+        po_value: '12,500.00',
+        status: '0',
+        supplier_name: 'Acme',
+        currency_symbol: '',
+      },
+    ],
+  }).po_list[0]!;
   const po = toPurchaseOrder(row);
-  expect(po).toMatchObject({ id: '31', code: 'PO/25-26/0012', value: 12500, status: 0, supplierName: 'Acme', currency: '₹' });
+  expect(po).toMatchObject({
+    id: '31',
+    code: 'PO/25-26/0012',
+    value: 12500,
+    status: 0,
+    supplierName: 'Acme',
+    currency: '₹',
+  });
 });
 
 test('status labels', () => {

@@ -1,5 +1,5 @@
 /** @author Lokesh */
-import { toReviewRows } from './review-sections';
+import { splitCode, toReviewRows } from './review-sections';
 import type { ReviewEntry } from './review-pager';
 
 const entry = (key: string, date: string | null) =>
@@ -34,4 +34,15 @@ test('groups by age in a fixed order with counts and panel edges', () => {
   ]);
   expect(rows[1]).toMatchObject({ first: true, last: false });
   expect(rows[2]).toMatchObject({ first: false, last: true });
+});
+
+describe('splitCode', () => {
+  it('lifts the draft prefix into a tag', () => {
+    expect(splitCode('DRAFT#PO/53831')).toEqual({ tag: 'DRAFT', number: 'PO/53831' });
+    expect(splitCode('TMP#GRN-156985')).toEqual({ tag: 'TMP', number: 'GRN-156985' });
+    expect(splitCode('PF#G241989')).toEqual({ tag: 'PF', number: 'G241989' });
+  });
+  it('leaves numbered documents alone', () => {
+    expect(splitCode('INV/26-27/0042')).toEqual({ tag: null, number: 'INV/26-27/0042' });
+  });
 });

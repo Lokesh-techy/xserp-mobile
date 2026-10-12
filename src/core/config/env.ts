@@ -13,27 +13,21 @@ const requested = process.env.EXPO_PUBLIC_SERVER;
 const serverName: ServerName = isServerName(requested) ? requested : appEnv;
 const server = SERVERS[serverName];
 
-/** LAN IP of the machine serving the bundle (from Metro's host), so a phone can reach `make up`. */
+/** LAN IP of the machine serving the bundle (from Metro's host), so a phone can reach a local Django. */
 const devMachine = Constants.expoConfig?.hostUri?.split(':')[0] || 'localhost';
 
 const clean = (url: string) => url.replace(DEV_MACHINE, devMachine).replace(/\/+$/, '');
 
 const erpBase = clean(process.env.EXPO_PUBLIC_ERP_URL || server.erpUrl);
-const mobileApiBase = clean(process.env.EXPO_PUBLIC_MOBILE_API_URL || server.mobileApiUrl);
 
 export const env = {
   appEnv,
   serverName,
   serverLabel: server.label,
-  /** Legacy ERP origin, e.g. `https://dev.xserp.in`. */
+  /** Django ERP origin, e.g. `https://dev.xserp.in`. */
   serverUrl: erpBase,
-  /** FastAPI mobile service, e.g. `https://dev.xserp.in/api/v1`. */
-  mobileApiUrl: mobileApiBase,
   idleTimeoutMinutes: Number(process.env.EXPO_PUBLIC_IDLE_TIMEOUT_MINUTES || extra.idleTimeoutMinutes || 30),
 } as const;
 
 /** `erpUrl('sales/json/draft_oa/')` → `https://dev.xserp.in/erp/sales/json/draft_oa/` */
 export const erpUrl = (path: string) => `${env.serverUrl}/erp/${path.replace(/^\/+/, '')}`;
-
-/** `mobileApiUrl('auth/login')` → `https://dev.xserp.in/api/v1/auth/login` */
-export const mobileApiUrl = (path: string) => `${env.mobileApiUrl}/${path.replace(/^\/+/, '')}`;

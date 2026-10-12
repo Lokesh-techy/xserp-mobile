@@ -5,8 +5,9 @@ const all = ['sales'] as const;
 export const salesKeys = {
   all,
   dashboard: () => [...all, 'dashboard'] as const,
-  detail: (since: string, till: string) => [...all, 'detail', since, till] as const,
-  aging: () => ['accounts', 'aging'] as const,
+  aging: () => [...all, 'receivableAgeing'] as const,
+  oaStatus: () => [...all, 'oaStatus'] as const,
+  invoiceStatus: () => [...all, 'invoiceStatus'] as const,
   draftInvoices: () => [...all, 'draftInvoices'] as const,
   draftOAs: () => [...all, 'draftOAs'] as const,
   search: (f: SalesFilters) => [...all, 'search', { ...f, range: [f.range.since.toDateString(), f.range.till.toDateString()] }] as const,

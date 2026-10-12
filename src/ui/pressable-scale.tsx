@@ -24,6 +24,8 @@ type Props = Omit<PressableProps, 'style' | 'children' | 'onPress'> & {
 
 // A second tap this soon after the first is treated as an accidental double tap.
 const DOUBLE_TAP_MS = 450;
+// Holding the highlight back this long means a scroll that starts on a row never flashes it.
+const PRESS_DELAY_MS = 45;
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -48,16 +50,17 @@ export function PressableScale({
 
   return (
     <AnimatedPressable
+      unstable_pressDelay={PRESS_DELAY_MS}
       {...rest}
       disabled={disabled || busy}
       onPressIn={(e) => {
-        scale.set(withTiming(scaleTo, { duration: 110, easing: easeOut }));
-        dim.set(withTiming(0.82, { duration: 90 }));
+        scale.set(withTiming(scaleTo, { duration: 90, easing: easeOut }));
+        dim.set(withTiming(0.86, { duration: 90, easing: easeOut }));
         onPressIn?.(e);
       }}
       onPressOut={(e) => {
         scale.set(withSpring(1, springs.snappy));
-        if (!busy) dim.set(withTiming(1, { duration: 180 }));
+        if (!busy) dim.set(withTiming(1, { duration: 200, easing: easeOut }));
         onPressOut?.(e);
       }}
       onPress={(e) => {

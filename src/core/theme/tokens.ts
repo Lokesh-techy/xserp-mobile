@@ -5,6 +5,9 @@ export const gradients = {
   accent: ['#004195', '#209BE1'] as const,
   success: ['#178463', '#1D9D74'] as const,
   danger: ['#B8403C', '#D9534F'] as const,
+  // Ageing summary: money coming in (deep emerald) vs going out (deep crimson).
+  receivable: ['#064E3B', '#0F8A66'] as const,
+  payable: ['#6B1424', '#B4323F'] as const,
 };
 export type Gradients = typeof gradients;
 
@@ -20,15 +23,23 @@ export type Fonts = typeof fonts;
 export const radius = { sm: 10, md: 14, lg: 20, xl: 28, pill: 999 } as const;
 export type Radius = typeof radius;
 
-export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28, gutter: 18 } as const;
+export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28, gutter: 16 } as const;
 export type Space = typeof space;
 
+// Soft, diffuse and low: closer to ambient light than a drop shadow.
 export const shadow = {
-  card: { shadowColor: '#0B2A5B', shadowOpacity: 0.08, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
-  lifted: { shadowColor: '#001A3D', shadowOpacity: 0.18, shadowRadius: 28, shadowOffset: { width: 0, height: 14 }, elevation: 8 },
-  button: { shadowColor: '#004195', shadowOpacity: 0.28, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 5 },
+  card: { shadowColor: '#0A1F44', shadowOpacity: 0.06, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
+  lifted: { shadowColor: '#001A3D', shadowOpacity: 0.14, shadowRadius: 32, shadowOffset: { width: 0, height: 12 }, elevation: 8 },
+  button: { shadowColor: '#004195', shadowOpacity: 0.24, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 4 },
 } as const;
-export type Shadows = typeof shadow;
+export type Shadows = { [K in keyof typeof shadow]: (typeof shadow)[K] | (typeof shadowDark)[K] };
+
+/** On near-black a shadow only muddies; keep a faint one for lifted sheets and the brand glow. */
+export const shadowDark = {
+  card: { shadowColor: '#000000', shadowOpacity: 0, shadowRadius: 0, shadowOffset: { width: 0, height: 0 }, elevation: 0 },
+  lifted: { shadowColor: '#000000', shadowOpacity: 0.5, shadowRadius: 32, shadowOffset: { width: 0, height: 12 }, elevation: 8 },
+  button: { shadowColor: '#004195', shadowOpacity: 0.35, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 4 },
+} as const;
 
 /** Colours used on top of the dark gradients — identical in both schemes. */
 export const alpha = {

@@ -1,6 +1,6 @@
 /** @author Lokesh */
 import type { ReactNode } from 'react';
-import { View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { makeStyles } from '@/core/theme';
 
@@ -32,6 +32,8 @@ const useStyles = makeStyles((t) => ({
     borderRadius: t.radius.lg,
     padding: t.space.lg,
     overflow: 'hidden',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: t.colors.edgeLight,
     ...t.shadow.card,
   },
   bar: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4 },

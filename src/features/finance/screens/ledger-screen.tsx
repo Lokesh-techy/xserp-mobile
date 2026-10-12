@@ -1,11 +1,11 @@
 /** @author Lokesh */
 import { useQuery } from '@tanstack/react-query';
-import { useCallback, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { useSessionStore } from '@/core/auth';
-import { makeStyles, useTheme } from '@/core/theme';
+import { makeStyles, toneColors, useTheme } from '@/core/theme';
 import { formatDate, formatMoney, thisMonth } from '@/core/utils';
 import {
   Bone,
@@ -24,6 +24,7 @@ import {
   StateView,
   Text,
   useHostRefresh,
+  type RowEdge,
   type ScrollHost,
 } from '@/ui';
 
@@ -42,7 +43,6 @@ export function LedgerScreen(props: Props) {
 }
 
 function Body({ host, id, group }: Props & { host: ScrollHost }) {
-  const t = useTheme();
   const styles = useStyles();
   const fy = useSessionStore((s) => s.session?.fyStartDay);
   const [range, setRange] = useState(() => thisMonth());
@@ -69,6 +69,8 @@ function Body({ host, id, group }: Props & { host: ScrollHost }) {
       {...host.scrollProps}
       data={isSwitching(data) ? [] : (data.data?.vouchers ?? [])}
       keyExtractor={(v, i) => `${v.code}-${i}`}
+      initialNumToRender={15}
+      windowSize={9}
       contentContainerStyle={styles.pad}
       ListHeaderComponent={
         <View style={styles.head}>
@@ -115,22 +117,34 @@ function Body({ host, id, group }: Props & { host: ScrollHost }) {
           <StateView icon="document-outline" title="No vouchers in this period" />
         )
       }
-      renderItem={({ item, index }) => (
-        <ListRow edge={edgeOf(index, data.data?.vouchers.length ?? 0)} style={styles.voucher}>
-          <View style={styles.flex}>
-            <Text variant="rowTitle">{item.code}</Text>
-            <Text variant="rowMeta" color={t.colors.textMuted}>
-              {formatDate(item.date)}
-            </Text>
-          </View>
-          <Text variant="rowTitle" weight="bold" color={item.is_debit ? t.colors.danger : t.colors.success}>
-            {formatMoney(item.value)} {item.is_debit ? 'Dr' : 'Cr'}
-          </Text>
-        </ListRow>
-      )}
+      renderItem={({ item, index }) => <VoucherRow item={item} edge={edgeOf(index, data.data?.vouchers.length ?? 0)} />}
     />,
   );
 }
+
+type Voucher = NonNullable<Awaited<ReturnType<typeof fetchLedgerData>>>['vouchers'][number];
+
+/** Voucher code and date; the amount with its Dr/Cr side in an aligned column, coloured like the ledger list. */
+const VoucherRow = memo(function VoucherRow({ item, edge }: { item: Voucher; edge: RowEdge }) {
+  const t = useTheme();
+  const styles = useStyles();
+  return (
+    <ListRow edge={edge} style={styles.voucher}>
+      <View style={styles.flex}>
+        <Text variant="rowTitle">{item.code}</Text>
+        <Text variant="rowMeta" color={t.colors.textMuted}>
+          {formatDate(item.date)}
+        </Text>
+      </View>
+      <Text variant="rowTitle" weight="bold" style={styles.num}>
+        {formatMoney(item.value)}
+        <Text variant="caption" color={item.is_debit ? toneColors(t, 'info').fg : t.colors.success}>
+          {item.is_debit ? ' Dr' : ' Cr'}
+        </Text>
+      </Text>
+    </ListRow>
+  );
+});
 
 const useStyles = makeStyles((t) => ({
   pad: { padding: t.space.gutter, paddingTop: 8, paddingBottom: 48 },
@@ -139,4 +153,5 @@ const useStyles = makeStyles((t) => ({
   statBone: { flex: 1, height: 84, borderRadius: t.radius.lg },
   voucher: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   flex: { flex: 1, gap: 2 },
+  num: { fontVariant: ['tabular-nums'] },
 }));

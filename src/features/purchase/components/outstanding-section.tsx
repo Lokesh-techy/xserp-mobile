@@ -27,7 +27,10 @@ export function OutstandingSection({ item, detail }: { item: PurchaseOrder; deta
     );
   }
   const ledger = query.data?.[0];
-  if (!ledger) return <StateView icon="checkmark-circle-outline" title="No outstanding" message="This supplier has no open balance." />;
+  if (!ledger)
+    return (
+      <StateView icon="checkmark-circle-outline" title="No outstanding" message="This supplier has no open balance." />
+    );
   const a = ledger.aging;
   return (
     <Card style={styles.card}>

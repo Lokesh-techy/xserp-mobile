@@ -18,7 +18,8 @@ import {
   type ScrollHost,
 } from '@/ui';
 
-import { ApprovalCard } from './approval-card';
+import { ApprovalCard, DateLabel } from './approval-card';
+import { CardActions } from './card-actions';
 import { openPager } from './pager-store';
 import type { ApprovalConfig } from './types';
 import { useApprovalQueue } from './use-queue';
@@ -99,6 +100,9 @@ export function QueueList<T, D>({
                   tint={t.tints[config.tint]}
                   showStatus={false}
                   onPress={() => openPager(config, items, config.id(item))}
+                  footer={
+                    <CardActions config={config} item={item} leading={<DateLabel date={config.summary(item).date} />} />
+                  }
                 />
               )}
             />,

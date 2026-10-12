@@ -43,7 +43,7 @@ export function QueryState<T>({ query, isEmpty, empty, skeleton, children, wrap 
     );
   }
   if (isEmpty?.(query.data)) {
-    return (
+    return wrap(
       <Centered>
         <StateView
           icon={empty?.icon ?? 'checkmark-done-outline'}

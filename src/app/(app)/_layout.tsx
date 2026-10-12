@@ -28,7 +28,7 @@ export default function AppLayout() {
           freezeOnBlur: true,
         }}>
         <Stack.Screen name="index" />
-        <Stack.Screen name="profile" options={{ animation: 'fade_from_bottom' }} />
+        <Stack.Screen name="profile" />
         <Stack.Screen name="document" options={{ animation: 'slide_from_bottom' }} />
       </Stack>
       <SubscriptionSheet />

@@ -3,7 +3,7 @@ import * as Application from 'expo-application';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -12,7 +12,7 @@ import { login, useSessionStore } from '@/core/auth';
 import { env } from '@/core/config/env';
 import { enter, makeStyles, useTheme } from '@/core/theme';
 import { errorFeedback } from '@/core/utils';
-import { AmbientBackground, Button, Input, Text, XMark } from '@/ui';
+import { AmbientBackground, Button, Input, Text, XMark, PressableScale } from '@/ui';
 
 export function LoginScreen() {
   const t = useTheme();
@@ -71,8 +71,8 @@ export function LoginScreen() {
             </Text>
           </Animated.View>
           <Animated.View entering={enter(120)} style={[styles.card, cardStyle]}>
-            <Input label="Email" icon="mail-outline" value={email} onChangeText={setEmail} autoCapitalize="none" autoComplete="email" keyboardType="email-address" textContentType="username" returnKeyType="next" onSubmitEditing={() => passwordRef.current?.focus()} />
-            <Input ref={passwordRef} label="Password" icon="lock-closed-outline" secure value={password} onChangeText={setPassword} autoComplete="password" textContentType="password" returnKeyType="go" onSubmitEditing={() => void submit()} />
+            <Input label="Email" placeholder="name@company.com" icon="mail-outline" value={email} onChangeText={setEmail} autoCapitalize="none" autoComplete="email" keyboardType="email-address" textContentType="username" returnKeyType="next" onSubmitEditing={() => passwordRef.current?.focus()} />
+            <Input ref={passwordRef} label="Password" placeholder="Enter your password" icon="lock-closed-outline" secure value={password} onChangeText={setPassword} autoComplete="password" textContentType="password" returnKeyType="go" onSubmitEditing={() => void submit()} />
             {!!notice && !error && (
               <View style={[styles.box, { backgroundColor: t.colors.accentSoft }]}>
                 <Text variant="label" color={t.colors.infoText}>
@@ -88,11 +88,11 @@ export function LoginScreen() {
               </View>
             )}
             <Button title="Sign in" icon="arrow-forward" onPress={submit} />
-            <Pressable hitSlop={10} onPress={() => router.push('/forgot-password')} style={styles.forgot}>
+            <PressableScale hitSlop={10} onPress={() => router.push('/forgot-password')} style={styles.forgot}>
               <Text variant="label" color={t.colors.accent}>
                 Forgot password?
               </Text>
-            </Pressable>
+            </PressableScale>
           </Animated.View>
           <View style={styles.footer}>
             <View style={[styles.dot, { backgroundColor: t.alpha.liveDot }]} />

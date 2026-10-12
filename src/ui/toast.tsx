@@ -1,7 +1,7 @@
 /** @author Lokesh */
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { create } from 'zustand';
@@ -9,6 +9,7 @@ import { create } from 'zustand';
 import { enter, fadeOut, makeStyles, useTheme } from '@/core/theme';
 
 import { Text } from './text';
+import { PressableScale } from './pressable-scale';
 
 type ToastInput = {
   message: string;
@@ -49,7 +50,7 @@ function ToastRow({ item }: { item: ToastItem }) {
         {item.message}
       </Text>
       {item.action && (
-        <Pressable
+        <PressableScale
           hitSlop={10}
           onPress={() => {
             item.action?.onPress();
@@ -58,7 +59,7 @@ function ToastRow({ item }: { item: ToastItem }) {
           <Text variant="label" weight="extrabold" color={t.colors.white}>
             {item.action.label.toUpperCase()}
           </Text>
-        </Pressable>
+        </PressableScale>
       )}
     </Animated.View>
   );

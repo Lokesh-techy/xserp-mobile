@@ -7,7 +7,7 @@ import { useCan } from '@/core/permissions';
 import { useFocusRefetch } from '@/core/query';
 import { makeStyles, useTheme } from '@/core/theme';
 import { filterItems, lastDays, parseServerDate } from '@/core/utils';
-import { ApprovalCard, openPager, useApprovalQueue } from '@/features/approvals/engine';
+import { ApprovalCard, CardActions, DateLabel, openPager, useApprovalQueue } from '@/features/approvals/engine';
 import {
   edgeOf,
   ListSkeleton,
@@ -131,6 +131,13 @@ export function GrnTab({ host }: { host: ScrollHost }) {
               tint={t.tints.stores}
               showStatus={false}
               onPress={() => openPager(grnApproval, rows, item.receiptNo)}
+              footer={
+                <CardActions
+                  config={grnApproval}
+                  item={item}
+                  leading={<DateLabel date={grnApproval.summary(item).date} />}
+                />
+              }
             />
           )}
         />,

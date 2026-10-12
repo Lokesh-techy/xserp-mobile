@@ -1,10 +1,11 @@
 /** @author Lokesh */
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, TextInput } from 'react-native';
+import { TextInput } from 'react-native';
 import Animated, { Extrapolation, interpolate, useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 
 import { markActive } from '@/core/auth/idle-timeout';
 import { makeStyles, useTheme } from '@/core/theme';
+import { PressableScale } from './pressable-scale';
 
 const RANGE = 72; // scroll distance over which the bar slims down
 
@@ -40,9 +41,9 @@ export function CollapsingSearch({ value, onChangeText, placeholder, scrollY }: 
           style={styles.input}
         />
         {!!value && (
-          <Pressable hitSlop={10} onPress={() => onChangeText('')} accessibilityLabel="Clear search">
+          <PressableScale hitSlop={10} onPress={() => onChangeText('')} accessibilityLabel="Clear search">
             <Ionicons name="close-circle" size={18} color={t.colors.textFaint} />
-          </Pressable>
+          </PressableScale>
         )}
       </Animated.View>
     </Animated.View>

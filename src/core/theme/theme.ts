@@ -8,6 +8,7 @@ import {
   moduleTints,
   radius,
   shadow,
+  shadowDark,
   space,
   type Alpha,
   type Fonts,
@@ -45,7 +46,7 @@ function build(scheme: Scheme): Theme {
     fonts,
     radius,
     space,
-    shadow,
+    shadow: scheme === 'dark' ? shadowDark : shadow,
     tints: moduleTints,
     chart: chartSeries[scheme],
     alpha,
@@ -66,11 +67,11 @@ export function toneColors(t: Theme, tone: Tone): { bg: string; fg: string } {
     case 'info':
       return { bg: c.accentSoft, fg: c.infoText };
     case 'success':
-      return { bg: c.successSoft, fg: c.success };
+      return { bg: c.successSoft, fg: c.successText };
     case 'warning':
       return { bg: c.warningSoft, fg: c.warningText };
     case 'danger':
-      return { bg: c.dangerSoft, fg: c.danger };
+      return { bg: c.dangerSoft, fg: c.dangerText };
     case 'violet':
       return { bg: c.violetSoft, fg: c.violet };
     default:

@@ -1,4 +1,5 @@
 /** @author Lokesh */
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
 import { useSession } from '@/core/auth';
@@ -14,7 +15,10 @@ const TABS = ['dashboard', 'lookup', 'pending'] as const;
 
 export function PurchaseScreen() {
   const session = useSession();
-  const [tab, setTab] = useTabParam(TABS, 'dashboard');
+  const [tab] = useTabParam(TABS, 'dashboard');
+  // Set by the dashboard's tappable groups; any tab change drops it so Lookup opens unfiltered next time.
+  const { delivery, kind } = useLocalSearchParams<{ delivery?: string; kind?: string }>();
+  const setTab = (k: (typeof TABS)[number]) => router.setParams({ tab: k, delivery: undefined, kind: undefined });
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterBadge, setFilterBadge] = useState(0);
   const pending = useApprovalQueue(poApproval);
@@ -28,10 +32,22 @@ export function PurchaseScreen() {
     <ModuleScreen
       title="Purchase"
       tabs={<SegmentedTabs tabs={tabs} value={tab} onChange={setTab} />}
-      actions={tab === 'lookup' ? [{ icon: 'options-outline', label: 'Filters', badge: filterBadge, onPress: () => setFilterOpen(true) }] : []}>
+      actions={
+        tab === 'lookup'
+          ? [{ icon: 'options-outline', label: 'Filters', badge: filterBadge, onPress: () => setFilterOpen(true) }]
+          : []
+      }>
       {(host) =>
         tab === 'lookup' ? (
-          <LookupTab host={host} filterOpen={filterOpen} onFilterClose={() => setFilterOpen(false)} onFilterCount={setFilterBadge} />
+          <LookupTab
+            key={`${delivery ?? ''}:${kind ?? ''}`}
+            delivery={delivery}
+            kind={kind === 'po' || kind === 'jo' ? kind : undefined}
+            host={host}
+            filterOpen={filterOpen}
+            onFilterClose={() => setFilterOpen(false)}
+            onFilterCount={setFilterBadge}
+          />
         ) : tab === 'pending' && canApprove ? (
           <QueueList config={poApproval} host={host} />
         ) : (

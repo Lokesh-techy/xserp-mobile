@@ -87,10 +87,10 @@ export function Popover({ anchor, onClose, width = 264, children }: Props) {
 const useStyles = makeStyles((t) => ({
   card: {
     position: 'absolute',
-    backgroundColor: t.colors.surface,
+    backgroundColor: t.colors.surfaceRaised,
     borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: t.colors.divider,
+    borderColor: t.colors.edgeLight,
     ...t.shadow.lifted,
   },
   content: { paddingVertical: 6 },

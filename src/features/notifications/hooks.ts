@@ -4,7 +4,7 @@ import { useCallback, useEffect } from 'react';
 
 import { errorMessage } from '@/core/api';
 import { useSessionStore } from '@/core/auth';
-import { POLL_MS } from '@/core/query';
+import { usePollInterval } from '@/core/query';
 import { toast } from '@/ui';
 
 import { countUnread, deleteNotifications, fetchNotifications, type AppNotification } from './api';
@@ -35,7 +35,7 @@ export function useNotifications() {
   const query = useQuery({
     queryKey: notificationKeys.list(),
     queryFn: fetchNotifications,
-    refetchInterval: POLL_MS,
+    refetchInterval: usePollInterval(),
     enabled: signedIn,
     select,
   });

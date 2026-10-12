@@ -20,6 +20,9 @@ const EDGES: RowEdge[] = [
 export const edgeOf = (index: number, count: number): RowEdge =>
   EDGES[(index === 0 ? 1 : 0) + (index === count - 1 ? 2 : 0)]!;
 
+/** The shared edge instance for a row already known to start and/or end its panel. */
+export const rowEdge = (first: boolean, last: boolean): RowEdge => EDGES[(first ? 1 : 0) + (last ? 2 : 0)]!;
+
 type Props = {
   children: ReactNode;
   /** Defaults to a standalone row (both edges). Pass `edgeOf(index, data.length)` from a list. */

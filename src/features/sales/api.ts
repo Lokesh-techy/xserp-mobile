@@ -1,14 +1,15 @@
 /** @author Lokesh */
 import { anyOr, post, postOk, ERP } from '@/core/api';
-import { agingSchema, financeYearsSchema, outstandingSchema } from '@/core/erp';
+import { financeYearsSchema, outstandingSchema } from '@/core/erp';
 import { lastDays, rangeParams, type DateRange } from '@/core/utils';
 import { z } from 'zod';
 
 import {
   invoiceListSchema,
   oaListSchema,
+  invoiceStatusSchema,
+  oaStatusSchema,
   salesDashboardSchema,
-  salesDetailSchema,
   salesMaterialsSchema,
   type InvoiceRow,
   type OaRow,
@@ -139,11 +140,9 @@ const toMaterials = (res: z.infer<typeof salesMaterialsSchema>): SalesMaterial[]
   }));
 
 export const fetchSalesDashboard = () => post(ERP.sales.dashboard, {}, { schema: salesDashboardSchema });
-export const fetchSalesDetail = (range: DateRange) =>
-  post(ERP.sales.salesDetail, rangeParams(range, ['from_date', 'to_date']), { schema: salesDetailSchema });
-const receivableSchema = z.looseObject({ receivable_aging: agingSchema.nullish() });
-export const fetchReceivableAging = async () =>
-  (await post(ERP.accounts.aging, {}, { schema: receivableSchema })).receivable_aging ?? null;
+/** No dates: every approved OA still open, whenever it was raised. */
+export const fetchOaStatus = () => post(ERP.sales.oaStatus, {}, { schema: oaStatusSchema });
+export const fetchInvoiceStatus = () => post(ERP.sales.invoiceStatus, {}, { schema: invoiceStatusSchema });
 
 export async function searchInvoices(f: SalesFilters): Promise<Invoice[]> {
   const res = await post(

@@ -1,5 +1,5 @@
 /** @author Lokesh */
-// Every backend path the app calls, in one place. Base URLs live in core/config/servers.ts.
+// Every Django ERP path the app calls, in one place. Base URLs live in core/config/servers.ts.
 
 /** Legacy Django ERP paths, relative to `<erpUrl>/erp/` (pass to `post` / `postOk`). */
 export const ERP = {
@@ -19,6 +19,8 @@ export const ERP = {
   sales: {
     dashboard: 'sales/json/dashboard/',
     salesDetail: 'sales/json/salesDetail/',
+    oaStatus: 'sales/json/oa_status/',
+    invoiceStatus: 'sales/json/invoice_status/',
     invoiceSearch: 'sales/json/invoiceSearch/',
     oaSearch: 'sales/json/oa_search/',
     invoiceFinanceYears: 'sales/json/finance_year/',
@@ -65,12 +67,16 @@ export const ERP = {
     taxLiability: 'accounts/json/tax_liability/',
     incomeAndExpenses: 'accounts/json/income_and_expenses/',
     aging: 'accounts/json/aging/',
+    receivableAgingDetails: 'accounts/json/get_receivable_aging_details/',
+    payableAgingDetails: 'accounts/json/get_payable_aging_details/',
     agingLedgers: 'accounts/json/aging_ledgers/',
     ledgerData: 'accounts/json/ledger_data/',
     ledgerBills: 'accounts/json/load_ledger_bills/',
     ledgerNames: 'accounts/json/ledger_names/',
+    ledgerBalances: 'accounts/json/ledger_balances/',
   },
   masters: {
+    dashboard: 'masters/json/dashboard/',
     partyNames: 'masters/json/partyNames/',
     materialNames: 'masters/json/materialNames/',
     projects: 'masters/json/projects/',
@@ -103,29 +109,4 @@ export const ERP_WEB = {
   home: '/erp/',
   terms: '/erp/public/terms/',
   privacy: '/erp/public/privacy/',
-} as const;
-
-/** FastAPI mobile service paths, relative to `<mobileApiUrl>` (which already ends in /api/v1). */
-export const MOBILE_API = {
-  auth: {
-    login: 'auth/login',
-    logout: 'auth/logout',
-    refresh: 'auth/refresh',
-    changePassword: 'auth/password/change',
-    forgotPassword: 'auth/password/forgot',
-  },
-  me: 'me',
-  devices: {
-    register: 'devices',
-    unregister: 'devices/unregister',
-  },
-  notifications: {
-    list: 'notifications',
-    events: 'notifications/events',
-    preferences: 'notifications/preferences',
-    readAll: 'notifications/read-all',
-    unreadCount: 'notifications/unread-count',
-    byId: (recipientId: string | number) => `notifications/${recipientId}`,
-    read: (recipientId: string | number) => `notifications/${recipientId}/read`,
-  },
 } as const;

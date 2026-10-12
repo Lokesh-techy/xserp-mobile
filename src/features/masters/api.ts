@@ -2,7 +2,9 @@
 import { post, postOk, ERP } from '@/core/api';
 import { materialStockSchema } from '@/core/erp';
 
-import { materialDetailSchema, partyDetailSchema, ratesSchema, type RateRow } from './schemas';
+import { mastersDashboardSchema, materialDetailSchema, partyDetailSchema, ratesSchema, type RateRow } from './schemas';
+
+export const fetchMastersDashboard = () => post(ERP.masters.dashboard, {}, { schema: mastersDashboardSchema });
 
 export type RateRequest = {
   id: string;

@@ -6,3 +6,4 @@ export { markActive, isIdleExpired, IDLE_NOTICE } from './idle-timeout';
 export { useIdleSignOut } from './use-idle-sign-out';
 export { bootstrapAuth, SESSION_EXPIRED_NOTICE } from './bootstrap';
 export * from './auth-api';
+export { syncSession, SESSION_FRESH_MS } from './session-refresh';

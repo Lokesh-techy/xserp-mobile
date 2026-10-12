@@ -6,7 +6,6 @@ const r = (range: DateRange) => [toApiDate(range.since), toApiDate(range.till)] 
 export const storesKeys = {
   all,
   dashboard: (range: DateRange) => [...all, 'dashboard', ...r(range)] as const,
-  statement: (range: DateRange) => [...all, 'statement', ...r(range)] as const,
   indent: (range: DateRange) => [...all, 'indent', ...r(range)] as const,
   grnStatus: (range: DateRange) => [...all, 'grnStatus', ...r(range)] as const,
   drafts: () => [...all, 'grnDrafts'] as const,

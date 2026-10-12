@@ -1,5 +1,5 @@
 /** @author Lokesh */
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { makeStyles, useTheme } from '@/core/theme';
@@ -69,9 +69,9 @@ const useStyles = makeStyles((t) => ({
     bottom: 0,
     paddingHorizontal: 14,
     paddingTop: 10,
-    backgroundColor: t.colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: t.colors.divider,
+    backgroundColor: t.colors.surfaceRaised,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: t.colors.edgeLight,
     ...t.shadow.lifted,
   },
   row: { flexDirection: 'row', gap: 10 },

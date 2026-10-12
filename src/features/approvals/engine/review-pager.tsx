@@ -111,7 +111,7 @@ export function ReviewPager({ title, entries, initialKey, onActed, empty, header
       <RemarksSheet
         action={picked}
         onClose={() => setPicked(null)}
-        onConfirm={(remarks) => picked && start(entry.config, entry.item, picked, remarks)}
+        onConfirm={(remarks) => (picked ? start(entry.config, entry.item, picked, remarks) : false)}
       />
     </View>
   );

@@ -10,14 +10,11 @@ test('only shows reports for modules the user can view, grouped in catalogue ord
 });
 
 test('search matches title and description across sections; empty sections drop out', () => {
-  const sections = visibleReports(allow(['ACCOUNTS', 'SALES', 'PURCHASE', 'STORES']), 'gstr');
+  const sections = visibleReports(allow(['ACCOUNTS', 'SALES', 'PURCHASE', 'STORES']), 'ageing');
   expect(sections.map((s) => s.title)).toEqual(['Finance']);
-  expect(sections[0]!.items.map((i) => i.id)).toEqual(['gstr1', 'gstr2', 'gstr3b']);
+  expect(sections[0]!.items.map((i) => i.id)).toEqual(['aging']);
 });
 
-test('every entry is either an in-app route or an /erp/ web path', () => {
-  for (const r of REPORTS) {
-    if (r.kind === 'app') expect(String(r.href).startsWith('/')).toBe(true);
-    else expect(r.path.startsWith('/erp/')).toBe(true);
-  }
+test('every entry opens an in-app route', () => {
+  for (const r of REPORTS) expect(String(r.href).startsWith('/')).toBe(true);
 });

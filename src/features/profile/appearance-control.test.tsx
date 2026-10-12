@@ -19,10 +19,11 @@ test('offers System / Light / Dark and switches the theme live', async () => {
       <SchemeProbe />
     </ThemeProvider>,
   );
-  expect(screen.getByText('System')).toBeTruthy();
-  expect(screen.getByText('Light')).toBeTruthy();
+  const control = screen.getByLabelText('Appearance');
+  expect(control.props.values).toEqual(['System', 'Light', 'Dark']);
+  expect(control.props.selectedIndex).toBe(1);
   expect(screen.getByText('scheme:light')).toBeTruthy();
-  await fireEvent.press(screen.getByText('Dark'));
+  await fireEvent(control, 'change', { nativeEvent: { selectedSegmentIndex: 2 } });
   expect(screen.getByText('scheme:dark')).toBeTruthy();
   expect(Appearance.setColorScheme).toHaveBeenCalledWith('dark');
 });

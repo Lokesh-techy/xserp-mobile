@@ -86,7 +86,8 @@ export function toSession(p: UserPayload, previous?: Session | null): Session {
       enterpriseActive: p.is_enterprise_active ?? true,
     },
     serverDate: p.server_date ?? null,
-    refreshedAt: Date.now(),
+    // Login omits ICD flags (only user_settings sends them), so a fresh login is stale until the first sync.
+    refreshedAt: previous ? Date.now() : 0,
   };
 }
 

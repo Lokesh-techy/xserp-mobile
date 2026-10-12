@@ -1,7 +1,7 @@
 /** @author Lokesh */
 import { Ionicons } from '@expo/vector-icons';
 import { memo, useMemo, useState } from 'react';
-import { FlatList, Pressable, TextInput, View } from 'react-native';
+import { FlatList, TextInput, View } from 'react-native';
 
 import { makeStyles, useTheme } from '@/core/theme';
 import { filterItems, formatQty } from '@/core/utils';
@@ -61,11 +61,11 @@ export function MaterialPickerSheet({ visible, items, onConfirm, onClose }: Prop
           placeholder="Search name, drawing no or make"
         />
         {sum.items > 0 && (
-          <Pressable onPress={() => setPicks({})} hitSlop={8} style={styles.clear}>
+          <PressableScale onPress={() => setPicks({})} hitSlop={8} style={styles.clear}>
             <Text variant="caption" weight="bold" color={t.colors.accent}>
               Clear {sum.items} picked
             </Text>
-          </Pressable>
+          </PressableScale>
         )}
       </View>
       <FlatList

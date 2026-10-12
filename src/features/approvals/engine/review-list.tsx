@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { approvalTints, makeStyles, useTheme } from '@/core/theme';
-import { filterItems, formatMoney } from '@/core/utils';
+import { filterItems } from '@/core/utils';
 import {
   ListRow,
   ListSkeleton,
@@ -16,8 +16,10 @@ import {
   type ScrollHost,
 } from '@/ui';
 
-import { Facts } from './approval-card';
+import { Amount, DateLabel, DocCode, Facts } from './approval-card';
+import { CardActions } from './card-actions';
 import type { ReviewEntry } from './review-pager';
+import type { ApprovalType } from './types';
 import { toReviewRows, type ReviewRow } from './review-sections';
 
 type Props = {
@@ -105,9 +107,20 @@ function GroupHeader({ label, count }: { label: string; count: number }) {
   );
 }
 
+/** The document type, spelled out, for the card's overline. */
+const KIND: Record<ApprovalType, string> = {
+  po: 'Purchase order',
+  invoice: 'Invoice',
+  oa: 'Order acknowledgement',
+  grn: 'Goods receipt',
+  icd: 'GRN audit',
+  rate: 'Rate request',
+};
+
 /**
- * One document inside its group's panel. A tinted badge says the type, so the eye can scan a column of types;
- * code and amount carry the first line, party and date the second.
+ * One document inside its group's panel, using the full card width: the type is named in its colour on the
+ * overline and marked by a thin stripe at the card's edge; code and amount carry the first line, party and
+ * facts follow, then the footer bar with the date and the actions.
  */
 function ReviewRowItem({
   row,
@@ -116,40 +129,29 @@ function ReviewRowItem({
   row: Extract<ReviewRow, { kind: 'entry' }>;
   onOpen: (entry: ReviewEntry) => void;
 }) {
-  const t = useTheme();
   const styles = useStyles();
   const { entry, first, last } = row;
   const s = entry.config.summary(entry.item);
   const tint = approvalTints[entry.config.type];
-  const kind = entry.config.short ?? entry.config.noun;
   return (
     <ListRow
       edge={{ first, last }}
       onPress={() => onOpen(entry)}
-      dividerInset={68}
-      accessibilityLabel={`${kind} ${s.code}, ${s.party || 'no party'}`}
+      dividerInset={14}
+      accessibilityLabel={`${KIND[entry.config.type]} ${s.code}, ${s.party || 'no party'}`}
       style={styles.row}>
-      <View style={[styles.badge, { backgroundColor: `${tint}17` }]}>
-        <Text weight="extrabold" color={tint} style={styles.badgeText} numberOfLines={1} adjustsFontSizeToFit>
-          {kind}
-        </Text>
-      </View>
-      <View style={styles.main}>
+      <View style={styles.top}>
+        <View style={[styles.stripe, { backgroundColor: tint }]} />
         <View style={styles.line}>
-          <Text variant="rowTitle" weight="bold" numberOfLines={1} style={styles.flex}>
-            {s.code}
-          </Text>
-          {typeof s.amount === 'number' && (
-            <Text variant="rowTitle" weight="bold" style={styles.num}>
-              {formatMoney(s.amount, s.currency || '₹')}
-            </Text>
-          )}
+          <DocCode code={s.code} kind={{ label: KIND[entry.config.type], tint }} />
+          {typeof s.amount === 'number' && <Amount value={s.amount} symbol={s.currency || '₹'} />}
         </View>
-        <Text variant="rowMeta" color={t.colors.textMuted} numberOfLines={1}>
+        <Text variant="body" weight="semibold" numberOfLines={1}>
           {s.party || '—'}
         </Text>
-        <Facts summary={s} />
+        <Facts summary={s} skipDate />
       </View>
+      <CardActions config={entry.config} item={entry.item} leading={<DateLabel date={s.date} />} />
     </ListRow>
   );
 }
@@ -165,17 +167,18 @@ const useStyles = makeStyles((t) => ({
     paddingBottom: 8,
   },
   num: { fontVariant: ['tabular-nums'] },
-  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  badge: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
+  row: { paddingHorizontal: 14 },
+  top: { gap: 4 },
+  // The type's colour as a thin bar flush with the card's left edge, alongside the content.
+  stripe: {
+    position: 'absolute',
+    left: -14,
+    top: 2,
+    bottom: 2,
+    width: 3,
+    borderTopRightRadius: 2,
+    borderBottomRightRadius: 2,
   },
-  badgeText: { fontSize: 11, lineHeight: 14, letterSpacing: 0.2 },
-  main: { flex: 1, gap: 3 },
-  line: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  line: { flexDirection: 'row', alignItems: 'flex-end', gap: 12 },
   flex: { flex: 1 },
 }));

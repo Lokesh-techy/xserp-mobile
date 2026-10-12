@@ -5,7 +5,8 @@ import { useSessionStore } from '@/core/auth';
 
 import { createActionRunner } from './action-runner';
 
-export const UNDO_MS = 4000;
+/** How long an approve/reject waits before it is sent — the window to cancel it. */
+export const UNDO_MS = 1500;
 
 type Ref = { type: string; id: string; action: string };
 type Callbacks = { onError: (e: unknown) => void; onDone?: () => void };

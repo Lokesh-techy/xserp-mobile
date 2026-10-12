@@ -1,18 +1,27 @@
 /** @author Lokesh */
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useRef } from 'react';
+import { useCallback, useLayoutEffect, useRef } from 'react';
 
-/** Navigation focus is not window focus: refetch stale data when the user comes back to a screen. */
+import { STALE_MS } from './query-client';
+
+/**
+ * Navigation focus is not window focus: refetch when the user comes back to a screen after being away longer
+ * than STALE_MS. Runs once per return — callers usually pass a callback that changes every render, so it is
+ * read through a ref (a dependency on it would refetch on every render while focused).
+ */
 export function useFocusRefetch(refetch: () => unknown) {
-  const first = useRef(true);
+  const latest = useRef(refetch);
+  useLayoutEffect(() => {
+    latest.current = refetch;
+  });
+  const blurredAt = useRef<number | null>(null);
   useFocusEffect(
     useCallback(() => {
-      if (first.current) {
-        first.current = false;
-        return;
-      }
-      refetch();
-    }, [refetch]),
+      if (blurredAt.current !== null && Date.now() - blurredAt.current > STALE_MS) latest.current();
+      return () => {
+        blurredAt.current = Date.now();
+      };
+    }, []),
   );
 }
 

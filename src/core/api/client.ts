@@ -22,8 +22,18 @@ const CSRF_TOKEN = Array.from({ length: 32 }, () => Math.floor(Math.random() * 1
 type RequestOptions = { auth?: boolean; timeoutMs?: number; emptyCodes?: readonly number[] };
 export type PostOptions<S extends z.ZodType> = RequestOptions & { schema: S };
 
+// EXPO_PUBLIC_LOG_API=1 in .env.local logs every request with running counts, to spot repeated calls.
+const LOG_API = __DEV__ && process.env.EXPO_PUBLIC_LOG_API === '1';
+const sent = new Map<string, number>();
+let sentTotal = 0;
+
 /** The raw POST: auth fields, CSRF, timeout. Callers decide how to read the body. */
 async function send(path: string, params: FormParams, { auth = true, timeoutMs = 30_000 }: RequestOptions): Promise<Response> {
+  const startedAt = Date.now();
+  if (LOG_API) {
+    sent.set(path, (sent.get(path) ?? 0) + 1);
+    console.log(`[api] #${++sentTotal} ${path} (×${sent.get(path)})`);
+  }
   const body: FormParams = { ...params, csrfmiddlewaretoken: CSRF_TOKEN };
   if (auth) {
     const a = hooks.getAuth();
@@ -56,6 +66,7 @@ async function send(path: string, params: FormParams, { auth = true, timeoutMs =
     throw new ApiError(aborted ? 'timeout' : 'network', aborted ? 'Request timed out' : 'Unable to reach the server', { path });
   } finally {
     clearTimeout(timer);
+    if (LOG_API) console.log(`[api] ${path} ${Date.now() - startedAt} ms`);
   }
   return res;
 }

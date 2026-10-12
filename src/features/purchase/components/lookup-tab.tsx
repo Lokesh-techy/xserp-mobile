@@ -2,10 +2,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Animated from 'react-native-reanimated';
 
+import { useSessionStore } from '@/core/auth';
 import { useFocusRefetch } from '@/core/query';
 import { makeStyles, useTheme } from '@/core/theme';
-import { filterItems, normalize, type DateRange } from '@/core/utils';
-import { ApprovalCard, openPager } from '@/features/approvals/engine';
+import { filterItems, financialYear, normalize, type DateRange } from '@/core/utils';
+import { ApprovalCard, CardActions, DateLabel, openPager } from '@/features/approvals/engine';
 import { useMaterialItems, usePartyItems, useProjectItems, useProjects } from '@/features/master-data';
 import {
   countActiveFilters,
@@ -25,6 +26,7 @@ import {
 
 import { DEFAULT_PO_FILTERS, type PoFilters } from '../api';
 import { poApproval } from '../approvals';
+import { isOrderKind, type OrderKind } from '../dashboard-model';
 import { usePoSearch } from '../hooks';
 import { PO_STATUS_OPTIONS } from '../status';
 
@@ -36,7 +38,16 @@ const LOCAL = [
   { key: 'on time', label: 'On time' },
 ] as const;
 
-type Props = { host: ScrollHost; filterOpen: boolean; onFilterClose: () => void; onFilterCount: (n: number) => void };
+type Props = {
+  host: ScrollHost;
+  /** Opened from the dashboard: start on this delivery state over the financial year the dashboard counts. */
+  delivery?: string;
+  /** Opened from the dashboard's PO/JO switch: only that kind of order. */
+  kind?: OrderKind;
+  filterOpen: boolean;
+  onFilterClose: () => void;
+  onFilterCount: (n: number) => void;
+};
 
 const toValues = (f: PoFilters): FilterValues => ({
   range: f.range,
@@ -46,13 +57,18 @@ const toValues = (f: PoFilters): FilterValues => ({
   itemKey: f.itemId,
 });
 
-export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Props) {
+export function LookupTab({ host, delivery, kind, filterOpen, onFilterClose, onFilterCount }: Props) {
   const t = useTheme();
   const styles = useStyles();
-  const [filters, setFilters] = useState<PoFilters>(DEFAULT_PO_FILTERS);
-  const [values, setValues] = useState<FilterValues>(() => toValues(DEFAULT_PO_FILTERS()));
+  const fy = useSessionStore((s) => s.session?.fyStartDay);
+  const fromDashboard = LOCAL.some((o) => o.key === delivery);
+  const [initial] = useState<PoFilters>(() =>
+    fromDashboard ? { ...DEFAULT_PO_FILTERS(), range: financialYear(fy) } : DEFAULT_PO_FILTERS(),
+  );
+  const [filters, setFilters] = useState<PoFilters>(initial);
+  const [values, setValues] = useState<FilterValues>(() => toValues(initial));
   const [defaults] = useState<FilterValues>(() => toValues(DEFAULT_PO_FILTERS()));
-  const [local, setLocal] = useState<string | null>(null);
+  const [local, setLocal] = useState<string | null>(fromDashboard ? delivery! : null);
   const search = useScreenSearch('Search PO, supplier or project');
   const query = usePoSearch(filters);
   const parties = usePartyItems();
@@ -96,9 +112,10 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
   const all = useMemo(() => query.data ?? [], [query.data]);
   const visible = useMemo(() => {
     const searched = filterItems(all, search, (po) => [po.code, po.supplierName, po.projectName, po.projectCode]);
-    if (!local) return searched;
-    return searched.filter((po) => normalize(`${po.materialStatus} ${po.deliveryStatus}`).includes(local));
-  }, [all, search, local]);
+    const ofKind = kind ? searched.filter((po) => isOrderKind(po, kind)) : searched;
+    if (!local) return ofKind;
+    return ofKind.filter((po) => normalize(`${po.materialStatus} ${po.deliveryStatus}`).includes(local));
+  }, [all, search, local, kind]);
 
   return (
     <>
@@ -140,6 +157,13 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
                   summary={poApproval.summary(item)}
                   tint={t.tints.purchase}
                   onPress={() => openPager(poApproval, visible, item.id)}
+                  footer={
+                    <CardActions
+                      config={poApproval}
+                      item={item}
+                      leading={<DateLabel date={poApproval.summary(item).date} />}
+                    />
+                  }
                 />
               )}
             />,

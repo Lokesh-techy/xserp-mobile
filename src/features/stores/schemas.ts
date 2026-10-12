@@ -9,7 +9,6 @@ export const storeDashboardSchema = z.looseObject({
   stock_mix: zList(z.looseObject({ category: zStr, value: zNum })),
   monthly_closing_stock: zList(z.looseObject({ month: zStr, closing_stock: zNum })),
 });
-export const stockStatementSchema = statement;
 
 export const indentStatusSchema = z.looseObject({ indent_raised: zNum, indent_closed: zNum, indent_pending: zNum, indent_due_po: zNum, indent_due_material: zNum });
 export const grnStatusSchema = z.looseObject({ grn_raised: zNum, grn_inprocess: zNum, grn_accounted: zNum });

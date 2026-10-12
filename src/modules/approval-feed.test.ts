@@ -38,10 +38,39 @@ test('summarises the feed by document type in a fixed order (stable across refre
     { config: inv, items: [{ id: '1', date: null }, { id: '2', date: null }] },
   ]);
   expect(summarizeByType(feed)).toEqual([
-    { type: 'po', label: 'po', tint: 'purchase', count: 1 },
-    { type: 'invoice', label: 'invoice', tint: 'purchase', count: 2 },
+    { type: 'po', label: 'po', tint: 'purchase', count: 1, value: 0, foreign: false },
+    { type: 'invoice', label: 'invoice', tint: 'purchase', count: 2, value: 0, foreign: false },
   ]);
   expect(summarizeByType([])).toEqual([]);
+});
+
+test('totals rupee amounts per type; foreign-currency documents are flagged, not added', () => {
+  const priced = erase(
+    defineApproval<{ id: string; amount: number; currency: string }>({
+      type: 'po',
+      title: 'po',
+      noun: 'PO',
+      permission: 'PURCHASE',
+      tint: 'purchase',
+      queueKey: ['po'],
+      queue: async () => [],
+      id: (d) => d.id,
+      summary: (d) => ({ code: d.id, party: '', amount: d.amount, currency: d.currency, status: { label: '', tone: 'info' } }),
+      actions: [],
+    }),
+  );
+  const feed = buildFeed([
+    {
+      config: priced,
+      items: [
+        { id: '1', amount: 1000, currency: '₹' },
+        { id: '2', amount: 250.5, currency: 'INR' },
+        { id: '3', amount: 99, currency: '' },
+        { id: '4', amount: 500, currency: '$' },
+      ],
+    },
+  ]);
+  expect(summarizeByType(feed)[0]).toMatchObject({ count: 4, value: 1349.5, foreign: true });
 });
 
 test('repeated or blank ids still get unique keys', () => {

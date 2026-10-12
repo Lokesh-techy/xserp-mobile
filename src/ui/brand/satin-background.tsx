@@ -7,8 +7,8 @@ import { useTheme } from '@/core/theme';
 
 // Porcelain base: a long, even fall from near-white to a soft cool grey — no pattern, nothing to band or shimmer.
 const BASE = {
-  light: ['#FCFDFE', '#F5F7FA', '#EEF1F6'] as const,
-  dark: ['#0E1626', '#0A111D', '#070C16'] as const,
+  light: ['#FAFBFC', '#F2F4F8', '#ECEFF4'] as const,
+  dark: ['#0C121C', '#070B12', '#05080D'] as const,
 };
 // A satin sheen across the top-left, the way light sits on lacquer. Barely there.
 const SHEEN = {

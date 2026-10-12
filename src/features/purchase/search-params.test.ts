@@ -12,6 +12,18 @@ test('unset filters are sent as xserp\'s "any" sentinel (-1), never empty string
 
 test('set filters pass through', async () => {
   const spy = jest.spyOn(client, 'post').mockResolvedValue({ po_list: [] } as never);
-  await searchPurchaseOrders({ ...DEFAULT_PO_FILTERS(), supplierId: '12', itemId: '45', projectCode: 'PRJ1', status: '2' });
-  expect(spy.mock.calls.at(-1)![1]).toMatchObject({ supplierId: '12', item_id: '45', project_code: 'PRJ1', status: '2', po_no: '-1' });
+  await searchPurchaseOrders({
+    ...DEFAULT_PO_FILTERS(),
+    supplierId: '12',
+    itemId: '45',
+    projectCode: 'PRJ1',
+    status: '2',
+  });
+  expect(spy.mock.calls.at(-1)![1]).toMatchObject({
+    supplierId: '12',
+    item_id: '45',
+    project_code: 'PRJ1',
+    status: '2',
+    po_no: '-1',
+  });
 });

@@ -17,8 +17,9 @@ test('the pull gesture survives re-renders (Android cancels a gesture that is re
     wrapper,
     initialProps: { n: 1 },
   });
-  const gestureOf = (el: ReactElement) => (el.props as { gesture: unknown }).gesture;
-  const first = gestureOf(result.current.attach(<View />));
+  // Each list builds its gestures once from this builder; it must not change between renders.
+  const builderOf = (el: ReactElement) => (el.props as { buildPan: unknown }).buildPan;
+  const first = builderOf(result.current.attach(<View />));
   await rerender({ n: 2 });
-  expect(gestureOf(result.current.attach(<View />))).toBe(first);
+  expect(builderOf(result.current.attach(<View />))).toBe(first);
 });

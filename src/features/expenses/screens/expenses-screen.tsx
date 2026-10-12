@@ -29,6 +29,7 @@ import {
 } from '@/ui';
 
 import { fetchExpenseGroups, fetchExpenses } from '../api';
+import { ExpenseCardActions } from '../components/expense-card-actions';
 import { expenseKeys } from '../keys';
 import { expenseStatus, STATUS, type ExpenseStatus } from '../status';
 
@@ -137,6 +138,7 @@ function ExpenseList({
                 {formatMoney(item.approved || item.claimed)}
               </Text>
             </View>
+            <ExpenseCardActions item={item} />
           </ListRow>
         );
       }}

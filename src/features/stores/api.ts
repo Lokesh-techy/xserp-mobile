@@ -10,7 +10,6 @@ import {
   grnStatusSchema,
   indentStatusSchema,
   stockCheckSchema,
-  stockStatementSchema,
   storeDashboardSchema,
   type ReceiptRow,
 } from './schemas';
@@ -96,10 +95,9 @@ export const toMovements = (s: z.infer<typeof stockCheckSchema>): Movement[] =>
     receipt: m.receipt_qty,
   }));
 
+// The stock statement procedure is slow on large ledgers; the server runs its calls in parallel, but allow for it.
 export const fetchStoreDashboard = (r: DateRange) =>
-  post(ERP.stores.dashboard, rangeParams(r), { schema: storeDashboardSchema });
-export const fetchStockStatement = (r: DateRange) =>
-  post(ERP.stores.stockStatement, rangeParams(r), { schema: stockStatementSchema });
+  post(ERP.stores.dashboard, rangeParams(r), { schema: storeDashboardSchema, timeoutMs: 90_000 });
 export const fetchIndentStatus = (r: DateRange) =>
   post(ERP.stores.indentStatus, rangeParams(r, ['from_date', 'to_date']), { schema: indentStatusSchema });
 export const fetchGrnStatus = (r: DateRange) =>

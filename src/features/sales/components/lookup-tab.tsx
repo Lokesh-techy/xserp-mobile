@@ -8,7 +8,7 @@ import { useCan } from '@/core/permissions';
 import { useFocusRefetch } from '@/core/query';
 import { makeStyles, useTheme } from '@/core/theme';
 import { filterItems, type DateRange } from '@/core/utils';
-import { ApprovalCard, openPager } from '@/features/approvals/engine';
+import { ApprovalCard, CardActions, DateLabel, openPager } from '@/features/approvals/engine';
 import { useMaterialItems, usePartyItems, useProjectItems, useProjects } from '@/features/master-data';
 import { Button, countActiveFilters, edgeOf, type FilterField, FilterSheet, type FilterValues, isSwitching, QueryState, type ScrollHost, Text, useHostRefresh, withPressFeel, SegmentedControl, useScreenSearch } from '@/ui';
 
@@ -103,7 +103,7 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
             ListHeaderComponent={header}
             ListFooterComponent={footer}
             ListEmptyComponent={<QueryState query={invoices} isEmpty={() => true} empty={{ icon: 'search-outline', title: 'No invoices', message: 'No invoices match these filters.' }}>{() => null}</QueryState>}
-            renderItem={({ item, index }) => <ApprovalCard edge={edgeOf(index, invoiceRows.length)} summary={invoiceApproval.summary(item)} tint={t.tints.sales} onPress={() => openPager(invoiceApproval, invoiceRows, item.id)} />}
+            renderItem={({ item, index }) => <ApprovalCard edge={edgeOf(index, invoiceRows.length)} summary={invoiceApproval.summary(item)} tint={t.tints.sales} onPress={() => openPager(invoiceApproval, invoiceRows, item.id)} footer={<CardActions config={invoiceApproval} item={item} leading={<DateLabel date={invoiceApproval.summary(item).date} />} />} />}
           />
         ) : (
           <Animated.FlatList
@@ -114,7 +114,7 @@ export function LookupTab({ host, filterOpen, onFilterClose, onFilterCount }: Pr
             ListHeaderComponent={header}
             ListFooterComponent={footer}
             ListEmptyComponent={<QueryState query={oas} isEmpty={() => true} empty={{ icon: 'search-outline', title: 'No order acknowledgements', message: 'Nothing matches these filters.' }}>{() => null}</QueryState>}
-            renderItem={({ item, index }) => <ApprovalCard edge={edgeOf(index, oaRows.length)} summary={oaApproval.summary(item)} tint={t.tints.sales} onPress={() => openPager(oaApproval, oaRows, item.id)} />}
+            renderItem={({ item, index }) => <ApprovalCard edge={edgeOf(index, oaRows.length)} summary={oaApproval.summary(item)} tint={t.tints.sales} onPress={() => openPager(oaApproval, oaRows, item.id)} footer={<CardActions config={oaApproval} item={item} leading={<DateLabel date={oaApproval.summary(item).date} />} />} />}
           />
         ),
       )}

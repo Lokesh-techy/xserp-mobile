@@ -1,7 +1,7 @@
 /** @author Lokesh */
 import { Ionicons } from '@expo/vector-icons';
-import { forwardRef, useState } from 'react';
-import { Pressable, TextInput, View, type TextInputProps } from 'react-native';
+import { forwardRef, useCallback, useRef, useState } from 'react';
+import { Pressable, TextInput, type TextInputProps } from 'react-native';
 import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { markActive } from '@/core/auth/idle-timeout';
@@ -10,6 +10,7 @@ import { tapFeedback } from '@/core/utils';
 
 import type { IconName } from './button';
 import { Text } from './text';
+import { PressableScale } from './pressable-scale';
 
 type Props = TextInputProps & {
   label: string;
@@ -28,6 +29,16 @@ export const Input = forwardRef<TextInput, Props>(function Input(
   const focus = useSharedValue(0);
   const [hidden, setHidden] = useState(true);
   const [focused, setFocused] = useState(false);
+  // Our own handle on the field (so a tap anywhere on it can focus), passed on to the caller's ref too.
+  const inner = useRef<TextInput | null>(null);
+  const setRef = useCallback(
+    (node: TextInput | null) => {
+      inner.current = node;
+      if (typeof ref === 'function') ref(node);
+      else if (ref) ref.current = node;
+    },
+    [ref],
+  );
   const rest0 = error ? t.colors.danger : t.colors.border;
   const { accent, fillSubtle, surface } = t.colors;
 
@@ -38,7 +49,12 @@ export const Input = forwardRef<TextInput, Props>(function Input(
   }));
 
   return (
-    <View style={styles.root}>
+    // The label, icon and padding all belong to the field: a tap anywhere on it puts the cursor in.
+    <Pressable
+      style={styles.root}
+      onPress={() => inner.current?.focus()}
+      accessible={false}
+      disabled={rest.editable === false}>
       <Text variant="label" color={t.colors.textMuted}>
         {label}
         {required && (
@@ -51,7 +67,7 @@ export const Input = forwardRef<TextInput, Props>(function Input(
       <Animated.View style={[styles.box, boxStyle]}>
         <Ionicons name={icon} size={18} color={focused ? t.colors.onPrimarySoft : t.colors.textFaint} />
         <TextInput
-          ref={ref}
+          ref={setRef}
           {...rest}
           accessibilityLabel={label}
           onChangeText={(text) => {
@@ -74,7 +90,7 @@ export const Input = forwardRef<TextInput, Props>(function Input(
           }}
         />
         {secure && (
-          <Pressable
+          <PressableScale
             hitSlop={12}
             accessibilityLabel={hidden ? 'Show password' : 'Hide password'}
             onPress={() => {
@@ -82,7 +98,7 @@ export const Input = forwardRef<TextInput, Props>(function Input(
               setHidden((h) => !h);
             }}>
             <Ionicons name={hidden ? 'eye-outline' : 'eye-off-outline'} size={19} color={t.colors.textMuted} />
-          </Pressable>
+          </PressableScale>
         )}
       </Animated.View>
       {!!error && (
@@ -90,7 +106,7 @@ export const Input = forwardRef<TextInput, Props>(function Input(
           {error}
         </Text>
       )}
-    </View>
+    </Pressable>
   );
 });
 

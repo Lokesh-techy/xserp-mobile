@@ -9,6 +9,10 @@ export const agingSchema = z.looseObject({
   age2: zNum,
   age3: zNum,
   age4: zNum,
+  age5: zNum,
+  age6: zNum,
+  /** Falls due in the next 10 days. */
+  age7: zNum,
   overdue: zNum,
   total: zNum,
   advance: zNum,

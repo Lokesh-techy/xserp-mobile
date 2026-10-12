@@ -4,7 +4,7 @@ import { useCallback, useMemo } from 'react';
 
 import { useSessionStore } from '@/core/auth';
 import { can } from '@/core/permissions';
-import { POLL_MS } from '@/core/query';
+import { usePollInterval } from '@/core/query';
 import { parseServerDate } from '@/core/utils';
 import type { ModuleTint } from '@/core/theme';
 import { toEntries, type AnyApproval, type ApprovalType, type ReviewEntry } from '@/features/approvals/engine';
@@ -20,18 +20,39 @@ export function buildFeed(groups: { config: AnyApproval; items: unknown[] }[]): 
   return keyed.map((k) => k.entry);
 }
 
-export type TypeSummary = { type: ApprovalType; label: string; tint: ModuleTint; count: number };
+/**
+ * `value`: the rupee total of that type's pending documents. Foreign-currency documents can't be added to it,
+ * so they are left out and `foreign` says some exist (the card shows the total with a "+").
+ */
+export type TypeSummary = {
+  type: ApprovalType;
+  label: string;
+  tint: ModuleTint;
+  count: number;
+  value: number;
+  foreign: boolean;
+};
+
+const isRupee = (currency: string | null | undefined) => /^(₹|inr|rs\.?)?$/i.test((currency ?? '').trim());
 
 /** Display order for document types: fixed, so the Home card never reshuffles on refresh. */
 export const TYPE_ORDER: ApprovalType[] = ['po', 'invoice', 'oa', 'grn', 'icd', 'rate'];
 
-/** Pending counts per document type, in TYPE_ORDER — drives the Home approvals card. */
+/** Pending counts and rupee value per document type, in TYPE_ORDER — drives the Home approvals card. */
 export function summarizeByType(entries: ReviewEntry[]): TypeSummary[] {
   const byType = new Map<ApprovalType, TypeSummary>();
   for (const e of entries) {
-    const cur = byType.get(e.config.type);
-    if (cur) cur.count += 1;
-    else byType.set(e.config.type, { type: e.config.type, label: e.config.short ?? e.config.noun, tint: e.config.tint, count: 1 });
+    const type = e.config.type;
+    let cur = byType.get(type);
+    if (!cur) {
+      cur = { type, label: e.config.short ?? e.config.noun, tint: e.config.tint, count: 0, value: 0, foreign: false };
+      byType.set(type, cur);
+    }
+    cur.count += 1;
+    const s = e.config.summary(e.item);
+    if (typeof s.amount !== 'number' || !Number.isFinite(s.amount)) continue;
+    if (isRupee(s.currency)) cur.value += s.amount;
+    else cur.foreign = true;
   }
   return [...byType.values()].sort((a, b) => TYPE_ORDER.indexOf(a.type) - TYPE_ORDER.indexOf(b.type));
 }
@@ -48,8 +69,12 @@ export function useApprovalFeed() {
     }),
     [configs],
   );
-  const feed = useQueries({ queries: configs.map((c) => ({ queryKey: c.queueKey, queryFn: c.queue, refetchInterval: POLL_MS })), combine });
+  const poll = usePollInterval();
+  const feed = useQueries({ queries: configs.map((c) => ({ queryKey: c.queueKey, queryFn: c.queue, refetchInterval: poll })), combine });
   const qc = useQueryClient();
-  const refetch = useCallback(() => Promise.all(configs.map((c) => qc.refetchQueries({ queryKey: c.queueKey }))), [configs, qc]);
+  const refetch = useCallback(
+    () => Promise.all(configs.map((c) => qc.refetchQueries({ queryKey: c.queueKey }, { cancelRefetch: false }))),
+    [configs, qc],
+  );
   return { entries: feed.entries, loading: feed.loading, refetch, enabled: configs.length > 0 };
 }
